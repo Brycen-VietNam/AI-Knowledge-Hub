@@ -1,17 +1,17 @@
-# /kh.specify
+# /specify
 
 Write a detailed 2-layer spec for a feature or user story.
 
 ## Usage
 ```
-/kh.specify <feature-name> [--epic <epic>] [--priority P0|P1|P2]
+/specify <feature-name> [--epic <epic>] [--priority P0|P1|P2]
 ```
 
 ## Examples
 ```
-/kh.specify multilingual-search --epic rag-pipeline --priority P0
-/kh.specify rbac-document-filter --epic auth
-/kh.specify slack-bot-query-handler --epic bots
+/specify multilingual-search --epic rag-pipeline --priority P0
+/specify rbac-document-filter --epic auth
+/specify slack-bot-query-handler --epic bots
 ```
 
 ## Execution Flow
@@ -45,7 +45,7 @@ Do NOT silently assume. Do NOT block on minor details.
 
 ## Output
 ```
-/kh.specify complete
+/specify complete
   Spec:     docs/specs/multilingual-search.spec.md (Layers 1–3)
   Sources:  docs/sources/multilingual-search.sources.md
   Memory:   .claude/memory/WARM/multilingual-search.mem.md

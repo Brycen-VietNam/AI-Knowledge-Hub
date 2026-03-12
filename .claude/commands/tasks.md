@@ -1,17 +1,17 @@
-# /kh.tasks
+# /tasks
 
 Break plan stories into atomic, reviewable tasks. Max 50 lines per task.
 
 ## Usage
 ```
-/kh.tasks <feature-name> [--story <S-id>] [--agent <agent-id>]
+/tasks <feature-name> [--story <S-id>] [--agent <agent-id>]
 ```
 
 ## Examples
 ```
-/kh.tasks multilingual-search --story S001
-/kh.tasks multilingual-search --agent db-agent   ← all stories for that agent
-/kh.tasks multilingual-search                    ← all stories (sequential output)
+/tasks multilingual-search --story S001
+/tasks multilingual-search --agent db-agent   ← all stories for that agent
+/tasks multilingual-search                    ← all stories (sequential output)
 ```
 
 ## Execution Flow
@@ -53,7 +53,7 @@ T004 parallel: after:T002,T003  ← needs both done
 
 ## Output
 ```
-/kh.tasks complete
+/tasks complete
   Story: S001 | Feature: multilingual-search
   Tasks created: 4
   File: docs/tasks/multilingual-search/S001.tasks.md

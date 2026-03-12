@@ -1,11 +1,11 @@
-# /kh.report
+# /report
 
 Generate final report after feature implementation complete.
 Summarizes changes, test results, blockers, rollback plan, lessons learned.
 
 ## Usage
 ```
-/kh.report <feature-name> [--dry-run] [--include-archive]
+/report <feature-name> [--dry-run] [--include-archive]
 ```
 
 ## Execution Flow
@@ -62,7 +62,7 @@ After all approvals, run:
 
 ## Requirements for DONE Status
 
-Before `/kh.report --finalize` is allowed:
+Before `/report --finalize` is allowed:
 
 ### Code
 - [ ] All changes committed to feature branch
@@ -102,7 +102,7 @@ Before `/kh.report --finalize` is allowed:
 
 Show what report would contain WITHOUT saving:
 ```
-/kh.report multilingual-search --dry-run
+/report multilingual-search --dry-run
 
 → Shows: summary, changes count, test results, blockers
 → Does NOT save to disk
@@ -115,7 +115,7 @@ Show what report would contain WITHOUT saving:
 
 After all approvals, archive feature:
 ```
-/kh.report multilingual-search --finalize
+/report multilingual-search --finalize
 
 → Moves: WARM/<feature>.mem.md → COLD/<feature>.archive.md
 → Updates: HOT.md — removes from "In Progress"
@@ -137,8 +137,8 @@ After all approvals, archive feature:
 ---
 
 ## Related Commands
-- `/kh.implement <task>` — generate test results + code changes
-- `/kh.reviewcode <task>` — generate code review
-- `/kh.checklist <feature>` — pre-plan validation (used for AC reference in report)
+- `/implement <task>` — generate test results + code changes
+- `/reviewcode <task>` — generate code review
+- `/checklist <feature>` — pre-plan validation (used for AC reference in report)
 
 ---

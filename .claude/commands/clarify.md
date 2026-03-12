@@ -1,11 +1,11 @@
-# /kh.clarify
+# /clarify
 
 Generate structured clarification Q&A for a spec before planning.
 Fills known answers from existing files. Flags unknowns for humans.
 
 ## Usage
 ```
-/kh.clarify <feature-name> [--story <S-id>]
+/clarify <feature-name> [--story <S-id>]
 ```
 
 ## Execution Flow

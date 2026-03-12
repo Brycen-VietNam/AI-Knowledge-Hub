@@ -1,11 +1,11 @@
-# /kh.plan
+# /plan
 
 Generate 2-layer implementation plan from a passed checklist.
 Requires: /checklist PASS before running.
 
 ## Usage
 ```
-/kh.plan <feature-name> [--parallel]
+/plan <feature-name> [--parallel]
 ```
 
 ## Execution Flow

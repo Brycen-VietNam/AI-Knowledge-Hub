@@ -1,10 +1,10 @@
-# /kh.reviewcode
+# /reviewcode
 
 Review implemented code. Post-hook of /implement. Cannot APPROVE if ❌ exists.
 
 ## Usage
 ```
-/kh.reviewcode <task-id|file> [--level quick|full|security]
+/reviewcode <task-id|file> [--level quick|full|security]
 ```
 
 Level selection (auto if not specified):
@@ -123,6 +123,6 @@ Create follow-up task T002-fix in docs/tasks/<feature>/
 ## Agent Instructions
 - Model: **opus** (claude-opus-4-6)
 - Token budget: 3k tokens
-- POST-FLIGHT auto-runs `/kh.rules --phase post` (blocks APPROVED if security violations remain)
+- POST-FLIGHT auto-runs `/rules --phase post` (blocks APPROVED if security violations remain)
 - Deep reasoning required: prioritize security > performance > style
 - Output level (quick/full/security) auto-selected by task type

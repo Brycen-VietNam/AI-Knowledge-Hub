@@ -1,10 +1,10 @@
-# /kh.analyze
+# /analyze
 
 Analyze codebase context for a task. Run before /implement on any non-trivial task.
 
 ## Usage
 ```
-/kh.analyze <task-id> [--depth shallow|deep]
+/analyze <task-id> [--depth shallow|deep]
 shallow: signatures + imports only (default)
 deep:    include function bodies for touched files
 ```

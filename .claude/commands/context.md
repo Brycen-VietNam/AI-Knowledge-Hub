@@ -1,10 +1,10 @@
-# /kh.context
+# /context
 
 Load ONLY the context needed. Never load full project.
 
 ## Usage
 ```
-/kh.context <feature-or-task-id> [--minimal | --full]
+/context <feature-or-task-id> [--minimal | --full]
 --minimal: HOT.md + WARM/<feature> summary section only
 --full: HOT.md + full WARM/<feature> + task file
 default: HOT.md + WARM/<feature> (full) + task file if task-id given

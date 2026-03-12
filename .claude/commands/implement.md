@@ -1,10 +1,10 @@
-# /kh.implement
+# /implement
 
 Implement a specific task. Has pre/post hooks. Never exceeds task scope.
 
 ## Usage
 ```
-/kh.implement <task-id> [--dry-run] [--subagent <agent-id>]
+/implement <task-id> [--dry-run] [--subagent <agent-id>]
 ```
 
 ---
@@ -108,6 +108,6 @@ Add at top of any complex function implemented:
 ## Agent Instructions
 - Model: **sonnet** (claude-sonnet-4-6)
 - Token budget: 6k tokens
-- PRE-FLIGHT auto-runs `/kh.rules --phase pre` (blocks on HARD violations)
-- POST-FLIGHT auto-runs `/kh.sync` if conversation > 10 turns
+- PRE-FLIGHT auto-runs `/rules --phase pre` (blocks on HARD violations)
+- POST-FLIGHT auto-runs `/sync` if conversation > 10 turns
 - Never exceed TOUCH scope without creating follow-up task

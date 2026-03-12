@@ -1,10 +1,10 @@
-# /kh.sync
+# /sync
 
 Compress current session into persistent memory. Discard reasoning, keep decisions.
 
 ## Usage
 ```
-/kh.sync [--feature <name>] [--force]
+/sync [--feature <name>] [--force]
 ```
 Auto-triggered when: conversation > 15 turns, switching features, before subagent dispatch.
 
@@ -66,7 +66,7 @@ New blockers: [list or none]
 
 ## Token Report (agent outputs after sync)
 ```
-/kh.sync complete
+/sync complete
   Turns compressed: 14
   Decisions captured: 2
   Tasks updated: 3

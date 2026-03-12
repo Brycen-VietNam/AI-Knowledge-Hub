@@ -1,11 +1,11 @@
-# /kh.constitution
+# /constitution
 
 Establish or review project constitution — core principles, hard constraints, non-negotiables.
 Run ONCE at project start. Review when architecture changes significantly.
 
 ## Usage
 ```
-/kh.constitution [create|review|update]
+/constitution [create|review|update]
 ```
 
 ## Execution Flow

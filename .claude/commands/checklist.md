@@ -1,11 +1,11 @@
-# /kh.checklist
+# /checklist
 
 Pre-implementation gate. Validates spec quality, arch alignment, dependencies.
 Must pass before /plan is allowed to proceed.
 
 ## Usage
 ```
-/kh.checklist <feature-name> [--story <S-id>]
+/checklist <feature-name> [--story <S-id>]
 ```
 
 ## Execution Flow

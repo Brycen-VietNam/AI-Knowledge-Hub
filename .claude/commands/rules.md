@@ -1,10 +1,10 @@
-# /kh.rules
+# /rules
 
 Check work against rules. Auto-hooked into /implement (pre) and /reviewcode (post).
 
 ## Usage
 ```
-/kh.rules [--task <id>] [--file <path>] [--phase pre|post] [--all]
+/rules [--task <id>] [--file <path>] [--phase pre|post] [--all]
 --phase pre:  run before implement — catch design violations
 --phase post: run after implement — catch code violations
 --all:        run all rule files regardless of task type
@@ -89,6 +89,6 @@ Phase: pre-implement | Scope: src/rag/retriever.py
 ## Agent Instructions
 - Model: **haiku** (claude-haiku-4-5-20251001)
 - Token budget: 2k tokens
-- Auto-hooked into `/kh.implement` (--phase pre) and `/kh.reviewcode` (--phase post)
+- Auto-hooked into `/implement` (--phase pre) and `/reviewcode` (--phase post)
 - Load rule files for task type only (db-agent tasks → HARD + ARCH + SECURITY, etc.)
 - Return structured violation table + verdict
