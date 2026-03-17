@@ -10,7 +10,7 @@ Requires: /checklist PASS before running.
 
 ## Execution Flow
 ```
-1. Verify: docs/tasks/<feature>.checklist.md status = PASS
+1. Verify: docs/reviews/<feature>.checklist.md status = PASS
    → If not: "Run /checklist first. Checklist status: <status>"
 2. Load: docs/specs/<feature>.spec.md
 3. Load: .claude/memory/HOT.md (check active sprint capacity)

@@ -16,7 +16,7 @@ Fills known answers from existing files. Flags unknowns for humans.
 4. Scan spec for: assumptions, missing AC, undefined terms, ambiguous behavior
 5. Classify each question: BLOCKER | SHOULD | NICE
 6. Auto-fill answers found in CONSTITUTION.md or existing specs
-7. Save: docs/specs/<feature>.clarify.md
+7. Save: docs/clarify/<feature>.clarify.md
 ```
 
 ## Output Format

@@ -12,13 +12,25 @@ Must pass before /plan is allowed to proceed.
 ```
 1. Load: docs/specs/<feature>.spec.md (Layer 1 + Layer 2)
 2. Load: docs/sources/<feature>.sources.md (check sources fully mapped)
-3. Load: .claude/rules/HARD.md + ARCH.md (auto-check)
-4. Load: CONSTITUTION.md (constraint check)
-5. Auto-fill checklist template (AC coverage, scope impact, quality criteria)
-6. Ask for human approval on any WARN items
-7. Save: docs/reviews/<feature>.checklist.md
-8. Output: PASS (proceed to /plan) | WARN (review approved) | FAIL (list blockers)
+3. Load: docs/clarify/<feature>.clarify.md (verify no unresolved BLOCKER questions)
+4. Load: .claude/rules/HARD.md + ARCH.md + SECURITY.md + PERF.md (auto-check)
+5. Load: AGENTS.md (verify agent scope assignments)
+6. Load: CONSTITUTION.md (constraint check)
+7. Auto-fill checklist template (AC coverage, scope impact, quality criteria)
+8. For each WARN item: output formatted approval block (see WARN Approval Format)
+9. Save: docs/reviews/<feature>.checklist.md
+10. Output: PASS (proceed to /plan) | WARN (review approved) | FAIL (list blockers)
 ```
+
+## WARN Approval Format
+For each WARN item, output:
+```markdown
+⚠️ WARN: <item description>
+Risk: <what could go wrong>
+Mitigation: <how it will be handled>
+Approve? [ ] Yes, proceed  [ ] No, resolve first
+```
+Human must check "Yes, proceed" before /checklist can output WARN-approved result.
 
 ## Checklist
 
@@ -60,10 +72,10 @@ Must pass before /plan is allowed to proceed.
 Result: ⛔ FAIL — 2 blockers
 
 ### ❌ Blockers (fix before /plan)
-- Spec Quality: Q1 (fallback language) still ❓ in clarify.md
+- Spec Quality: Q1 (fallback language) still ❓ in clarify.md (unresolved BLOCKER)
 - Multilingual: Korean (ko) not mentioned in S003 RAG behavior
 
-### ✅ Passed (14/16)
+### ✅ Passed (28/30)
 [list]
 
 ### Next
@@ -76,3 +88,6 @@ Resolve blockers → re-run /checklist → then /plan
 - Hard stop if spec has ❌ CONSTITUTION violation
 - Do NOT auto-fix spec — report and stop
 - PASS = all items checked or explicitly marked N/A with reason
+- If clarify.md has any ❓ BLOCKER question → immediate FAIL, do not continue
+- SECURITY.md + PERF.md loaded for Section 3 quality checks
+- AGENTS.md loaded for "Agent scope assignments" item only

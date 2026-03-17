@@ -32,7 +32,7 @@ Mở project trong Claude Code → gõ `/` để thấy tất cả commands.
 # 5. Review (auto-hooks /rules post)
 /reviewcode T00X
 
-# 6. Compress session sau ~10 turns
+# 6. Compress session sau ~10-15 turns
 /sync --feature <feature-name>
 
 # 7. Finalize after feature complete

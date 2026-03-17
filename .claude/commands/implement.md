@@ -33,7 +33,7 @@ IMPLEMENT:
 POST-FLIGHT (auto):
   6. /rules --task <id> --phase post  — verify no new violations
   7. Update task status: IN_PROGRESS → DONE in task file
-  8. /sync if conversation > 10 turns since last sync
+  8. /sync if conversation > 15 turns since last sync
 ```
 
 ---
@@ -109,5 +109,5 @@ Add at top of any complex function implemented:
 - Model: **sonnet** (claude-sonnet-4-6)
 - Token budget: 6k tokens
 - PRE-FLIGHT auto-runs `/rules --phase pre` (blocks on HARD violations)
-- POST-FLIGHT auto-runs `/sync` if conversation > 10 turns
+- POST-FLIGHT auto-runs `/sync` if conversation > 15 turns
 - Never exceed TOUCH scope without creating follow-up task

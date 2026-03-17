@@ -86,6 +86,7 @@ frontend/     — React/Vite SPA (frontend-agent scope)
 docs/
   specs/      — .spec.md files (Layers 1–3, output of /specify)
   sources/    — .sources.md files (AC traceability, output of /specify)
+  clarify/    — .clarify.md files (Q&A gate, output of /clarify)
   plans/      — .plan.md files (output of /plan)
   tasks/      — .tasks.md files (output of /tasks)
   reviews/    — .checklist.md files (pre-plan gate, output of /checklist)
