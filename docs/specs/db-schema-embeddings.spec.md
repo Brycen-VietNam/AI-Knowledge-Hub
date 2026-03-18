@@ -109,7 +109,7 @@ Giải quyết ngay ở P0 để unblock rag-agent, auth-agent, api-agent.
 > Confirm hoặc /clarify trước /plan.
 
 **Non-functional**
-- CJK support: ja (MeCab), ko (KoNLPy), zh (jieba), vi (underthesea) — tokenization ở application layer
+- CJK support: ja (MeCab), ko (kiwipiepy), zh (jieba), vi (underthesea) — tokenization ở application layer
 
 ---
 
@@ -121,7 +121,7 @@ Giải quyết ngay ở P0 để unblock rag-agent, auth-agent, api-agent.
 - So that: không có per-request connection creation (C011)
 
 **Acceptance Criteria**
-- [ ] AC1: `create_async_engine` với `pool_size=10, max_overflow=10` (= effective max 20) (C011)
+- [ ] AC1: `create_async_engine` với `pool_size=5, max_overflow=15` (= effective max 20) (C011)
 - [ ] AC2: Engine khởi tạo tại `backend/db/session.py` — không gọi trong request handler
 - [ ] AC3: `AsyncSession` factory export từ `session.py` để các agent import
 - [ ] AC4: Health check query: `SELECT 1` chạy thành công qua pool khi startup
@@ -132,7 +132,7 @@ Giải quyết ngay ở P0 để unblock rag-agent, auth-agent, api-agent.
 **Implementation notes**
 - File: `backend/db/session.py`
 - Export: `async_session_factory`, `engine`
-- Pool min=5 set qua `pool_pre_ping=True` + `pool_size=5` với `max_overflow=15`
+- Pool: `pool_size=5, max_overflow=15, pool_pre_ping=True` (asyncpg driver)
 
 ---
 

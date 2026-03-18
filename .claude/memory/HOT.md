@@ -1,7 +1,7 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-03-17 | Session: #002
+Updated: 2026-03-18 | Session: #003
 
 ---
 
@@ -10,14 +10,14 @@ Goal: Build DB foundation — unblock all other agents
 Sprint end: _[date TBD]_
 
 ## In Progress (max 3)
-- [ ] db-schema-embeddings (P0) — SPECCING → next: /clarify
+- [ ] db-schema-embeddings (P0) — PLANNED → next: /tasks
 - [ ] Story: _none yet_
 - [ ] Story: _none yet_
 
 ## Recent Decisions (last 3 — oldest drops off)
-- 2026-03-18: License review — all free/OSS except LLM (multi-provider: free+paid). kiwipiepy thay KoNLPy, Valkey thay Redis
-- 2026-03-18: Backlog restructured — cjk-tokenizer + document-ingestion + llm-provider nâng lên P0 (15 features total)
-- 2026-03-17: Embedding model = multilingual-e5-large (1024 dims) — confirmed by stakeholder
+- 2026-03-18: db-schema-embeddings plan approved — 4 stories, G1(S001→S002 seq) + G2(S003∥S004), all db-agent
+- 2026-03-18: License review — all free/OSS except LLM (multi-provider). kiwipiepy thay KoNLPy, Valkey thay Redis, C015+C016 added to CONSTITUTION v1.3
+- 2026-03-18: Pool confirmed pool_size=5, max_overflow=15; asyncpg driver confirmed
 
 ## Active Blockers
 _None._
