@@ -10,7 +10,7 @@ Goal: Build DB foundation — unblock all other agents
 Sprint end: _[date TBD]_
 
 ## In Progress (max 3)
-- [ ] db-schema-embeddings (P0) — PLANNED → next: /tasks
+- [ ] db-schema-embeddings (P0) — TASKS_READY → next: /analyze S001/T001
 - [ ] Story: _none yet_
 - [ ] Story: _none yet_
 
