@@ -1,7 +1,7 @@
 # Feature Memory: db-schema-embeddings
 > Created by /specify. Updated after each SDD phase. Loaded only when working on this feature.
 
-Status: PLANNED
+Status: TASKS_READY
 Updated: 2026-03-18
 
 ---
@@ -31,12 +31,16 @@ Critical path: S001 → S002 → (S003 ∥ S004)
 Groups: G1=S001→S002 sequential; G2=S003+S004 parallel after G1
 
 ## Task Progress
-| Task | Story | Status | Agent | Notes |
-|------|-------|--------|-------|-------|
-| T001 | S001 | TODO | db-agent | Core schema migration |
-| T002 | S002 | TODO | db-agent | pgvector + HNSW index |
-| T003 | S003 | TODO | db-agent | FTS column + GIN index |
-| T004 | S004 | TODO | db-agent | session.py connection pool |
+Task files: `docs/tasks/db-schema-embeddings/S001-S004.tasks.md`
+
+| Story | Task File | Tasks | Status |
+|-------|-----------|-------|--------|
+| S001 | S001.tasks.md | T001 (migration 001), T002 (4 ORM models), T003 (__init__.py) | TODO |
+| S002 | S002.tasks.md | T001 (migration 002), T002 (embedding.py Vector col) | TODO |
+| S003 | S003.tasks.md | T001 (migration 003), T002 (document.py content_fts) | TODO |
+| S004 | S004.tasks.md | T001 (session.py), T002 (db/__init__.py) | TODO |
+
+Total atomic tasks: 9
 
 ## Files Touched
 _Updated by /sync after each implement session._
@@ -60,4 +64,17 @@ Files touched (this session):
   CONSTITUTION.md v1.2→v1.3 (C005 kiwipiepy, C015 LLM_PROVIDER, C016 Valkey, Tech Stack expanded)
   docs/backlog.md (restructured — 15 features, P0/P1/P2, dependency graph)
 Questions resolved: Q1 (asyncpg), Q2 (pool split) — all /clarify BLOCKERs resolved
+New blockers: none
+
+---
+
+## Sync: 2026-03-18 (/tasks)
+Decisions added: none
+Tasks changed: WARM task board updated — 9 atomic tasks across 4 stories
+Files touched (this session):
+  docs/tasks/db-schema-embeddings/S001.tasks.md (created — 3 tasks)
+  docs/tasks/db-schema-embeddings/S002.tasks.md (created — 2 tasks)
+  docs/tasks/db-schema-embeddings/S003.tasks.md (created — 2 tasks)
+  docs/tasks/db-schema-embeddings/S004.tasks.md (created — 2 tasks)
+Questions resolved: none
 New blockers: none
