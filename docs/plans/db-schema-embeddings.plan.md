@@ -63,10 +63,11 @@ G2 (after G1, parallel-safe):
 **Subagent dispatch**: YES
 **Est. tokens**: ~1.5k
 
-**Outputs**
-- [ ] `001_create_core_schema.sql` with rollback section
-- [ ] 4 SQLAlchemy ORM models (UserGroup, Document, Embedding, AuditLog)
-- [ ] `models/__init__.py` exporting all models
+**Outputs** — ✅ COMPLETE (2026-03-18)
+- [x] `001_create_core_schema.sql` with rollback section — REVIEWED
+- [x] 4 SQLAlchemy ORM models (UserGroup, Document, Embedding, AuditLog) — REVIEWED
+- [x] `models/__init__.py` exporting all models — REVIEWED
+- [x] `tests/db/test_models.py` — 14 tests, all pass
 
 ---
 

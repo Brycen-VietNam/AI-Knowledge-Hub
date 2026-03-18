@@ -34,13 +34,35 @@ DB tasks: always include rollback SQL
 Every task: has explicit review_criteria + test_cmd
 ```
 
+## Test Convention — TDD (MANDATORY — agreed 2026-03-18)
+```
+Follow TDD: write tests BEFORE or WITH implementation code. Never after.
+
+WRONG ❌: T001 creates code only → T002 creates tests (separate task)
+WRONG ❌: T001 creates code, test added as afterthought in same task
+RIGHT  ✅: T001 TOUCH list includes test file; /implement writes test first, then code
+
+Rules:
+- Every task TOUCH list MUST include the relevant test file
+- test_cmd MUST run pytest (not just python -c "import ...")
+- /implement order: write failing test → write code → test passes
+- test file location: tests/<agent-scope>/ (outside backend/, Docker-safe)
+  db-agent   → tests/db/
+  rag-agent  → tests/rag/
+  api-agent  → tests/api/
+  auth-agent → tests/auth/
+- SQL migration tasks: test_cmd can be psql verify (no pytest needed)
+- Exception: smoke-only tasks (e.g. __init__.py re-exports) — pytest import test acceptable
+```
+
 ## Granularity Examples
 ```
 TOO BIG ❌:  "Implement RBAC in retriever"
-RIGHT    ✅:  T001: Add user_group_ids param to HybridRetriever.__init__
-             T002: Add WHERE clause to pgvector query in retrieve()
-             T003: Add language branch for CJK tokenizer
-             T004: Write pytest for RBAC filter isolation
+WRONG   ❌:  T001: Add RBAC filter code  (no test)
+             T002: Write RBAC filter test (separate task)
+RIGHT   ✅:  T001: Add user_group_ids param to HybridRetriever.__init__ + test
+             T002: Add WHERE clause to pgvector query in retrieve() + test
+             T003: Add language branch for CJK tokenizer + test
 ```
 
 ## Parallel tagging

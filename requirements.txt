@@ -1,0 +1,9 @@
+# Knowledge-Hub — Python dependencies
+# DB layer
+sqlalchemy==2.0.48
+asyncpg==0.29.0
+pgvector==0.3.6
+
+# Testing
+pytest==8.3.5
+pytest-asyncio==0.25.3
