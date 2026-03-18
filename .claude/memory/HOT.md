@@ -15,9 +15,9 @@ Sprint end: _[date TBD]_
 - [ ] Story: _none yet_
 
 ## Recent Decisions (last 3 — oldest drops off)
+- 2026-03-18: License review — all free/OSS except LLM (multi-provider: free+paid). kiwipiepy thay KoNLPy, Valkey thay Redis
+- 2026-03-18: Backlog restructured — cjk-tokenizer + document-ingestion + llm-provider nâng lên P0 (15 features total)
 - 2026-03-17: Embedding model = multilingual-e5-large (1024 dims) — confirmed by stakeholder
-- 2026-03-17: Feature backlog created at docs/backlog.md (14 features, P0→P2)
-- 2026-03-17: db-schema-embeddings chosen as first feature to spec (P0, unblocks all agents)
 
 ## Active Blockers
 _None._
