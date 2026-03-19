@@ -49,18 +49,18 @@ def test_audit_log_tablename():
 
 # --- Column presence checks ---
 
-def test_embeddings_has_no_vector_column(engine):
-    """embedding vector(1024) must NOT exist here — added in S002 migration."""
+def test_embeddings_has_vector_column(engine):
+    """embedding vector(1024) must exist after S002/T002 ORM update."""
     inspector = inspect(engine)
     cols = [c["name"] for c in inspector.get_columns("embeddings")]
-    assert "embedding" not in cols
+    assert "embedding" in cols
 
 
-def test_documents_has_no_content_fts_column(engine):
-    """content_fts tsvector must NOT exist here — added in S003 migration."""
+def test_documents_has_content_fts_column(engine):
+    """content_fts tsvector must exist after S003/T002 ORM update."""
     inspector = inspect(engine)
     cols = [c["name"] for c in inspector.get_columns("documents")]
-    assert "content_fts" not in cols
+    assert "content_fts" in cols
 
 
 def test_embeddings_has_user_group_id(engine):

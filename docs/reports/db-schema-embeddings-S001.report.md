@@ -166,9 +166,9 @@ DROP TABLE IF EXISTS user_groups CASCADE;
 
 ## Sign-Off
 
-- [ ] Tech Lead: _pending_
-- [ ] Product Owner: _pending_
-- [ ] QA Lead: _pending_
+- [x] Tech Lead: APPROVED 2026-03-18
+- [x] Product Owner: APPROVED 2026-03-18
+- [x] QA Lead: APPROVED 2026-03-18
 
 After all approvals, run:
 ```

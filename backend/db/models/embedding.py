@@ -1,10 +1,11 @@
-# Spec: docs/specs/db-schema-embeddings.spec.md#S001
-# Task: T002 — Embedding ORM model (no Vector column yet — added in S002/T002)
-# Decision: D01 — embedding vector(1024) added after pgvector extension (migration 002)
+# Spec: docs/specs/db-schema-embeddings.spec.md#S002
+# Task: T002 — Add Vector(1024) embedding column (pgvector extension required — migration 002)
+# Decision: D01 — multilingual-e5-large, 1024 dims (confirmed by stakeholder)
 # Decision: D02 — user_group_id denormalized for RBAC WHERE clause (R001, C002)
 import uuid
 from datetime import datetime
 
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import ForeignKey, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -20,4 +21,4 @@ class Embedding(Base):
     lang: Mapped[str] = mapped_column(String(2), nullable=False)  # ISO 639-1
     user_group_id: Mapped[int] = mapped_column(nullable=False)  # denormalized, no FK (R001)
     created_at: Mapped[datetime] = mapped_column(nullable=False, server_default=func.now())
-    # embedding Vector(1024) column added in S002/T002 after pgvector extension
+    embedding: Mapped[list[float]] = mapped_column(Vector(1024), nullable=True)  # nullable: rag-agent populates post-ingestion

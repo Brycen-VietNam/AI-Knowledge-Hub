@@ -31,3 +31,8 @@ Bước 4 — Verify
 
 # Thêm vào PATH: C:\Program Files\PostgreSQL\17\bin
 psql -U postgres -d knowledge_hub_local -c "SELECT extversion FROM pg_extension WHERE extname='vector';"
+
+
+      POSTGRES_USER: kh_user
+      POSTGRES_PASSWORD: kh_dev_password
+

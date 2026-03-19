@@ -1,8 +1,8 @@
 # Feature Memory: db-schema-embeddings
 > Created by /specify. Updated after each SDD phase. Loaded only when working on this feature.
 
-Status: IN_PROGRESS (S001 — T003 remaining)
-Updated: 2026-03-18
+Status: DONE ✅ — all 4 stories complete & archived to COLD
+Updated: 2026-03-19
 
 ---
 
@@ -35,10 +35,10 @@ Task files: `docs/tasks/db-schema-embeddings/S001-S004.tasks.md`
 
 | Story | Task File | Tasks | Status |
 |-------|-----------|-------|--------|
-| S001 | S001.tasks.md | T001 ✅ T002 ✅ T002b ✅ T003 ✅ | COMPLETE |
-| S002 | S002.tasks.md | T001, T002 | TODO |
-| S003 | S003.tasks.md | T001, T002 | TODO |
-| S004 | S004.tasks.md | T001, T002 | TODO |
+| S001 | S001.tasks.md | T001 ✅ T002 ✅ T002b ✅ T003 ✅ | DONE — archived COLD |
+| S002 | S002.tasks.md | T001 ✅ T002 ✅ | DONE — archived COLD |
+| S003 | S003.tasks.md | T001 ✅ T002 ✅ | DONE — archived COLD |
+| S004 | S004.tasks.md | T001 ✅ T002 ✅ | DONE — archived COLD |
 
 Total atomic tasks: 10 (T002b added)
 

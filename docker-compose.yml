@@ -5,17 +5,19 @@ services:
     image: pgvector/pgvector:pg17
     container_name: knowledge-hub-postgres
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       POSTGRES_DB: knowledge_hub
-      POSTGRES_USER: kh_user
-      POSTGRES_PASSWORD: kh_dev_password
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/db/migrations:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kh_user -d knowledge_hub"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d knowledge_hub"]
       interval: 10s
       timeout: 5s
       retries: 5

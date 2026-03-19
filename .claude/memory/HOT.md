@@ -1,7 +1,7 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-03-18 | Session: #004
+Updated: 2026-03-19 | Session: #006
 
 ---
 
@@ -10,7 +10,7 @@ Goal: Build DB foundation — unblock all other agents
 Sprint end: _[date TBD]_
 
 ## In Progress (max 3)
-- [ ] db-schema-embeddings (P0) — S001 COMPLETE ✅ → next: S002 /implement T001 (migration 002_add_pgvector_hnsw.sql)
+- [x] db-schema-embeddings (P0) — FINALIZED ✅ archived COLD | unblocks: rag-pipeline, api-core, auth
 - [ ] Story: _none yet_
 - [ ] Story: _none yet_
 
@@ -20,7 +20,7 @@ Sprint end: _[date TBD]_
 - 2026-03-18: D05 — UserGroup.id: Identity() not autoincrement (SQL standard)
 
 ## Active Blockers
-_None._
+_None. DB foundation complete — ready for next feature._
 
 ## Subagent Status
 | Agent | Task | Status | Last updated |
