@@ -4,7 +4,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, String, Text, func
+from sqlalchemy import CHAR, ForeignKey, Text, func
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -16,9 +16,8 @@ class Document(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     title: Mapped[str] = mapped_column(nullable=False)
-    lang: Mapped[str] = mapped_column(String(2), nullable=False)  # ISO 639-1
+    lang: Mapped[str] = mapped_column(CHAR(2), nullable=False)  # ISO 639-1 — CHAR(2) matches migration 001
     user_group_id: Mapped[int] = mapped_column(ForeignKey("user_groups.id"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(nullable=False, server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(nullable=False, server_default=func.now())
-    # updated_at must be set by application layer on UPDATE (no DB trigger)
+    updated_at: Mapped[datetime] = mapped_column(nullable=False, server_default=func.now(), onupdate=func.now())
     content_fts: Mapped[str | None] = mapped_column(Text().with_variant(TSVECTOR, "postgresql"), nullable=True)  # nullable: rag-agent populates post-ingestion (D02)
