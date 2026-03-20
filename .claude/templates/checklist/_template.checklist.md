@@ -104,6 +104,11 @@ _If PARTIAL/FAIL: clarify before proceeding._
 - [ ] Integration test scenarios listed?
 - [ ] Black-box test cases (happy path + edge cases)?
 - [ ] Documentation strategy (API docs, change log)?
+- [ ] Prompt caching strategy documented? (stable prefix + dynamic suffix + cache_control if API path)
+
+Prompt caching applicability:
+- Required when feature includes LLM prompts or subagent orchestration.
+- If feature has no LLM path, mark this item as N/A with a short reason.
 
 **Verdict:**
 - [ ] PASS — All quality criteria met

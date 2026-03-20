@@ -65,6 +65,14 @@ Human must check "Yes, proceed" before /checklist can output WARN-approved resul
 - [ ] Token budget estimated in Layer 1
 - [ ] Parallel-safe stories identified
 - [ ] Subagent assignments listed
+- [ ] Prompt caching strategy documented? (stable prefix + dynamic suffix + cache_control if API path)
+
+### Prompt Caching Scoring Rule (Policy v1)
+- If feature includes LLM prompts or subagent orchestration:
+  - PASS: strategy documented with Route A (default) and Route B note (if direct Anthropic API path exists)
+  - WARN (default): strategy missing/incomplete; require WARN approval block before continuing
+  - FAIL: only when team explicitly enables strict gate for this feature
+- If feature has no LLM path: mark item as N/A with short reason
 
 ## Output
 ```markdown

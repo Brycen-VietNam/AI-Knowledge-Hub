@@ -38,6 +38,14 @@ Consumers: Web SPA, Teams bot, Slack bot (all via API).
 | /context       | HOT.md + requested WARM file              | 2k tokens  | haiku  |
 | /rules         | rules/ dir + task scope                   | 2k tokens  | haiku  |
 
+### PROMPT CACHE RULES (Policy v1)
+- Prefix must be deterministic for the same command/task class.
+- Keep stable block order and file load order fixed by command flow.
+- Put volatile data (timestamp, random id, fresh diff, ad-hoc user notes) in suffix only.
+- Route A (stable prefix) is default for all slash-command/subagent workflows.
+- Route B (`cache_control`) is optional and only for direct Anthropic API integrations.
+- Detailed playbook: `.claude/README.md` section "Prompt Caching Strategy (Anthropic-first)".
+
 ### Compression triggers (agent auto-runs /sync when)
 - Conversation exceeds 15 turns
 - Switching features mid-session
