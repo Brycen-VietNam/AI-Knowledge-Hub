@@ -1,11 +1,34 @@
 {
   "permissions": {
     "deny": [
-      "**/.env*",
-      "**/*.key",
-      "**/*.pem",
-      "**/secrets/**",
-      "**/credentials.json"
+      "Read(**/.env*)",
+      "Edit(**/.env*)",
+      "Write(**/.env*)",
+      "Read(**/*.key)",
+      "Edit(**/*.key)",
+      "Write(**/*.key)",
+      "Read(**/*.pem)",
+      "Edit(**/*.pem)",
+      "Write(**/*.pem)",
+      "Read(**/secrets/**)",
+      "Edit(**/secrets/**)",
+      "Write(**/secrets/**)",
+      "Read(**/credentials.json)",
+      "Edit(**/credentials.json)",
+      "Write(**/credentials.json)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .claude/scripts/track_tokens.py"
+          }
+        ]
+      }
     ]
   }
 }
