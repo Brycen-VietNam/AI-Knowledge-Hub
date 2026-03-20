@@ -62,9 +62,9 @@ G3 (after G2, run together):
 **Files**
 | Action | Path |
 |--------|------|
-| CREATE | src/db/migrations/00N_description.sql |
-| CREATE | src/db/models/document_embedding.py |
-| MODIFY | src/db/models/__init__.py |
+| CREATE | backend/db/migrations/00N_description.sql |
+| CREATE | backend/db/models/document_embedding.py |
+| MODIFY | backend/db/models/__init__.py |
 
 **Subagent dispatch**: YES / NO
 **Est. tokens**: ~Nk

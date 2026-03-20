@@ -23,9 +23,9 @@ Review implemented code. Post-hook of /implement. Cannot APPROVE if ❌ exists.
 ```
 
 Level selection (auto if not specified):
-- touches src/auth/ or src/rag/ → always `security`
-- touches src/api/ → `full`  
-- touches frontend/ or src/bots/ → `quick`
+- touches backend/auth/ or backend/rag/ → always `security`
+- touches backend/api/ → `full`
+- touches frontend/ or backend/bots/ → `quick`
 - --level flag overrides auto
 
 ---
@@ -97,7 +97,7 @@ Level: security | Date: 2024-01-15 | Reviewer: Claude
 
 #### ❌ BLOCKER — Must fix before merge
 - Task criterion not met: Vietnamese (vi) not handled
-  File: src/rag/retriever.py L45
+  File: backend/rag/retriever.py L45
   Fix: `elif lang == "vi": tokens = underthesea.word_tokenize(query)`
 
 #### ⚠️ WARNING — Should fix

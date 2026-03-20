@@ -53,9 +53,9 @@ Token budget total: ~18k
 ### S001: pgvector schema for embeddings
 Agent: db-agent | Parallel: G1 | Depends: none
 Files:
-  CREATE: src/db/migrations/002_embeddings.sql
-  CREATE: src/db/models/document_embedding.py
-  MODIFY: src/db/models/__init__.py
+  CREATE: backend/db/migrations/002_embeddings.sql
+  CREATE: backend/db/models/document_embedding.py
+  MODIFY: backend/db/models/__init__.py
 Est. tokens: ~2k
 Test: pytest tests/db/test_embedding_model.py
 Subagent dispatch: YES (self-contained)

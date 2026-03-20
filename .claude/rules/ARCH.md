@@ -5,9 +5,9 @@
 
 ## A001 — Agent Scope Isolation
 Each agent owns its directory. Cross-boundary calls via interfaces only.
-- db-agent: never imports from src/rag/ or src/api/
-- rag-agent: imports from src/db/ only via repository interfaces
-- api-agent: imports from src/rag/ and src/auth/ — never direct db access
+- db-agent: never imports from backend/rag/ or backend/api/
+- rag-agent: imports from backend/db/ only via repository interfaces
+- api-agent: imports from backend/rag/ and backend/auth/ — never direct db access
 
 ## A002 — Dependency Direction
 ```
@@ -19,7 +19,7 @@ No reverse dependencies. No circular imports.
 
 ## A003 — Language Detection
 Auto-detect query language. Never hardcode `lang="en"` as fallback.
-Use: langdetect or fasttext model at query entry point (src/api/routes/query.py).
+Use: langdetect or fasttext model at query entry point (backend/api/routes/query.py).
 Response language = detected query language (unless user overrides).
 
 ## A004 — Hybrid Search Weight Contract
@@ -35,6 +35,6 @@ All API errors must follow:
 Never expose stack traces or internal paths in production responses.
 
 ## A006 — Migration Strategy
-All schema changes via numbered migration files: `src/db/migrations/NNN_description.sql`
+All schema changes via numbered migration files: `backend/db/migrations/NNN_description.sql`
 Each migration must have a rollback section commented at bottom.
 ORM models updated AFTER migration file is created and reviewed.

@@ -20,12 +20,12 @@ Check work against rules. Auto-hooked into /implement (pre) and /reviewcode (pos
 ## Rule Files to Load per Task Type
 
 ```
-Task touches src/rag/     → HARD.md (R001,R005,R007) + ARCH.md (A001,A004)
-Task touches src/api/     → HARD.md (R003,R004,R006) + SECURITY.md (S001,S004)
-Task touches src/auth/    → HARD.md (R003) + SECURITY.md (all)
-Task touches src/db/      → HARD.md (R002) + ARCH.md (A006) + SECURITY.md (S001)
-Task touches frontend/    → SECURITY.md (S003) + ARCH.md (A005)
-Task touches src/bots/    → HARD.md (R003,R004) + ARCH.md (A005)
+Task touches backend/rag/     → HARD.md (R001,R005,R007) + ARCH.md (A001,A004)
+Task touches backend/api/     → HARD.md (R003,R004,R006) + SECURITY.md (S001,S004)
+Task touches backend/auth/    → HARD.md (R003) + SECURITY.md (all)
+Task touches backend/db/      → HARD.md (R002) + ARCH.md (A006) + SECURITY.md (S001)
+Task touches frontend/        → SECURITY.md (S003) + ARCH.md (A005)
+Task touches backend/bots/    → HARD.md (R003,R004) + ARCH.md (A005)
 --all flag                → all rule files
 ```
 
@@ -44,7 +44,7 @@ For each applicable rule, agent must:
 
 ```markdown
 ## Rule Check: T002 — RBAC retriever filter
-Phase: pre-implement | Scope: src/rag/retriever.py
+Phase: pre-implement | Scope: backend/rag/retriever.py
 
 ### HARD Rules
 | Rule | Description | Status | Location |
