@@ -44,7 +44,7 @@ Consumers: Web SPA, Teams bot, Slack bot (all via API).
 - Put volatile data (timestamp, random id, fresh diff, ad-hoc user notes) in suffix only.
 - Route A (stable prefix) is default for all slash-command/subagent workflows.
 - Route B (`cache_control`) is optional and only for direct Anthropic API integrations.
-- Detailed playbook: `.claude/README.md` section "Prompt Caching Strategy (Anthropic-first)".
+- Detailed playbook: `.claude/PROMPT_CACHING.md`.
 
 ### Compression triggers (agent auto-runs /sync when)
 - Conversation exceeds 15 turns
