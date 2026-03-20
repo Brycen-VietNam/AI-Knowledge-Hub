@@ -41,12 +41,19 @@ Mở project trong Claude Code → gõ `/` để thấy tất cả commands.
 
 ---
 
+## Prompt Caching
+
+See: `.claude/PROMPT_CACHING.md`
+
+---
+
 ## File Map
 
 ```
 .claude/
 ├── CLAUDE.md               ← Project context + token budget rules (load EVERY session)
 ├── AGENTS.md               ← Subagent registry + compact handoff protocol
+├── PROMPT_CACHING.md       ← Prompt caching policy and management guidelines
 │
 ├── commands/               ← Slash commands (Claude Code auto-registers these)
 │   ├── constitution.md     ← /constitution  — establish project principles
