@@ -1,5 +1,20 @@
 # /reviewcode
 
+## ⚡ PRE-FLIGHT — Model Check (BLOCKING)
+
+This command runs on **claude-opus-4-6**. Do not proceed on sonnet.
+
+If running directly:
+1. `/model claude-opus-4-6`
+2. Run `/reviewcode <task-id>`
+3. `/model claude-sonnet-4-6` — restore after review
+
+If running from orchestrator (/implement post-flight):
+→ Dispatch via Agent tool with `model: "opus"` parameter.
+→ Do NOT call /reviewcode inline — spawn as subagent.
+
+---
+
 Review implemented code. Post-hook of /implement. Cannot APPROVE if ❌ exists.
 
 ## Usage

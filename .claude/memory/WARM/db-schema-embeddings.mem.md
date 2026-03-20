@@ -1,8 +1,8 @@
 # Feature Memory: db-schema-embeddings
 > Created by /specify. Updated after each SDD phase. Loaded only when working on this feature.
 
-Status: TASKS_READY
-Updated: 2026-03-18
+Status: DONE ✅ — all 4 stories complete & archived to COLD
+Updated: 2026-03-19
 
 ---
 
@@ -35,15 +35,32 @@ Task files: `docs/tasks/db-schema-embeddings/S001-S004.tasks.md`
 
 | Story | Task File | Tasks | Status |
 |-------|-----------|-------|--------|
-| S001 | S001.tasks.md | T001 (migration 001), T002 (4 ORM models), T003 (__init__.py) | TODO |
-| S002 | S002.tasks.md | T001 (migration 002), T002 (embedding.py Vector col) | TODO |
-| S003 | S003.tasks.md | T001 (migration 003), T002 (document.py content_fts) | TODO |
-| S004 | S004.tasks.md | T001 (session.py), T002 (db/__init__.py) | TODO |
+| S001 | S001.tasks.md | T001 ✅ T002 ✅ T002b ✅ T003 ✅ | DONE — archived COLD |
+| S002 | S002.tasks.md | T001 ✅ T002 ✅ | DONE — archived COLD |
+| S003 | S003.tasks.md | T001 ✅ T002 ✅ | DONE — archived COLD |
+| S004 | S004.tasks.md | T001 ✅ T002 ✅ | DONE — archived COLD |
 
-Total atomic tasks: 9
+Total atomic tasks: 10 (T002b added)
+
+Task detail:
+- T001 migration 001_create_core_schema.sql — REVIEWED ✅
+- T002 4 ORM models (UserGroup/Document/Embedding/AuditLog) — REVIEWED ✅
+- T002b unit tests tests/db/test_models.py (13 tests) — REVIEWED ✅
+- T003 models/__init__.py — REVIEWED ✅
 
 ## Files Touched
-_Updated by /sync after each implement session._
+backend/db/migrations/001_create_core_schema.sql (created)
+backend/db/models/base.py (created)
+backend/db/models/user_group.py (created — Identity() fix applied)
+backend/db/models/document.py (created)
+backend/db/models/embedding.py (created — no Vector col yet, S002)
+backend/db/models/audit_log.py (created)
+tests/db/test_models.py (created — 13 tests, all pass)
+tests/__init__.py (created)
+tests/db/__init__.py (created)
+docs/reviews/S001-T001.review.md (created — APPROVED)
+docs/reviews/S001-T002.review.md (created — APPROVED)
+docs/reviews/S001-T002b.review.md (created — APPROVED)
 
 ## Open Questions
 _All resolved at /clarify 2026-03-18. See docs/clarify/db-schema-embeddings.clarify.md._
@@ -78,3 +95,32 @@ Files touched (this session):
   docs/tasks/db-schema-embeddings/S004.tasks.md (created — 2 tasks)
 Questions resolved: none
 New blockers: none
+
+---
+
+## Sync: 2026-03-18 (/implement S001 T001–T002b)
+Decisions added: D05 — UserGroup.id uses Identity() not autoincrement (SQL standard, aligns with GENERATED ALWAYS AS IDENTITY in migration 001)
+Tasks changed: T001→REVIEWED, T002→REVIEWED, T002b→REVIEWED (new task added), T003→TODO
+Files touched: see ## Files Touched section
+Questions resolved: none
+New blockers: none
+Note: tests/ placed outside backend/ — Python convention, Docker-safe
+
+---
+
+## Sync: 2026-03-18 (session #004 — conventions + venv)
+Decisions added:
+  D06 — TDD mandatory: test in same task TOUCH list, /implement writes test first then code
+  D07 — venv at .venv/; requirements.txt pinned: sqlalchemy=2.0.48, asyncpg=0.29.0, pgvector=0.3.6, pytest=8.3.5, pytest-asyncio=0.25.3
+Tasks changed: none (T003 still TODO)
+Files touched:
+  .venv/ (created — Python 3.12.10)
+  requirements.txt (created)
+  pytest.ini (created — asyncio_mode=auto, loop_scope=function)
+  .claude/commands/tasks.md (TDD convention added — mandatory from T003 onwards)
+  docs/tasks/db-schema-embeddings/S002.tasks.md (T002 updated — test co-located)
+  docs/tasks/db-schema-embeddings/S003.tasks.md (T002 updated — test co-located)
+  docs/tasks/db-schema-embeddings/S004.tasks.md (T001+T002 updated — test co-located)
+Questions resolved: none
+New blockers: none
+Note: VSCode must use .venv interpreter (Ctrl+Shift+P → Python: Select Interpreter → .venv\Scripts\python.exe)

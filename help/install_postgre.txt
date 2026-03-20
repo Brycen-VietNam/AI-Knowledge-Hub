@@ -1,0 +1,38 @@
+Cài PostgreSQL 17 + pgvector trên Windows
+Bước 1 — Cài PostgreSQL 17
+
+Tải installer từ: https://www.postgresql.org/download/windows/
+
+Chọn version 17.x
+Trong installer: chọn PostgreSQL Server + pgAdmin + Command Line Tools
+Default port: 5432 (đổi sang 5433 nếu Docker đang dùng 5432)
+Đặt password cho user postgres
+Bước 2 — Cài pgvector
+
+Sau khi PostgreSQL cài xong, mở PowerShell as Administrator:
+
+
+# Option A — dùng pgxn (PostgreSQL Extension Network)
+pgxn install vector
+
+# Option B — dùng installer có sẵn từ pgvector releases
+# Tải file .zip từ https://github.com/pgvector/pgvector/releases
+# Giải nén vào thư mục PostgreSQL (C:\Program Files\PostgreSQL\17\)
+
+Bước 3 — Enable extension trong DB
+
+-- Kết nối psql hoặc pgAdmin
+CREATE DATABASE knowledge_hub_local;
+\c knowledge_hub_local
+CREATE EXTENSION IF NOT EXISTS vector;
+SELECT * FROM pg_extension WHERE extname = 'vector';
+
+Bước 4 — Verify
+
+# Thêm vào PATH: C:\Program Files\PostgreSQL\17\bin
+psql -U postgres -d knowledge_hub_local -c "SELECT extversion FROM pg_extension WHERE extname='vector';"
+
+
+      POSTGRES_USER: kh_user
+      POSTGRES_PASSWORD: kh_dev_password
+

@@ -1,7 +1,7 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-03-18 | Session: #003
+Updated: 2026-03-19 | Session: #006
 
 ---
 
@@ -10,17 +10,17 @@ Goal: Build DB foundation — unblock all other agents
 Sprint end: _[date TBD]_
 
 ## In Progress (max 3)
-- [ ] db-schema-embeddings (P0) — TASKS_READY → next: /analyze S001/T001
+- [x] db-schema-embeddings (P0) — FINALIZED ✅ archived COLD | unblocks: rag-pipeline, api-core, auth
 - [ ] Story: _none yet_
 - [ ] Story: _none yet_
 
 ## Recent Decisions (last 3 — oldest drops off)
-- 2026-03-18: db-schema-embeddings plan approved — 4 stories, G1(S001→S002 seq) + G2(S003∥S004), all db-agent
-- 2026-03-18: License review — all free/OSS except LLM (multi-provider). kiwipiepy thay KoNLPy, Valkey thay Redis, C015+C016 added to CONSTITUTION v1.3
-- 2026-03-18: Pool confirmed pool_size=5, max_overflow=15; asyncpg driver confirmed
+- 2026-03-18: D06 — TDD mandatory: test written in same task as code, TOUCH list includes test file, /implement writes test first
+- 2026-03-18: D07 — venv at .venv/, requirements.txt pinned (sqlalchemy=2.0.48, asyncpg=0.29.0, pgvector=0.3.6, pytest=8.3.5)
+- 2026-03-18: D05 — UserGroup.id: Identity() not autoincrement (SQL standard)
 
 ## Active Blockers
-_None._
+_None. DB foundation complete — ready for next feature._
 
 ## Subagent Status
 | Agent | Task | Status | Last updated |

@@ -1,0 +1,14 @@
+# Environment — never commit credentials
+.env
+.env.local
+docker-compose.override.yml
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# IDE
+.vscode/settings.json
