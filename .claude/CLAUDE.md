@@ -1,7 +1,7 @@
 # Knowledge-Hub — Project Intelligence
 
 > Agent: Read this file FIRST every session. Then load `.claude/memory/HOT.md` only.
-> Do NOT load WARM/ or src/ until a specific task is assigned.
+> Do NOT load WARM/ or backend/ until a specific task is assigned.
 
 ---
 

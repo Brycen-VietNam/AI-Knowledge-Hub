@@ -41,8 +41,8 @@ SEQUENTIAL REQUIRED:
 CONTEXT: <2 sentences max about feature>
 CONSTRAINT: <2-3 HARD rules relevant to this task, from rules/HARD.md>
 TASK: <exact task title and definition, 3-5 lines>
-TOUCH: [src/path/file.py, src/path/other.py]
-NO_TOUCH: [src/auth/, src/api/routes/]
+TOUCH: [backend/path/file.py, backend/path/other.py]
+NO_TOUCH: [backend/auth/, backend/api/routes/]
 TEST_CMD: pytest tests/<path>/<test_file.py>::<test_name> -v
 MEMORY: .claude/memory/WARM/<feature>.mem.md
 RETURN: diff + test_result + memory_update_block

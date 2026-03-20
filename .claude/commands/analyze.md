@@ -28,7 +28,7 @@ deep:    include function bodies for touched files
 Depth: shallow | Files scanned: 2
 
 ### Code Map (relevant only)
-src/rag/retriever.py
+backend/rag/retriever.py
   class HybridRetriever:
     __init__(self, db, embedder, bm25)     ← add user_group_ids here
     retrieve(self, query, lang, top_k)     ← add WHERE clause here, L67
@@ -36,9 +36,9 @@ src/rag/retriever.py
     _bm25_search(self, tokens, top_k)
 
 ### Patterns to Follow
-- Auth param passing: see src/api/routes/query.py L23 — user pulled from JWT
-- pgvector query style: text().bindparams() — see src/db/repo/doc_repo.py L34
-- Logging: structured JSON via src/utils/logger.py — import get_logger
+- Auth param passing: see backend/api/routes/query.py L23 — user pulled from JWT
+- pgvector query style: text().bindparams() — see backend/db/repo/doc_repo.py L34
+- Logging: structured JSON via backend/utils/logger.py — import get_logger
 
 ### Conflicts / Gaps Found
 ⚠️  retriever.py L45: hardcoded lang="en" in BM25 path — VIOLATES R005
@@ -48,7 +48,7 @@ src/rag/retriever.py
 ### RBAC Gap
 Current: filter applied in Python AFTER pgvector returns results
 Required: WHERE user_group_id = ANY(:group_ids) inside pgvector query
-Fix location: src/rag/retriever.py L67 _dense_search()
+Fix location: backend/rag/retriever.py L67 _dense_search()
 
 ### Recommended Approach for T002
 1. Add `user_group_ids: list[str]` to retrieve() signature

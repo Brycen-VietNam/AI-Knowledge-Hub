@@ -22,4 +22,4 @@ Use Redis sliding window or FastAPI middleware.
 ## S005 — Secret Management
 Zero hardcoded secrets. All via environment variables.
 `os.getenv("DATABASE_URL")` ✅  |  `DATABASE_URL = "postgres://..."` ❌
-CI: run `grep -rn "password\|secret\|api_key" src/ --include="*.py"` as gate.
+CI: run `grep -rn "password\|secret\|api_key" backend/ --include="*.py"` as gate.

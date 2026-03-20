@@ -21,7 +21,7 @@ IF task-id:
   1. Read docs/tasks/<feature>/<task>.tasks.md → get feature name + files to touch
   2. Load HOT.md
   3. Load WARM/<feature>.mem.md
-  4. Load ONLY the lines referenced in task from src/ files
+  4. Load ONLY the lines referenced in task from backend/ files
      (e.g. task says "modify retriever.py L40-L90" → load ONLY those lines)
   5. Load relevant rules: read task type → map to rules files
      - DB task → rules/HARD.md R001,R002 + rules/ARCH.md A006
@@ -32,7 +32,7 @@ IF task-id:
 IF feature name:
   1. Load HOT.md
   2. Load WARM/<feature>.mem.md
-  3. Do NOT load src/ files (wait for task assignment)
+  3. Do NOT load backend/ files (wait for task assignment)
 ```
 
 ---
@@ -47,8 +47,8 @@ Mode: default
 ### Files in context
 - .claude/memory/HOT.md ✅
 - .claude/memory/WARM/multilingual-search.mem.md ✅
-- src/rag/retriever.py (L1-12 imports, L40-90 HybridRetriever class) ✅
-- [skipped] src/rag/bm25_indexer.py — not in task scope
+- backend/rag/retriever.py (L1-12 imports, L40-90 HybridRetriever class) ✅
+- [skipped] backend/rag/bm25_indexer.py — not in task scope
 
 ### Rules active for this task
 - HARD: R001 (RBAC before retrieval), R005 (CJK tokenization), R007 (latency)

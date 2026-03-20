@@ -37,7 +37,7 @@ Created: {{DATE}} | Agent: {{AGENT_ID}} | Status: TODO
 **Status**: TODO | IN_PROGRESS | DONE | BLOCKED
 
 **File(s)**
-- `src/<path>/<file>.py` — action: create | modify | delete
+- `backend/<path>/<file>.py` — action: create | modify | delete
 
 **Change description** (3-5 lines)
 _What exactly changes. No full implementation._

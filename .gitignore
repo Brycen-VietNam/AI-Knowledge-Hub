@@ -12,3 +12,6 @@ __pycache__/
 
 # IDE
 .vscode/settings.json
+
+# Claude Code — local logs (never commit token usage data)
+.claude/logs/
