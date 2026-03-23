@@ -1,26 +1,26 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-03-19 | Session: #006
+Updated: 2026-03-23 | Session: #008
 
 ---
 
 ## Active Sprint
-Goal: Build DB foundation — unblock all other agents
+Goal: Auth layer — unblock RBAC, document ingestion, query endpoint
 Sprint end: _[date TBD]_
 
 ## In Progress (max 3)
-- [x] db-schema-embeddings (P0) — FINALIZED ✅ archived COLD | unblocks: rag-pipeline, api-core, auth
-- [ ] Story: _none yet_
+- [x] db-schema-embeddings (P0) — FINALIZED ✅ archived COLD
+- [ ] auth-api-key-oidc (P0) — TASKS ✅ 16 tasks across 4 stories | next: /analyze S001-T001
 - [ ] Story: _none yet_
 
 ## Recent Decisions (last 3 — oldest drops off)
-- 2026-03-18: D06 — TDD mandatory: test written in same task as code, TOUCH list includes test file, /implement writes test first
-- 2026-03-18: D07 — venv at .venv/, requirements.txt pinned (sqlalchemy=2.0.48, asyncpg=0.29.0, pgvector=0.3.6, pytest=8.3.5)
-- 2026-03-18: D05 — UserGroup.id: Identity() not autoincrement (SQL standard)
+- 2026-03-23: D07 — JWT claim mapping configurable: OIDC_EMAIL_CLAIM (default "email"), OIDC_NAME_CLAIM (default "name")
+- 2026-03-23: D06 — groups claim empty/absent → user_group_ids=[], login OK (permissive, not 403)
+- 2026-03-23: D09 — API key creation = manual seed via SQL this sprint; admin endpoint deferred
 
 ## Active Blockers
-_None. DB foundation complete — ready for next feature._
+_None._
 
 ## Subagent Status
 | Agent | Task | Status | Last updated |
