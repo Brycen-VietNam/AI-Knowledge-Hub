@@ -14,13 +14,14 @@ Summarizes changes, test results, blockers, rollback plan, lessons learned.
 2. Load: docs/plans/<feature>.plan.md (for what was planned)
 3. Load: docs/tasks/<feature>/*.tasks.md (all task files, check all DONE)
 4. Load: .claude/memory/WARM/<feature>.mem.md (get decisions, blockers)
-5. Run: git diff master..HEAD --stat (code changes summary)
+5. Run: git diff develop..HEAD --stat (code changes summary)
 6. Load: test results from /implement + /reviewcode logs
 7. Compile: changes, test results, AC coverage, blockers, rollback plan
 8. Save: docs/reports/<feature>.report.md
 9. Ask: approval from tech lead + product owner
-10. If approved: move WARM file → COLD archive (feature DONE)
-11. Update: HOT.md — remove from "In Progress"
+10. If approved: move WARM file → COLD/<feature>.archive.md
+11. Add one row to COLD/README.md Archive Index (feature, completed date, stories, tests, unblocks, report path)
+12. Update: HOT.md — remove from "In Progress"
 ```
 
 ## Output Format
@@ -118,6 +119,7 @@ After all approvals, archive feature:
 /report multilingual-search --finalize
 
 → Moves: WARM/<feature>.mem.md → COLD/<feature>.archive.md
+→ Adds row to COLD/README.md Archive Index
 → Updates: HOT.md — removes from "In Progress"
 → Creates: CHANGELOG entry with deployment notes
 → Output: "Feature marked DONE. Archive: COLD/<feature>.archive.md"

@@ -17,9 +17,11 @@ from backend.db.models.audit_log import AuditLog
 @pytest.fixture(scope="module")
 def engine():
     eng = create_engine("sqlite:///:memory:")
-    Base.metadata.create_all(eng)
+    # Exclude api_keys table — ARRAY(Integer) is PostgreSQL-only, unsupported in SQLite
+    tables = [t for t in Base.metadata.sorted_tables if t.name != "api_keys"]
+    Base.metadata.create_all(eng, tables=tables)
     yield eng
-    Base.metadata.drop_all(eng)
+    Base.metadata.drop_all(eng, tables=tables)
 
 
 @pytest.fixture
@@ -120,8 +122,8 @@ def test_document_insert(session):
     assert doc.lang == "en"
 
 
-def test_audit_log_user_id_is_text(session):
-    """user_id must accept any text string (placeholder, no FK constraint)."""
+def test_audit_log_user_id_is_uuid(session):
+    """user_id must accept a UUID value (upgraded from TEXT placeholder in auth-api-key-oidc/T004)."""
     group = UserGroup(name="Ops")
     session.add(group)
     session.flush()
@@ -130,15 +132,16 @@ def test_audit_log_user_id_is_text(session):
     session.add(doc)
     session.flush()
 
+    uid = uuid.uuid4()
     log = AuditLog(
         id=uuid.uuid4(),
-        user_id="auth0|some-user-id-placeholder",
+        user_id=uid,
         doc_id=doc.id,
         query_hash="abc123",
     )
     session.add(log)
     session.flush()
-    assert log.user_id == "auth0|some-user-id-placeholder"
+    assert isinstance(log.user_id, uuid.UUID)
 
 
 # --- __init__ export check (T003) ---
