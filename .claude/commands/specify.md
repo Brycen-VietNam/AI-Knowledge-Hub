@@ -22,8 +22,8 @@ Write a detailed 2-layer spec for a feature or user story.
 4. Fill Layer 1 summary from inputs + constitution constraints
 5. Generate Layer 2 stories (ask clarify questions inline if ambiguous)
 6. Ask: source for each AC (requirement doc, email, existing behavior, business logic, conversation)
-7. Save: docs/specs/<feature-name>.spec.md (Layers 1–3 including sources)
-8. Save: docs/sources/<feature-name>.sources.md (sources traceability table)
+7. Save: docs/<feature-name>/spec/<feature-name>.spec.md (Layers 1–3 including sources)
+8. Save: docs/<feature-name>/sources/<feature-name>.sources.md (sources traceability table)
 9. Create: .claude/memory/WARM/<feature-name>.mem.md from template
 10. Update: HOT.md — add to "In Progress" if P0
 ```
@@ -46,8 +46,8 @@ Do NOT silently assume. Do NOT block on minor details.
 ## Output
 ```
 /specify complete
-  Spec:     docs/specs/multilingual-search.spec.md (Layers 1–3)
-  Sources:  docs/sources/multilingual-search.sources.md
+  Spec:     docs/multilingual-search/spec/multilingual-search.spec.md (Layers 1–3)
+  Sources:  docs/multilingual-search/sources/multilingual-search.sources.md
   Memory:   .claude/memory/WARM/multilingual-search.mem.md
   Stories:  5 | Assumptions: 2 | AC count: 12
   Next:     /clarify multilingual-search

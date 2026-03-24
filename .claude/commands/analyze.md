@@ -11,7 +11,7 @@ deep:    include function bodies for touched files
 
 ## Execution Flow
 ```
-1. Load: docs/tasks/<feature>/<story>.tasks.md — target task only
+1. Load: docs/<feature>/tasks/<story>.tasks.md — target task only
 2. Load: WARM/<feature>.mem.md — decisions + prior context
 3. Load: ONLY files in task TOUCH list
    shallow → imports + class/function signatures (L1-N per function)
@@ -19,7 +19,7 @@ deep:    include function bodies for touched files
 4. Map: what calls what, what imports what
 5. Find: existing patterns to follow
 6. Detect: conflicts, missing pieces, rule violations in current code
-7. Save: docs/tasks/<feature>/<task-id>.analysis.md
+7. Save: docs/<feature>/tasks/<task-id>.analysis.md
 ```
 
 ## Output Format
@@ -58,7 +58,7 @@ Fix location: backend/rag/retriever.py L67 _dense_search()
 
 ### Token budget
 Estimated implementation: ~2.5k tokens
-Analysis saved: docs/tasks/multilingual-search/T002.analysis.md
+Analysis saved: docs/multilingual-search/tasks/T002.analysis.md
 ```
 
 ## Agent Instructions

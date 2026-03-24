@@ -18,7 +18,7 @@ default: HOT.md + WARM/<feature> (full) + task file if task-id given
 INPUT: feature name OR task-id (e.g. "multilingual-search" or "T002")
 
 IF task-id:
-  1. Read docs/tasks/<feature>/<task>.tasks.md → get feature name + files to touch
+  1. Read docs/<feature>/tasks/<task>.tasks.md → get feature name + files to touch
   2. Load HOT.md
   3. Load WARM/<feature>.mem.md
   4. Load ONLY the lines referenced in task from backend/ files

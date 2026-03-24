@@ -10,14 +10,14 @@ Summarizes changes, test results, blockers, rollback plan, lessons learned.
 
 ## Execution Flow
 ```
-1. Load: docs/specs/<feature>.spec.md (Layer 1, for AC reference)
-2. Load: docs/plans/<feature>.plan.md (for what was planned)
-3. Load: docs/tasks/<feature>/*.tasks.md (all task files, check all DONE)
+1. Load: docs/<feature>/spec/<feature>.spec.md (Layer 1, for AC reference)
+2. Load: docs/<feature>/plan/<feature>.plan.md (for what was planned)
+3. Load: docs/<feature>/tasks/*.tasks.md (all task files, check all DONE)
 4. Load: .claude/memory/WARM/<feature>.mem.md (get decisions, blockers)
 5. Run: git diff develop..HEAD --stat (code changes summary)
 6. Load: test results from /implement + /reviewcode logs
 7. Compile: changes, test results, AC coverage, blockers, rollback plan
-8. Save: docs/reports/<feature>.report.md
+8. Save: docs/<feature>/reports/<feature>.report.md
 9. Ask: approval from tech lead + product owner
 10. If approved: move WARM file → COLD/<feature>.archive.md
 11. Add one row to COLD/README.md Archive Index (feature, completed date, stories, tests, unblocks, report path)
@@ -27,7 +27,7 @@ Summarizes changes, test results, blockers, rollback plan, lessons learned.
 ## Output Format
 
 ### Final Report File
-**Path:** `docs/reports/<feature>.report.md`
+**Path:** `docs/<feature>/reports/<feature>.report.md`
 
 **Sections:**
 - Executive Summary (status, duration, key metrics)
@@ -44,7 +44,7 @@ Summarizes changes, test results, blockers, rollback plan, lessons learned.
 ```markdown
 ## /report complete
 
-Report: docs/reports/multilingual-search.report.md
+Report: docs/multilingual-search/reports/multilingual-search.report.md
 Status: ✓ COMPLETE
 AC Coverage: 12/12 (100%)
 Test Pass Rate: 34/34 (100%)

@@ -19,11 +19,11 @@ Updated: {{DATE}}
 | D01 | | | |
 
 ## Spec
-Path: `docs/specs/{{FEATURE_NAME}}.spec.md`
+Path: `docs/{{FEATURE_NAME}}/spec/{{FEATURE_NAME}}.spec.md`
 Stories: N | Priority: P0/P1/P2
 
 ## Plan
-Path: `docs/plans/{{FEATURE_NAME}}.plan.md`
+Path: `docs/{{FEATURE_NAME}}/plan/{{FEATURE_NAME}}.plan.md`
 Critical path: S001 → S00N
 
 ## Task Progress
