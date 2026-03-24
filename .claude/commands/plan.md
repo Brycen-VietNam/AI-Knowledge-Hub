@@ -35,7 +35,7 @@ Never parallelize: auth stories + anything else
 Never parallelize: two stories touching same file
 ```
 
-## Output: docs/plans/<feature>.plan.md
+## Output: docs/<feature>/plan/<feature>.plan.md
 
 ### Layer 1 — Plan Summary
 ```markdown

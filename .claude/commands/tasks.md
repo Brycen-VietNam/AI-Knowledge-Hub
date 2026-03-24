@@ -22,7 +22,7 @@ Break plan stories into atomic, reviewable tasks. Max 50 lines per task.
 4. Break story into atomic tasks (max 50 lines each)
 5. Assign parallel/sequential tags per task
 6. Copy template: .claude/templates/tasks/_template.tasks.md
-7. Save: docs/tasks/<feature>/<story-id>.tasks.md
+7. Save: docs/<feature>/tasks/<story-id>.tasks.md
 8. Update: WARM/<feature>.mem.md — add task list + status board
 ```
 
