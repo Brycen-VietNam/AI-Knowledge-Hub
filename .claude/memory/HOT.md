@@ -1,7 +1,7 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-03-23 | Session: #008
+Updated: 2026-03-24 | Session: #011
 
 ---
 
@@ -9,15 +9,19 @@ Updated: 2026-03-23 | Session: #008
 Goal: Auth layer — unblock RBAC, document ingestion, query endpoint
 Sprint end: _[date TBD]_
 
+## Completed Features
+- auth-api-key-oidc — DONE ✅ 4 stories, 16 tasks, 51 tests, 20/20 ACs
+  Archive: `.claude/memory/COLD/auth-api-key-oidc.archive.md`
+  Report: `docs/reports/auth-api-key-oidc.report.md`
+  Unblocks: rbac-document-filter, document-ingestion, query-endpoint
+
 ## In Progress (max 3)
-- [x] db-schema-embeddings (P0) — FINALIZED ✅ archived COLD
-- [ ] auth-api-key-oidc (P0) — TASKS ✅ 16 tasks across 4 stories | next: /analyze S001-T001
-- [ ] Story: _none yet_
+_None — pick up next feature._
 
 ## Recent Decisions (last 3 — oldest drops off)
-- 2026-03-23: D07 — JWT claim mapping configurable: OIDC_EMAIL_CLAIM (default "email"), OIDC_NAME_CLAIM (default "name")
-- 2026-03-23: D06 — groups claim empty/absent → user_group_ids=[], login OK (permissive, not 403)
-- 2026-03-23: D09 — API key creation = manual seed via SQL this sprint; admin endpoint deferred
+- 2026-03-24: auth-api-key-oidc finalized — all sign-offs collected
+- 2026-03-23: D12 — AuthenticatedUser canonical home = backend/auth/types.py
+- 2026-03-23: D10 — ApiKey has no is_active; verify_api_key joins User.is_active
 
 ## Active Blockers
 _None._
@@ -30,3 +34,4 @@ _None._
 ## Next Session Start
 > When starting a new session, run: `/context <active-feature>`
 > Then check blockers above before picking up work.
+> Next candidates: rbac-document-filter, document-ingestion, query-endpoint

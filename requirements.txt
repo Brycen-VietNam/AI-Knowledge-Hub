@@ -1,8 +1,16 @@
 # Knowledge-Hub — Python dependencies
+# Web framework
+fastapi>=0.115.0
+
 # DB layer
 sqlalchemy==2.0.48
 asyncpg==0.29.0
 pgvector==0.3.6
+
+# Auth — OIDC/JWT (D03: PyJWT >= 2.8)
+PyJWT>=2.8.0
+cryptography>=42.0.0
+httpx>=0.27.0
 
 # Testing
 pytest==8.3.5

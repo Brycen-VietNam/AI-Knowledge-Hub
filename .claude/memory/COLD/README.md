@@ -16,6 +16,5 @@ Triggered automatically by `/report` when feature is APPROVED. Manual steps:
 
 | Feature | Completed | Stories | Tests | Unblocks | Report |
 |---------|-----------|---------|-------|----------|--------|
-| <!-- feature slug --> | <!-- YYYY-MM-DD --> | <!-- S001–SNNN --> | <!-- N/N --> | <!-- comma-separated --> | <!-- docs/reports/....report.md --> |
-
-<!-- Add one row per completed feature. Remove the template row above on first real entry. -->
+| db-schema-embeddings | 2026-03-19 | S001–S004 | 21/21 | auth-api-key-oidc, rbac-document-filter | docs/reports/db-schema-embeddings.report.md |
+| auth-api-key-oidc | 2026-03-24 | S001–S004 | 51/51 | rbac-document-filter, document-ingestion, query-endpoint | docs/reports/auth-api-key-oidc.report.md |
