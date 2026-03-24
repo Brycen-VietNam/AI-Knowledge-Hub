@@ -144,3 +144,66 @@ claude .
 ```
 
 Không cần config thêm gì. Tất cả đã có trong `.claude/`.
+
+---
+
+## 📁 Feature Documentation Structure (as of 2026-03-24)
+
+All feature artifacts are grouped under a single feature directory for scalability and clarity.
+
+### Pattern
+```
+docs/<feature-name>/
+  ├── spec/              # Specification (Layers 1–3)
+  │   └── <feature>.spec.md
+  ├── sources/           # AC traceability table
+  │   └── <feature>.sources.md
+  ├── clarify/           # Q&A resolution log
+  │   └── <feature>.clarify.md
+  ├── plan/              # Implementation plan
+  │   └── <feature>.plan.md
+  ├── tasks/             # Task definitions & analysis
+  │   ├── <story>.tasks.md
+  │   └── <story>.analysis.md
+  ├── reviews/           # Code reviews & checklists
+  │   ├── checklist.md
+  │   └── <story>[-<task>].review.md
+  └── reports/           # Final reports & rollback plans
+      ├── <feature>.report.md
+      └── <story>.report.md (per-story, if applicable)
+```
+
+### Example: auth-api-key-oidc
+```
+docs/auth-api-key-oidc/
+├── spec/auth-api-key-oidc.spec.md
+├── sources/auth-api-key-oidc.sources.md
+├── clarify/auth-api-key-oidc.clarify.md
+├── plan/auth-api-key-oidc.plan.md
+├── tasks/
+│   ├── S001.tasks.md
+│   ├── S001.analysis.md
+│   ├── S002.tasks.md
+│   └── ...
+├── reviews/
+│   ├── checklist.md
+│   ├── S001-T001.review.md
+│   ├── S001-T002.review.md
+│   └── ...
+└── reports/
+    ├── auth-api-key-oidc.report.md
+    └── (no per-story reports in this case)
+```
+
+### Why this structure? (as of 2026-03-24)
+- **Feature-centric:** All docs for one feature in one place
+- **Scalable:** Handles 10+ concurrent features without flat directory bloat (previously specs/, plans/, reviews/ had 100+ files each)
+- **Archive-friendly:** One feature directory = one atomic unit to move to `.claude/memory/COLD/` when done
+- **Navigation:** Jump to `docs/rbac-document-filter/` and see all artifacts for that feature
+- **Command integration:** All 10 slash commands (`/specify` through `/report`) updated to use this structure (refactor completed 2026-03-24)
+
+### Transition note
+Previously: `docs/specs/<feature>.spec.md`, `docs/plans/<feature>.plan.md`, `docs/tasks/<feature>/<story>.tasks.md`
+Now: `docs/<feature>/spec/<feature>.spec.md`, `docs/<feature>/plan/<feature>.plan.md`, `docs/<feature>/tasks/<story>.tasks.md`
+
+Existing features (db-schema-embeddings, auth-api-key-oidc) have been migrated. All new features follow this pattern automatically.
