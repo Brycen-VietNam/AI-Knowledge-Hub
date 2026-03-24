@@ -108,8 +108,10 @@ See: `.claude/PROMPT_CACHING.md`
 |-------|------|-----------|------------|
 | HOT | memory/HOT.md | Every session | /sync |
 | WARM | memory/WARM/<feature>.mem.md | Working on that feature | /sync, /specify |
-| COLD | memory/COLD/<feature>.archive.md | Explicitly requested | Manual archive |
+| COLD | memory/COLD/<feature>.archive.md ¹ | Explicitly requested | Manual archive via /report |
 | Project | CLAUDE.md | Every session | Manual (rare) |
+
+¹ COLD stays flat (not nested under feature dir). Archive index in `COLD/README.md` references completed features.
 
 ---
 
