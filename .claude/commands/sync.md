@@ -1,6 +1,6 @@
 # /sync
 
-Compress current session into persistent memory. Discard reasoning, keep decisions.
+Convert conversation into structured memory (HOT + WARM), discard reasoning, CLEAR context, and require future steps to rebuild from memory.
 
 ## Usage
 ```
