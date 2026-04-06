@@ -16,7 +16,7 @@ PRE-FLIGHT (auto, blocking):
   1. /context <task-id>              — load minimal context
   2. /rules --task <id> --phase pre  — check HARD + ARCH rules
      → If ❌ BLOCKER: STOP. Report violation. Do not write code.
-  3. Read task file: docs/tasks/<feature>/<task>.tasks.md
+  3. Read task file: docs/<feature>/tasks/<task>.tasks.md
      → Confirm: status=TODO or IN_PROGRESS (not DONE)
      → Load: review_criteria, test_cmd, touch_files
 
@@ -98,7 +98,7 @@ Proceed? (yes / adjust scope first)
 ## Memory comment in code
 Add at top of any complex function implemented:
 ```python
-# Spec: docs/specs/multilingual-search.spec.md#S002
+# Spec: docs/multilingual-search/spec/multilingual-search.spec.md#S002
 # Task: T002 — RBAC filter at retrieval
 # Decision: D001 — HNSW index, D002 — BM25 weight 0.3
 ```

@@ -10,15 +10,15 @@ Must pass before /plan is allowed to proceed.
 
 ## Execution Flow
 ```
-1. Load: docs/specs/<feature>.spec.md (Layer 1 + Layer 2)
-2. Load: docs/sources/<feature>.sources.md (check sources fully mapped)
-3. Load: docs/clarify/<feature>.clarify.md (verify no unresolved BLOCKER questions)
+1. Load: docs/<feature>/spec/<feature>.spec.md (Layer 1 + Layer 2)
+2. Load: docs/<feature>/sources/<feature>.sources.md (check sources fully mapped)
+3. Load: docs/<feature>/clarify/<feature>.clarify.md (verify no unresolved BLOCKER questions)
 4. Load: .claude/rules/HARD.md + ARCH.md + SECURITY.md + PERF.md (auto-check)
 5. Load: AGENTS.md (verify agent scope assignments)
 6. Load: CONSTITUTION.md (constraint check)
 7. Auto-fill checklist template (AC coverage, scope impact, quality criteria)
 8. For each WARN item: output formatted approval block (see WARN Approval Format)
-9. Save: docs/reviews/<feature>.checklist.md
+9. Save: docs/<feature>/reviews/checklist.md
 10. Output: PASS (proceed to /plan) | WARN (review approved) | FAIL (list blockers)
 ```
 
@@ -35,7 +35,7 @@ Human must check "Yes, proceed" before /checklist can output WARN-approved resul
 ## Checklist
 
 ### Spec Quality
-- [ ] Spec file exists at docs/specs/<feature>.spec.md
+- [ ] Spec file exists at docs/<feature>/spec/<feature>.spec.md
 - [ ] Layer 1 summary complete (all fields filled)
 - [ ] Layer 2 stories have clear AC statements (SMART criteria)
 - [ ] Layer 3 sources fully mapped (each AC traced to source)

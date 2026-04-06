@@ -92,13 +92,14 @@ backend/
   bots/       — Teams/Slack adapters (bot-agent scope)
 frontend/     — React/Vite SPA (frontend-agent scope)
 docs/
-  specs/      — .spec.md files (Layers 1–3, output of /specify)
-  sources/    — .sources.md files (AC traceability, output of /specify)
-  clarify/    — .clarify.md files (Q&A gate, output of /clarify)
-  plans/      — .plan.md files (output of /plan)
-  tasks/      — .tasks.md files (output of /tasks)
-  reviews/    — .checklist.md files (pre-plan gate, output of /checklist)
-  reports/    — .report.md files (final summary, output of /report)
+  <feature>/
+    spec/           — <feature>.spec.md (Layers 1–3, output of /specify)
+    sources/        — <feature>.sources.md (AC traceability, output of /specify)
+    clarify/        — <feature>.clarify.md (Q&A gate, output of /clarify)
+    plan/           — <feature>.plan.md (output of /plan)
+    tasks/          — <story>.tasks.md, <story>.analysis.md (output of /tasks, /analyze)
+    reviews/        — checklist.md, <story>[-<task>].review.md (output of /checklist, /reviewcode)
+    reports/        — <feature>.report.md (final summary, output of /report)
 .claude/
   memory/     — HOT.md, WARM/<feature>.mem.md, COLD/<feature>.archive.md
   commands/   — slash command definitions

@@ -39,7 +39,8 @@ Level selection (auto if not specified):
 4. Run checks at selected level
 5. Output review report
 6. Set verdict: APPROVED | CHANGES_REQUIRED | BLOCKED
-7. Save: docs/reviews/<task-id>.review.md
+7. Save: docs/<feature>/reviews/<task-id>.review.md
+   (derive <feature> from the task file path loaded earlier)
 8. If APPROVED: update task file status → REVIEWED
 ```
 
@@ -129,7 +130,7 @@ Update WARM/<feature>.mem.md:
 ```
 If CHANGES_REQUIRED:
 ```
-Create follow-up task T002-fix in docs/tasks/<feature>/
+Create follow-up task T002-fix in docs/<feature>/tasks/
   with specific fix items from ❌ blockers section
 ```
 

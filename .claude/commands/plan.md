@@ -10,16 +10,16 @@ Requires: /checklist PASS before running.
 
 ## Execution Flow
 ```
-1. Verify: docs/reviews/<feature>.checklist.md status = PASS
+1. Verify: docs/<feature>/reviews/checklist.md status = PASS
    → If not: "Run /checklist first. Checklist status: <status>"
-2. Load: docs/specs/<feature>.spec.md
+2. Load: docs/<feature>/spec/<feature>.spec.md
 3. Load: .claude/memory/HOT.md (check active sprint capacity)
 4. Load: .claude/rules/ARCH.md (agent scope rules)
 5. Generate Layer 1 plan summary
 6. Generate Layer 2 story plans (one per spec story)
 7. Identify parallel groups
 8. Assign agents per AGENTS.md registry
-9. Save: docs/plans/<feature-name>.plan.md
+9. Save: docs/<feature-name>/plan/<feature-name>.plan.md
 10. Update: WARM/<feature>.mem.md — add plan path + critical path
 ```
 
@@ -35,7 +35,7 @@ Never parallelize: auth stories + anything else
 Never parallelize: two stories touching same file
 ```
 
-## Output: docs/plans/<feature>.plan.md
+## Output: docs/<feature>/plan/<feature>.plan.md
 
 ### Layer 1 — Plan Summary
 ```markdown

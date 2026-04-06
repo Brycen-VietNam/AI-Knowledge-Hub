@@ -16,13 +16,13 @@ Break plan stories into atomic, reviewable tasks. Max 50 lines per task.
 
 ## Execution Flow
 ```
-1. Load: docs/plans/<feature>.plan.md — Layer 2 (specific story)
+1. Load: docs/<feature>/plan/<feature>.plan.md — Layer 2 (specific story)
 2. Load: WARM/<feature>.mem.md (context + decisions)
 3. Load: relevant rules files for agent scope (from CLAUDE.md budget table)
 4. Break story into atomic tasks (max 50 lines each)
 5. Assign parallel/sequential tags per task
 6. Copy template: .claude/templates/tasks/_template.tasks.md
-7. Save: docs/tasks/<feature>/<story-id>.tasks.md
+7. Save: docs/<feature>/tasks/<story-id>.tasks.md
 8. Update: WARM/<feature>.mem.md — add task list + status board
 ```
 
@@ -78,7 +78,7 @@ T004 parallel: after:T002,T003  ← needs both done
 /tasks complete
   Story: S001 | Feature: multilingual-search
   Tasks created: 4
-  File: docs/tasks/multilingual-search/S001.tasks.md
+  File: docs/multilingual-search/tasks/S001.tasks.md
   Parallel groups: G1[T001,T003], G2[T002], G3[T004]
   Est. total tokens to implement: ~6k
   Next: /analyze T001

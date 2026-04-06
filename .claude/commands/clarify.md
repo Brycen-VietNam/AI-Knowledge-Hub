@@ -10,13 +10,13 @@ Fills known answers from existing files. Flags unknowns for humans.
 
 ## Execution Flow
 ```
-1. Load: docs/specs/<feature>.spec.md (Layer 1 + Layer 2)
+1. Load: docs/<feature>/spec/<feature>.spec.md (Layer 1 + Layer 2)
 2. Load: WARM/<feature>.mem.md
 3. Load: CONSTITUTION.md (auto-answer constraint questions)
 4. Scan spec for: assumptions, missing AC, undefined terms, ambiguous behavior
 5. Classify each question: BLOCKER | SHOULD | NICE
 6. Auto-fill answers found in CONSTITUTION.md or existing specs
-7. Save: docs/clarify/<feature>.clarify.md
+7. Save: docs/<feature>/clarify/<feature>.clarify.md
 ```
 
 ## Output Format
