@@ -2,12 +2,14 @@
 # Task: T002 — import smoke test
 # Task: T003 — unit tests: OIDC path, API-key path, 0-group path
 # Task: T004 — unit tests: 401 unauthenticated, timeout 504
+# Task: T014 — updated assertions for D10 QueryResponse breaking change
 # Decision: D04 — 0-group users → 200 not 403
+# Decision: D10 — QueryResponse: results[] → answer + sources + low_confidence
 # Rule: R003 — 401 on missing auth
 # Rule: R007 — 504 on timeout
 import asyncio
 import uuid
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import FastAPI
@@ -16,6 +18,7 @@ from fastapi.testclient import TestClient
 from backend.api.routes.query import QueryResponse, router
 from backend.auth.dependencies import get_db, verify_token
 from backend.auth.types import AuthenticatedUser
+from backend.rag.llm import LLMResponse
 from backend.rag.retriever import QueryTimeoutError, RetrievedDocument
 
 
@@ -70,69 +73,83 @@ def test_imports():
 # ---------------------------------------------------------------------------
 
 def test_api_key_user_gets_own_group_docs():
-    """API-key user with group_ids=[1] gets docs from group 1 (is_public=False)."""
+    """API-key user with group_ids=[1] — D10: response has answer+sources, not results[]."""
     user = _make_user([1], auth_type="api_key")
     app = _make_app(user)
     docs = [_make_doc(1), _make_doc(1)]
+    llm_resp = LLMResponse("answer", ["doc-1", "doc-2"], 0.9, "ollama", "llama3", False)
 
     with patch("backend.api.routes.query.retrieve", new=AsyncMock(return_value=docs)), \
+         patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()):
         with TestClient(app) as client:
             resp = client.post("/v1/query", json={"query": "hello"})
 
     assert resp.status_code == 200
     body = resp.json()
-    assert body["results"].__len__() == 2
-    assert all(not r["is_public"] for r in body["results"])
+    assert "answer" in body
+    assert "sources" in body
+    assert "results" not in body  # D10: old field removed
     assert "request_id" in body
 
 
 def test_oidc_user_gets_own_group_docs():
-    """OIDC user with group_ids=[2] gets docs from group 2 (is_public=False)."""
+    """OIDC user with group_ids=[2] — D10: response has answer+sources, not results[]."""
     user = _make_user([2], auth_type="oidc")
     app = _make_app(user)
     docs = [_make_doc(2)]
+    llm_resp = LLMResponse("answer", ["doc-2"], 0.9, "ollama", "llama3", False)
 
     with patch("backend.api.routes.query.retrieve", new=AsyncMock(return_value=docs)), \
+         patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()):
         with TestClient(app) as client:
             resp = client.post("/v1/query", json={"query": "oidc test"})
 
     assert resp.status_code == 200
     body = resp.json()
-    assert len(body["results"]) == 1
-    assert not body["results"][0]["is_public"]
+    assert "answer" in body
+    assert "sources" in body
+    assert "results" not in body  # D10
 
 
 def test_zero_group_user_returns_200_not_403():
-    """0-group user gets public-only docs (is_public=True). Never 403 (D04)."""
+    """0-group user gets 200 with answer. Never 403 (D04)."""
     user = _make_user([])
     app = _make_app(user)
     docs = [_make_doc(None)]  # NULL group_id = public
+    llm_resp = LLMResponse("public answer", ["doc-pub"], 0.9, "ollama", "llama3", False)
 
     with patch("backend.api.routes.query.retrieve", new=AsyncMock(return_value=docs)), \
+         patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()):
         with TestClient(app) as client:
             resp = client.post("/v1/query", json={"query": "public query"})
 
     assert resp.status_code == 200
     body = resp.json()
-    assert len(body["results"]) == 1
-    assert body["results"][0]["is_public"] is True
+    assert body["answer"] == "public answer"
+    assert "results" not in body  # D10
 
 
-def test_query_result_with_no_docs_returns_empty_list():
-    """retrieve() returning [] → 200 with empty results list."""
+def test_query_result_with_no_docs_returns_null_answer():
+    """retrieve() returning [] → NoRelevantChunksError → 200 {answer: null} (D09)."""
     user = _make_user([1])
     app = _make_app(user)
 
+    from backend.rag.llm import NoRelevantChunksError
     with patch("backend.api.routes.query.retrieve", new=AsyncMock(return_value=[])), \
+         patch("backend.api.routes.query.generate_answer",
+               new=AsyncMock(side_effect=NoRelevantChunksError("empty"))), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()):
         with TestClient(app) as client:
             resp = client.post("/v1/query", json={"query": "no results"})
 
     assert resp.status_code == 200
-    assert resp.json()["results"] == []
+    body = resp.json()
+    assert body["answer"] is None
+    assert body["reason"] == "no_relevant_chunks"
+    assert "results" not in body  # D10
 
 
 # ---------------------------------------------------------------------------
@@ -184,11 +201,13 @@ def test_query_asyncio_timeout_returns_504():
 
 
 def test_request_id_in_response():
-    """Every response includes a non-empty request_id (A005)."""
+    """Every response includes a non-empty request_id (A005, D12)."""
     user = _make_user([1])
     app = _make_app(user)
+    llm_resp = LLMResponse("ans", [], 0.9, "ollama", "llama3", False)
 
     with patch("backend.api.routes.query.retrieve", new=AsyncMock(return_value=[])), \
+         patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()):
         with TestClient(app) as client:
             resp = client.post("/v1/query", json={"query": "test"})

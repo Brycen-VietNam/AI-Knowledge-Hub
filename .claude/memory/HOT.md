@@ -1,7 +1,7 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-06 | Session: #016
+Updated: 2026-04-06 | Session: #019
 
 ---
 
@@ -24,12 +24,12 @@ Sprint end: _[date TBD]_
   Unblocks: document-ingestion, multilingual-rag-pipeline
 
 ## In Progress (max 3)
-_None._
+- llm-provider — Phase: /reviewcode ✅ APPROVED → /report next | WARM: `.claude/memory/WARM/llm-provider.mem.md`
 
 ## Recent Decisions (last 3 — oldest drops off)
-- 2026-04-06: D11 — Dockerfile mecabrc symlink fix: `ln -s /etc/mecabrc /usr/local/etc/mecabrc` — apt-get installs to /etc but mecab-python3 looks in /usr/local/etc; fix gives 56/56 in Docker
-- 2026-04-06: cjk-tokenizer DONE ✅ — finalized, archived to COLD, sign-offs all APPROVED
-- 2026-04-06: cjk-tokenizer /report — 22/22 ACs, 56/0/0 Docker, APPROVED
+- 2026-04-06: llm-provider /reviewcode APPROVED — B001 (sync→async clients), W001–W004 fixed; all security checks pass
+- 2026-04-06: llm-provider /analyze — QueryResponse breaking change D10: results[]→answer+sources+low_confidence+reason; request_id retained (D12)
+- 2026-04-06: llm-provider /plan DONE — G3 parallel dispatch (S003∥S004); api-agent QueryResponse update post-G3
 
 ## Active Blockers
 _None._
@@ -40,5 +40,6 @@ _None._
 | — | — | — | — |
 
 ## Next Session Start
-> Next feature: `document-ingestion` or `multilingual-rag-pipeline` (both unblocked by cjk-tokenizer + rbac-document-filter)
-> Run: `/specify <next-feature>` to begin
+> Active feature: `llm-provider`
+> Phase: /report — final step
+> Review: APPROVED 2026-04-06 (docs/llm-provider/reviews/llm-provider.review.md)
