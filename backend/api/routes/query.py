@@ -1,8 +1,13 @@
 # Spec: docs/rbac-document-filter/spec/rbac-document-filter.spec.md#S005
+# Spec: docs/llm-provider/spec/llm-provider.spec.md#S005
 # Task: T002 — POST /v1/query schema + auth wire-up (stub)
 # Task: T003 — RBAC group resolution + retrieve() + audit log (full impl)
+# Task: T014 — LLM generation wire-up + D10 QueryResponse breaking change
 # Decision: D01 — user_group_id IS NULL = public document
 # Decision: D04 — 0-group users → empty/public results, not 403
+# Decision: D08 — api-agent calls generate_answer(), not LLMProviderFactory (ARCH A002)
+# Decision: D09 — NoRelevantChunksError → 200 {answer: null, reason: no_relevant_chunks}
+# Decision: D10 — QueryResponse breaking change: results[] → answer + sources + low_confidence
 # Rule: R001 — RBAC at WHERE clause (retriever layer, not here)
 # Rule: R003 — verify_token on every endpoint
 # Rule: R004 — /v1/ prefix required
@@ -22,6 +27,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.auth.dependencies import get_db, verify_token
 from backend.auth.types import AuthenticatedUser
 from backend.db.session import async_session_factory
+from backend.rag.generator import generate_answer
+from backend.rag.llm import NoRelevantChunksError
 from backend.rag.retriever import QueryTimeoutError, RetrievedDocument, retrieve
 
 
@@ -34,17 +41,13 @@ class QueryRequest(BaseModel):
     top_k: int = Field(default=10, ge=1, le=100)
 
 
-class QueryResult(BaseModel):
-    doc_id: str
-    chunk_index: int
-    score: float
-    is_public: bool
-    content: str | None = None
-
-
 class QueryResponse(BaseModel):
-    request_id: str
-    results: list[QueryResult]
+    # D10: breaking change — results[] replaced with answer + sources + low_confidence
+    request_id: str          # retained — R005 traceability (D12)
+    answer: str | None
+    sources: list[str]
+    low_confidence: bool
+    reason: str | None = None  # populated only when answer is None (D09)
 
 
 # ---------------------------------------------------------------------------
@@ -128,14 +131,33 @@ async def query_documents(
 
     background_tasks.add_task(_write_audit, user.user_id, docs, query_hash)
 
-    results = [
-        QueryResult(
-            doc_id=str(d.doc_id),
-            chunk_index=d.chunk_index,
-            score=d.score,
-            is_public=d.user_group_id is None,
-            content=d.content,
+    chunks = [d.content for d in docs if d.content is not None]
+    try:
+        llm_result = await asyncio.wait_for(
+            generate_answer(body.query, chunks),
+            timeout=1.8,
         )
-        for d in docs
-    ]
-    return QueryResponse(request_id=request_id, results=results)
+    except (TimeoutError, asyncio.TimeoutError):
+        return JSONResponse(
+            status_code=504,
+            content={"error": {
+                "code": "LLM_TIMEOUT",
+                "message": "LLM generation exceeded 1800ms SLA",
+                "request_id": request_id,
+            }},
+        )
+    except NoRelevantChunksError:
+        # D09: bot-friendly — no 4xx, return null answer with reason
+        return QueryResponse(
+            request_id=request_id,
+            answer=None,
+            sources=[],
+            low_confidence=False,
+            reason="no_relevant_chunks",
+        )
+    return QueryResponse(
+        request_id=request_id,
+        answer=llm_result.answer,
+        sources=llm_result.sources,
+        low_confidence=llm_result.low_confidence,
+    )

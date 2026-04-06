@@ -1,0 +1,10 @@
+Given the following context documents, answer the question accurately and concisely.
+Cite the source document IDs in your answer.
+
+Context:
+{context}
+
+Question:
+{question}
+
+Answer:

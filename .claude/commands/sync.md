@@ -1,6 +1,6 @@
 # /sync
 
-Compress current session into persistent memory. Discard reasoning, keep decisions.
+Convert conversation into structured memory (HOT + WARM), discard reasoning, CLEAR context, and require future steps to rebuild from memory.
 
 ## Usage
 ```
@@ -26,7 +26,8 @@ Auto-triggered when: conversation > 15 turns, switching features, before subagen
    - Any content already in WARM file
 4. Update .claude/memory/HOT.md
 5. Update .claude/memory/WARM/<feature>.mem.md if feature is active
-6. Report: turns compressed, estimated tokens freed
+6. CLEAR conversation context (hard reset)
+7. Report: turns compressed, estimated tokens freed
 ```
 
 ---
