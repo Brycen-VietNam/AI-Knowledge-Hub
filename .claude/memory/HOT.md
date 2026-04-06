@@ -1,7 +1,7 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-06 | Session: #012
+Updated: 2026-04-06 | Session: #016
 
 ---
 
@@ -18,15 +18,18 @@ Sprint end: _[date TBD]_
   Archive: `.claude/memory/COLD/rbac-document-filter.archive.md`
   Report: `docs/rbac-document-filter/reports/rbac-document-filter.report.md`
   Unblocks: document-ingestion, multilingual-rag-pipeline, query-endpoint
+- cjk-tokenizer — DONE ✅ 4 stories, 22 ACs, **56/0/0 Docker** — approved 2026-04-06
+  Archive: `.claude/memory/COLD/cjk-tokenizer.archive.md`
+  Report: `docs/cjk-tokenizer/reports/cjk-tokenizer.report.md`
+  Unblocks: document-ingestion, multilingual-rag-pipeline
 
 ## In Progress (max 3)
-_None. Next candidates: document-ingestion, multilingual-rag-pipeline, query-endpoint_
+_None._
 
 ## Recent Decisions (last 3 — oldest drops off)
-- 2026-04-06: rbac-document-filter finalized — approved lb_mui, archived WARM→COLD
-- 2026-04-03: rbac-document-filter plan complete — G1(S001)→G2(S002)→G3(S003∥S004)→G4(S005)
-- 2026-03-24: auth-api-key-oidc finalized — all sign-offs collected
-- 2026-03-23: D10 — ApiKey has no is_active; verify_api_key joins User.is_active
+- 2026-04-06: D11 — Dockerfile mecabrc symlink fix: `ln -s /etc/mecabrc /usr/local/etc/mecabrc` — apt-get installs to /etc but mecab-python3 looks in /usr/local/etc; fix gives 56/56 in Docker
+- 2026-04-06: cjk-tokenizer DONE ✅ — finalized, archived to COLD, sign-offs all APPROVED
+- 2026-04-06: cjk-tokenizer /report — 22/22 ACs, 56/0/0 Docker, APPROVED
 
 ## Active Blockers
 _None._
@@ -37,6 +40,5 @@ _None._
 | — | — | — | — |
 
 ## Next Session Start
-> When starting a new session, run: `/context <active-feature>`
-> Then check blockers above before picking up work.
-> Next candidates: rbac-document-filter, document-ingestion, query-endpoint
+> Next feature: `document-ingestion` or `multilingual-rag-pipeline` (both unblocked by cjk-tokenizer + rbac-document-filter)
+> Run: `/specify <next-feature>` to begin
