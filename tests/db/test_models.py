@@ -158,3 +158,52 @@ def test_models_init_exports():
     assert Doc.__tablename__ == "documents"
     assert Emb.__tablename__ == "embeddings"
     assert AL.__tablename__ == "audit_logs"
+
+
+# Spec: docs/rbac-document-filter/spec/rbac-document-filter.spec.md#S004
+# Task: T002 — NULL-acceptance tests for nullable user_group_id (AC1-AC4)
+# Decision: D01 — user_group_id IS NULL = public document
+
+def test_document_user_group_id_accepts_null(session):
+    """AC3: Document.user_group_id must accept NULL (public document, D01)."""
+    doc = Document(
+        id=uuid.uuid4(),
+        title="Public Doc",
+        lang="en",
+        user_group_id=None,
+    )
+    session.add(doc)
+    session.flush()
+    assert doc.user_group_id is None
+
+
+def test_embedding_user_group_id_accepts_null(session):
+    """AC3: Embedding.user_group_id must accept NULL (public embedding, D01)."""
+    doc = Document(id=uuid.uuid4(), title="Public Doc 2", lang="en", user_group_id=None)
+    session.add(doc)
+    session.flush()
+
+    emb = Embedding(
+        id=uuid.uuid4(),
+        doc_id=doc.id,
+        chunk_index=0,
+        lang="en",
+        user_group_id=None,
+    )
+    session.add(emb)
+    session.flush()
+    assert emb.user_group_id is None
+
+
+def test_documents_user_group_id_is_nullable(engine):
+    """AC1: user_group_id on documents must be nullable after migration 005."""
+    inspector = inspect(engine)
+    cols = {c["name"]: c for c in inspector.get_columns("documents")}
+    assert cols["user_group_id"]["nullable"] is True
+
+
+def test_embeddings_user_group_id_is_nullable(engine):
+    """AC2: user_group_id on embeddings must be nullable after migration 005."""
+    inspector = inspect(engine)
+    cols = {c["name"]: c for c in inspector.get_columns("embeddings")}
+    assert cols["user_group_id"]["nullable"] is True

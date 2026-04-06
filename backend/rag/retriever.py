@@ -1,0 +1,144 @@
+# Spec: docs/rbac-document-filter/spec/rbac-document-filter.spec.md#S002
+# Task: T001 — scaffold RetrievedDocument dataclass + retrieve() stub
+# Task: T002 — _dense_search() pgvector RBAC WHERE clause
+# Task: T003 — _bm25_search() tsvector RBAC WHERE clause
+# Task: T004 — retrieve() hybrid merge + asyncio.wait_for timeout wrapper
+# Decision: D01 — user_group_id IS NULL = public document
+# Decision: D02 — dense filter on embeddings, BM25 filter on documents
+import asyncio
+import os
+import uuid
+from dataclasses import dataclass
+
+from sqlalchemy import bindparam, text
+
+RAG_DENSE_WEIGHT = float(os.getenv("RAG_DENSE_WEIGHT", "0.7"))
+RAG_BM25_WEIGHT = float(os.getenv("RAG_BM25_WEIGHT", "0.3"))
+
+
+class QueryTimeoutError(Exception):
+    """Raised when retrieval exceeds the 1800ms SLA (R007/P001)."""
+
+
+@dataclass
+class RetrievedDocument:
+    doc_id: uuid.UUID
+    chunk_index: int
+    score: float
+    user_group_id: int | None   # None = public document
+    content: str | None = None
+
+
+async def _dense_search(
+    session,
+    query_embedding: list[float],
+    user_group_ids: list[int],
+    top_k: int,
+) -> list["RetrievedDocument"]:
+    # Task: T002 — dense RBAC filter on embeddings.user_group_id (D02)
+    # R001: WHERE clause applied BEFORE ORDER BY / LIMIT — never post-query Python filter
+    # S001: text().bindparams() — zero f-string SQL interpolation
+    sql = text("""
+        SELECT e.doc_id, e.chunk_index, e.user_group_id,
+               e.embedding <-> cast(:query_vec AS vector) AS distance
+        FROM embeddings e
+        WHERE (e.user_group_id = ANY(:group_ids) OR e.user_group_id IS NULL)
+        ORDER BY distance
+        LIMIT :top_k
+    """).bindparams(
+        bindparam("query_vec", value=str(query_embedding)),
+        bindparam("group_ids", value=user_group_ids),
+        bindparam("top_k", value=top_k),
+    )
+    rows = await session.execute(sql)
+    return [
+        RetrievedDocument(
+            doc_id=r.doc_id,
+            chunk_index=r.chunk_index,
+            score=1.0 - r.distance,
+            user_group_id=r.user_group_id,
+        )
+        for r in rows
+    ]
+
+
+async def _bm25_search(
+    session,
+    bm25_query: str,
+    user_group_ids: list[int],
+    top_k: int,
+) -> list["RetrievedDocument"]:
+    # Task: T003 — BM25 RBAC filter on documents.user_group_id (D02)
+    # R001: WHERE clause applied BEFORE ORDER BY / LIMIT
+    # S001: text().bindparams() — zero f-string SQL interpolation
+    sql = text("""
+        SELECT d.id AS doc_id, 0 AS chunk_index, d.user_group_id,
+               ts_rank(d.content_fts, to_tsquery('simple', :query)) AS rank
+        FROM documents d
+        WHERE (d.user_group_id = ANY(:group_ids) OR d.user_group_id IS NULL)
+          AND d.content_fts @@ to_tsquery('simple', :query)
+        ORDER BY rank DESC
+        LIMIT :top_k
+    """).bindparams(
+        bindparam("query", value=bm25_query),
+        bindparam("group_ids", value=user_group_ids),
+        bindparam("top_k", value=top_k),
+    )
+    rows = await session.execute(sql)
+    return [
+        RetrievedDocument(
+            doc_id=r.doc_id,
+            chunk_index=r.chunk_index,
+            score=float(r.rank),
+            user_group_id=r.user_group_id,
+        )
+        for r in rows
+    ]
+
+
+def _merge(
+    dense: list[RetrievedDocument],
+    bm25: list[RetrievedDocument],
+    top_k: int,
+) -> list[RetrievedDocument]:
+    # Task: T004 — weighted score merge + dedup by doc_id (A004)
+    scores: dict[uuid.UUID, float] = {}
+    for doc in dense:
+        scores[doc.doc_id] = scores.get(doc.doc_id, 0.0) + RAG_DENSE_WEIGHT * doc.score
+    for doc in bm25:
+        scores[doc.doc_id] = scores.get(doc.doc_id, 0.0) + RAG_BM25_WEIGHT * doc.score
+    ranked = sorted(scores, key=scores.__getitem__, reverse=True)[:top_k]
+    all_docs = {d.doc_id: d for d in dense + bm25}
+    return [
+        RetrievedDocument(**{**vars(all_docs[did]), "score": scores[did]})
+        for did in ranked
+    ]
+
+
+async def retrieve(
+    query_embedding: list[float],
+    user_group_ids: list[int],   # [] = public-only mode
+    top_k: int = 10,
+    *,
+    session,                     # AsyncSession — injected by caller
+    bm25_query: str | None = None,
+) -> list[RetrievedDocument]:
+    # Spec: docs/rbac-document-filter/spec/rbac-document-filter.spec.md#S002
+    # Task: T004 — hybrid merge, concurrent gather, timeout wrapper
+    # Decision: D02 — dense filter on embeddings, BM25 filter on documents
+
+    async def _inner() -> list[RetrievedDocument]:
+        if bm25_query:
+            dense, bm25 = await asyncio.gather(
+                _dense_search(session, query_embedding, user_group_ids, top_k),
+                _bm25_search(session, bm25_query, user_group_ids, top_k),
+            )
+        else:
+            dense = await _dense_search(session, query_embedding, user_group_ids, top_k)
+            bm25 = []
+        return _merge(dense, bm25, top_k)
+
+    try:
+        return await asyncio.wait_for(_inner(), timeout=1.8)
+    except asyncio.TimeoutError:
+        raise QueryTimeoutError("retrieval exceeded 1800ms SLA")
