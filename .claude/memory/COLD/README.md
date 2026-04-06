@@ -18,3 +18,4 @@ Triggered automatically by `/report` when feature is APPROVED. Manual steps:
 |---------|-----------|---------|-------|----------|--------|
 | db-schema-embeddings | 2026-03-19 | S001–S004 | 21/21 | auth-api-key-oidc, rbac-document-filter | docs/reports/db-schema-embeddings.report.md |
 | auth-api-key-oidc | 2026-03-24 | S001–S004 | 51/51 | rbac-document-filter, document-ingestion, query-endpoint | docs/reports/auth-api-key-oidc.report.md |
+| rbac-document-filter | 2026-04-06 | S001–S005 | 41 AC / all PASS | document-ingestion, multilingual-rag-pipeline, query-endpoint | docs/rbac-document-filter/reports/rbac-document-filter.report.md |
