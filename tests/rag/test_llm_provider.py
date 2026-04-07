@@ -147,7 +147,7 @@ class TestAdapters:
         mock_completion.choices[0].message.content = "Answer text"
         mock_completion.choices[0].logprobs = None
         openai_mock = MagicMock()
-        openai_mock.OpenAI.return_value.chat.completions.create.return_value = mock_completion
+        openai_mock.AsyncOpenAI.return_value.chat.completions.create = AsyncMock(return_value=mock_completion)
         with patch.dict("sys.modules", {"openai": openai_mock}):
             from backend.rag.llm import openai as _openai_mod
             import importlib
@@ -166,7 +166,7 @@ class TestAdapters:
     async def test_openai_api_error_raises_llm_error(self, monkeypatch):
         monkeypatch.setenv("OPENAI_API_KEY", "bad")
         openai_mock = MagicMock()
-        openai_mock.OpenAI.return_value.chat.completions.create.side_effect = Exception("auth")
+        openai_mock.AsyncOpenAI.return_value.chat.completions.create = AsyncMock(side_effect=Exception("auth"))
         with patch.dict("sys.modules", {"openai": openai_mock}):
             from backend.rag.llm import openai as _openai_mod
             import importlib
@@ -183,7 +183,7 @@ class TestAdapters:
         mock_msg = MagicMock()
         mock_msg.content[0].text = "Claude answer"
         anthropic_mock = MagicMock()
-        anthropic_mock.Anthropic.return_value.messages.create.return_value = mock_msg
+        anthropic_mock.AsyncAnthropic.return_value.messages.create = AsyncMock(return_value=mock_msg)
         with patch.dict("sys.modules", {"anthropic": anthropic_mock}):
             from backend.rag.llm import claude as _claude_mod
             import importlib
@@ -203,7 +203,7 @@ class TestAdapters:
     async def test_claude_api_error_raises_llm_error(self, monkeypatch):
         monkeypatch.setenv("ANTHROPIC_API_KEY", "bad")
         anthropic_mock = MagicMock()
-        anthropic_mock.Anthropic.return_value.messages.create.side_effect = Exception("rate limit")
+        anthropic_mock.AsyncAnthropic.return_value.messages.create = AsyncMock(side_effect=Exception("rate limit"))
         with patch.dict("sys.modules", {"anthropic": anthropic_mock}):
             from backend.rag.llm import claude as _claude_mod
             import importlib

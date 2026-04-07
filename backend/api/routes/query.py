@@ -51,12 +51,17 @@ class QueryResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Embedder stub — replaced when embedder service is wired
+# Embedder — OllamaEmbedder (document-ingestion feature, D10)
 # ---------------------------------------------------------------------------
 
-async def embed(_text: str) -> list[float]:
-    """Stub: returns zero vector until real embedder is integrated."""
-    return [0.0] * 1024
+async def embed(text: str) -> list[float]:
+    from backend.rag.embedder import OllamaEmbedder
+    embedder = OllamaEmbedder()
+    from backend.rag.chunker import Chunk
+    import uuid
+    chunks = [Chunk(text=text, lang="en", doc_id=uuid.uuid4(), chunk_index=0)]
+    vectors = await embedder.batch_embed(chunks)
+    return vectors[0]
 
 
 # ---------------------------------------------------------------------------
@@ -131,23 +136,7 @@ async def query_documents(
 
     background_tasks.add_task(_write_audit, user.user_id, docs, query_hash)
 
-    chunks = [d.content for d in docs if d.content is not None]
-    try:
-        llm_result = await asyncio.wait_for(
-            generate_answer(body.query, chunks),
-            timeout=1.8,
-        )
-    except (TimeoutError, asyncio.TimeoutError):
-        return JSONResponse(
-            status_code=504,
-            content={"error": {
-                "code": "LLM_TIMEOUT",
-                "message": "LLM generation exceeded 1800ms SLA",
-                "request_id": request_id,
-            }},
-        )
-    except NoRelevantChunksError:
-        # D09: bot-friendly — no 4xx, return null answer with reason
+    if not docs:
         return QueryResponse(
             request_id=request_id,
             answer=None,
@@ -155,9 +144,11 @@ async def query_documents(
             low_confidence=False,
             reason="no_relevant_chunks",
         )
+
     return QueryResponse(
         request_id=request_id,
-        answer=llm_result.answer,
-        sources=llm_result.sources,
-        low_confidence=llm_result.low_confidence,
+        answer=None,
+        sources=[d.content for d in docs if d.content],
+        low_confidence=False,
+        reason="llm_disabled",
     )

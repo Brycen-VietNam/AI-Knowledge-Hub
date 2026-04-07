@@ -1,6 +1,7 @@
 # Knowledge-Hub — Python dependencies
 # Web framework
 fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
 
 # DB layer
 sqlalchemy==2.0.48

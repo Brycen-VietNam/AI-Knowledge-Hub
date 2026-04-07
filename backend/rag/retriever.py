@@ -39,7 +39,7 @@ async def _dense_search(
     # R001: WHERE clause applied BEFORE ORDER BY / LIMIT — never post-query Python filter
     # S001: text().bindparams() — zero f-string SQL interpolation
     sql = text("""
-        SELECT e.doc_id, e.chunk_index, e.user_group_id,
+        SELECT e.doc_id, e.chunk_index, e.user_group_id, e.text,
                e.embedding <-> cast(:query_vec AS vector) AS distance
         FROM embeddings e
         WHERE (e.user_group_id = ANY(:group_ids) OR e.user_group_id IS NULL)
@@ -57,6 +57,7 @@ async def _dense_search(
             chunk_index=r.chunk_index,
             score=1.0 - r.distance,
             user_group_id=r.user_group_id,
+            content=r.text,
         )
         for r in rows
     ]

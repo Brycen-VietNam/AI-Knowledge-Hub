@@ -53,6 +53,6 @@ async def verify_api_key(request: "Request", db: AsyncSession) -> AuthenticatedU
 
 
 def _now():
-    """Return current UTC datetime — extracted for testability."""
+    """Return current UTC datetime as naive — column is TIMESTAMP WITHOUT TIME ZONE."""
     from datetime import datetime, timezone
-    return datetime.now(timezone.utc)
+    return datetime.now(timezone.utc).replace(tzinfo=None)

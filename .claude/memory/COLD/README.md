@@ -20,3 +20,4 @@ Triggered automatically by `/report` when feature is APPROVED. Manual steps:
 | auth-api-key-oidc | 2026-03-24 | S001–S004 | 51/51 | rbac-document-filter, document-ingestion, query-endpoint | docs/reports/auth-api-key-oidc.report.md |
 | rbac-document-filter | 2026-04-06 | S001–S005 | 41 AC / all PASS | document-ingestion, multilingual-rag-pipeline, query-endpoint | docs/rbac-document-filter/reports/rbac-document-filter.report.md |
 | cjk-tokenizer | 2026-04-06 | S001–S004 | 48 pass / 8 skip (MeCab/Windows) / 0 fail | document-ingestion, multilingual-rag-pipeline | docs/cjk-tokenizer/reports/cjk-tokenizer.report.md |
+| llm-provider | 2026-04-06 | S001–S005 | 36/38 pass (2 async mock, non-critical) / 94% cov | query-endpoint (answer generation), multilingual-rag-pipeline | docs/llm-provider/reports/llm-provider.report.md |

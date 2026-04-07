@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Optional
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import CHAR, ForeignKey, func
+from sqlalchemy import CHAR, ForeignKey, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
@@ -22,4 +22,5 @@ class Embedding(Base):
     lang: Mapped[str] = mapped_column(CHAR(2), nullable=False)  # ISO 639-1 — CHAR(2) matches migration 001
     user_group_id: Mapped[Optional[int]] = mapped_column(nullable=True)  # denormalized, no FK (R001) — NULL = public (D01)
     created_at: Mapped[datetime] = mapped_column(nullable=False, server_default=func.now())
+    text: Mapped[str] = mapped_column(Text(), nullable=False)  # D11: chunk text for RAG retrieval
     embedding: Mapped[list[float]] = mapped_column(Vector(1024), nullable=True)  # nullable: rag-agent populates post-ingestion
