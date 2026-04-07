@@ -1,11 +1,11 @@
 ---
-name: llm-provider WARM memory
-description: Active WARM memory for llm-provider feature — multi-provider LLM adapter (ollama/openai/claude)
+name: llm-provider archive
+description: Completed feature archive — multi-provider LLM adapter (ollama/openai/claude) for /v1/query answer generation
 type: project
 ---
 
-# WARM Memory: llm-provider
-Created: 2026-04-06 | Status: REVIEWED ✅ | Phase: /reviewcode ✅ — ready for /report
+# COLD Archive: llm-provider
+Created: 2026-04-06 | Status: DONE ✅ FINALIZED 2026-04-06 | Phase: /report ✅ — archived
 
 ---
 

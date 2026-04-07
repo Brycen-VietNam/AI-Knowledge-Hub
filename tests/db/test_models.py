@@ -188,6 +188,7 @@ def test_embedding_user_group_id_accepts_null(session):
         doc_id=doc.id,
         chunk_index=0,
         lang="en",
+        text="chunk text",  # D11: required NOT NULL field
         user_group_id=None,
     )
     session.add(emb)

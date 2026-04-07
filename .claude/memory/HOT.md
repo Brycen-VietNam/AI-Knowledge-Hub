@@ -1,7 +1,7 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-06 | Session: #019
+Updated: 2026-04-07 | Session: #026
 
 ---
 
@@ -22,14 +22,18 @@ Sprint end: _[date TBD]_
   Archive: `.claude/memory/COLD/cjk-tokenizer.archive.md`
   Report: `docs/cjk-tokenizer/reports/cjk-tokenizer.report.md`
   Unblocks: document-ingestion, multilingual-rag-pipeline
+- llm-provider — DONE ✅ 5 stories, 22 ACs, 36/38 pass (94% cov) — finalized 2026-04-06
+  Archive: `.claude/memory/COLD/llm-provider.archive.md`
+  Report: `docs/llm-provider/reports/llm-provider.report.md`
+  Unblocks: query-endpoint (answer generation), multilingual-rag-pipeline
 
 ## In Progress (max 3)
-- llm-provider — Phase: /reviewcode ✅ APPROVED → /report next | WARM: `.claude/memory/WARM/llm-provider.mem.md`
+- document-ingestion — warnings fixed 2026-04-07 (W1+W2+W3 resolved) → next: /report
 
 ## Recent Decisions (last 3 — oldest drops off)
-- 2026-04-06: llm-provider /reviewcode APPROVED — B001 (sync→async clients), W001–W004 fixed; all security checks pass
-- 2026-04-06: llm-provider /analyze — QueryResponse breaking change D10: results[]→answer+sources+low_confidence+reason; request_id retained (D12)
-- 2026-04-06: llm-provider /plan DONE — G3 parallel dispatch (S003∥S004); api-agent QueryResponse update post-G3
+- 2026-04-07: D12 — /reviewcode APPROVED after fixes: W1 removed double verify_token (all 4 routes), W2 added httpx timeout=10.0, W3 removed hardcoded "en" fallback (LanguageDetectionError now propagates, A003 compliant)
+- 2026-04-07: D11 — raw content NOT stored in documents table (DB bloat); chunk text in embeddings.text TEXT NOT NULL; migration 006 covers both documents.status + embeddings.text
+- 2026-04-07: document-ingestion /implement DONE — 61 new tests, 230 pass, 9 pre-existing fails
 
 ## Active Blockers
 _None._
@@ -40,6 +44,6 @@ _None._
 | — | — | — | — |
 
 ## Next Session Start
-> Active feature: `llm-provider`
-> Phase: /report — final step
-> Review: APPROVED 2026-04-06 (docs/llm-provider/reviews/llm-provider.review.md)
+> Active: document-ingestion — all warnings fixed, ready for /report
+> WARM: `.claude/memory/WARM/document-ingestion.mem.md`
+> Review: `docs/document-ingestion/reviews/document-ingestion.review.md`
