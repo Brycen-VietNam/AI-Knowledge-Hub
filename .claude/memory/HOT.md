@@ -1,7 +1,7 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-07 | Session: #026
+Updated: 2026-04-08 | Session: #027
 
 ---
 
@@ -26,14 +26,18 @@ Sprint end: _[date TBD]_
   Archive: `.claude/memory/COLD/llm-provider.archive.md`
   Report: `docs/llm-provider/reports/llm-provider.report.md`
   Unblocks: query-endpoint (answer generation), multilingual-rag-pipeline
+- document-ingestion — DONE ✅ 5 stories, 22 ACs, 61 new tests / 230 pass — approved by lb_mui 2026-04-08
+  Archive: `.claude/memory/COLD/document-ingestion.archive.md`
+  Report: `docs/document-ingestion/reports/document-ingestion.report.md`
+  Unblocks: query-endpoint, multilingual-rag-pipeline
 
 ## In Progress (max 3)
-- document-ingestion — warnings fixed 2026-04-07 (W1+W2+W3 resolved) → next: /report
+_None._
 
 ## Recent Decisions (last 3 — oldest drops off)
+- 2026-04-08: document-ingestion FINALIZED — lb_mui approved, WARM archived to COLD, feature DONE
 - 2026-04-07: D12 — /reviewcode APPROVED after fixes: W1 removed double verify_token (all 4 routes), W2 added httpx timeout=10.0, W3 removed hardcoded "en" fallback (LanguageDetectionError now propagates, A003 compliant)
 - 2026-04-07: D11 — raw content NOT stored in documents table (DB bloat); chunk text in embeddings.text TEXT NOT NULL; migration 006 covers both documents.status + embeddings.text
-- 2026-04-07: document-ingestion /implement DONE — 61 new tests, 230 pass, 9 pre-existing fails
 
 ## Active Blockers
 _None._
@@ -44,6 +48,4 @@ _None._
 | — | — | — | — |
 
 ## Next Session Start
-> Active: document-ingestion — all warnings fixed, ready for /report
-> WARM: `.claude/memory/WARM/document-ingestion.mem.md`
-> Review: `docs/document-ingestion/reviews/document-ingestion.review.md`
+> No active feature. Next up: query-endpoint or multilingual-rag-pipeline (both unblocked by document-ingestion).
