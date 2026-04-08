@@ -107,3 +107,20 @@ Tasks: /analyze→DONE (4 stories, 7 tasks, 0 conflicts detected)
 Files: S002–S005.analysis.md created
 Confidence: All rules (R001, R005, R007, A001–A003) validated ✅
 Next: /implement G1 (S002 ∥ S003) or proceed directly to S002-T001
+
+## Sync: 2026-04-08 (session #032)
+Decisions applied: D1–D4 (no new)
+Tasks: /implement S005 COMPLETE
+  - T001 (integration tests) — DONE ✅ (already in test_search.py:189–236)
+  - T002 (coverage ≥80%) — DONE ✅ (100% achieved: 27/27 statements)
+  - All 24 ACs satisfied
+  - S002, S003, S004 previously DONE
+Files touched: 
+  - S005.tasks.md updated (status TODO→DONE)
+  - multilingual-rag-pipeline.report.md created
+  - HOT.md updated (feature moved to Completed)
+Commits: ee096db (S005 implementation), e663f72 (report)
+Test results: 15 PASS, 1 SKIP (MeCab), 0 FAIL | Coverage: 100%
+Rules: Pre-flight ✅, Post-flight ✅ (all HARD/ARCH rules satisfied)
+Blockers: None — feature complete, query-endpoint unblocked
+Next: /specify query-endpoint
