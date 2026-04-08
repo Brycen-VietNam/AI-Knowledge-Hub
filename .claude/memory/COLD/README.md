@@ -21,3 +21,4 @@ Triggered automatically by `/report` when feature is APPROVED. Manual steps:
 | rbac-document-filter | 2026-04-06 | S001–S005 | 41 AC / all PASS | document-ingestion, multilingual-rag-pipeline, query-endpoint | docs/rbac-document-filter/reports/rbac-document-filter.report.md |
 | cjk-tokenizer | 2026-04-06 | S001–S004 | 48 pass / 8 skip (MeCab/Windows) / 0 fail | document-ingestion, multilingual-rag-pipeline | docs/cjk-tokenizer/reports/cjk-tokenizer.report.md |
 | llm-provider | 2026-04-06 | S001–S005 | 36/38 pass (2 async mock, non-critical) / 94% cov | query-endpoint (answer generation), multilingual-rag-pipeline | docs/llm-provider/reports/llm-provider.report.md |
+| document-ingestion | 2026-04-08 | S001–S005 (split: db+api) | 61 new / 230 total pass / 22 AC PASS | query-endpoint, multilingual-rag-pipeline | docs/document-ingestion/reports/document-ingestion.report.md |

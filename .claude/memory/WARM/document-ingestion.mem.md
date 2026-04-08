@@ -1,5 +1,5 @@
 # WARM Memory: document-ingestion
-Created: 2026-04-06 | Status: REVIEW_APPROVED | Phase: /reviewcode DONE 2026-04-07 → next: /report
+Created: 2026-04-06 | Status: DONE ✅ | Phase: FINALIZED 2026-04-08 → archived to COLD
 
 ---
 
@@ -57,4 +57,4 @@ POST /v1/documents ingestion pipeline — upload JSON text, chunk, batch embed, 
 - [x] /analyze — DONE 2026-04-07 → `docs/document-ingestion/tasks/all-stories.analysis.md`
 - [x] /implement — DONE 2026-04-07 → 61 new tests, 230 pass, 9 pre-existing fails
 - [x] /reviewcode — APPROVED 2026-04-07 (3 warnings fixed: W1 double verify_token, W2 httpx timeout=10.0, W3 A003 compliant)
-- [ ] /report
+- [x] /report — DONE 2026-04-08 → FINALIZED, archived to COLD
