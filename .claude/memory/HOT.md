@@ -1,7 +1,7 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-08 | Session: #027
+Updated: 2026-04-08 | Session: #029
 
 ---
 
@@ -30,17 +30,21 @@ Sprint end: _[date TBD]_
   Archive: `.claude/memory/COLD/document-ingestion.archive.md`
   Report: `docs/document-ingestion/reports/document-ingestion.report.md`
   Unblocks: query-endpoint, multilingual-rag-pipeline
+- multilingual-rag-pipeline — DONE ✅ 4 stories (S002–S005), 7 tasks, 24 ACs, 100% coverage (15 pass, 1 skip)
+  Archive: `.claude/memory/COLD/multilingual-rag-pipeline.archive.md`
+  Report: `docs/multilingual-rag-pipeline/reports/multilingual-rag-pipeline.report.md`
+  Unblocks: query-endpoint
 
 ## In Progress (max 3)
-_None._
+_None._ All features in pipeline complete.
 
 ## Recent Decisions (last 3 — oldest drops off)
-- 2026-04-08: document-ingestion FINALIZED — lb_mui approved, WARM archived to COLD, feature DONE
-- 2026-04-07: D12 — /reviewcode APPROVED after fixes: W1 removed double verify_token (all 4 routes), W2 added httpx timeout=10.0, W3 removed hardcoded "en" fallback (LanguageDetectionError now propagates, A003 compliant)
-- 2026-04-07: D11 — raw content NOT stored in documents table (DB bloat); chunk text in embeddings.text TEXT NOT NULL; migration 006 covers both documents.status + embeddings.text
+- 2026-04-08: D4 — `search()` signature: `lang: str | None = None` (None=auto-detect, override=skip detect)
+- 2026-04-08: D3 — Keep "en" fallback for unknown foreign langs (fr/de) — acceptable P0 scope
+- 2026-04-08: D2 — TokenizerFactory.get(lang) for ALL langs (en → WhitespaceTokenizer, no special-case)
 
 ## Active Blockers
-_None._
+_None._ All dependencies DONE: auth-api-key-oidc ✅, rbac-document-filter ✅, cjk-tokenizer ✅, llm-provider ✅, document-ingestion ✅
 
 ## Subagent Status
 | Agent | Task | Status | Last updated |
@@ -48,4 +52,4 @@ _None._
 | — | — | — | — |
 
 ## Next Session Start
-> No active feature. Next up: query-endpoint or multilingual-rag-pipeline (both unblocked by document-ingestion).
+> No active features. Query-endpoint ready to begin. Run /specify query-endpoint.
