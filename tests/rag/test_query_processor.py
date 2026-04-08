@@ -1,10 +1,14 @@
-# Spec: docs/multilingual-rag-pipeline/spec/multilingual-rag-pipeline.spec.md#S002
+# Spec: docs/multilingual-rag-pipeline/spec/multilingual-rag-pipeline.spec.md#S002,S003
 # Task: S002-T001 — Write test suite for tokenize_query()
 # Task: S002-T002 — Implement tokenize_query() in query_processor.py
+# Task: S003-T001 — Write test suite for embed_query()
+# Task: S003-T002 — Implement embed_query() in query_processor.py
 
 import pytest
-from backend.rag.query_processor import tokenize_query
+from unittest.mock import patch, AsyncMock
+from backend.rag.query_processor import tokenize_query, embed_query
 from backend.rag.tokenizers.exceptions import UnsupportedLanguageError
+from backend.rag.embedder import EmbedderError
 
 
 # MeCab requires system binary (apt-get install mecab mecab-ipadic-utf8).
@@ -88,3 +92,32 @@ def test_tokenize_query_error_propagates():
     """Verify UnsupportedLanguageError message propagates correctly."""
     with pytest.raises(UnsupportedLanguageError, match="Unsupported language"):
         tokenize_query("hello", "es")
+
+
+# ============================================================================
+# S003: Query Embedding Tests
+# ============================================================================
+
+
+@patch('backend.rag.query_processor._embedder')
+async def test_embed_query_returns_vector(mock_embedder):
+    """Verify embed_query() returns list[float] of expected shape."""
+    # Setup mock to return a 768-dim vector
+    mock_embedder._embed_one = AsyncMock(return_value=[0.1, 0.2, 0.3] * 256)
+
+    result = await embed_query("hello world")
+
+    assert isinstance(result, list), "Result must be list"
+    assert len(result) == 768, f"Expected 768-dim vector, got {len(result)}"
+    assert all(isinstance(x, float) for x in result), "All elements must be floats"
+    mock_embedder._embed_one.assert_called_once_with("hello world")
+
+
+@patch('backend.rag.query_processor._embedder')
+async def test_embed_query_embedder_error_propagates(mock_embedder):
+    """Verify EmbedderError from embedder is NOT caught — propagates to caller."""
+    # Setup mock to raise error
+    mock_embedder._embed_one = AsyncMock(side_effect=EmbedderError("Ollama API down"))
+
+    with pytest.raises(EmbedderError, match="Ollama API down"):
+        await embed_query("hello world")
