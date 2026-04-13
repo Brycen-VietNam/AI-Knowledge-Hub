@@ -74,10 +74,10 @@ async def _bm25_search(
     # S001: text().bindparams() — zero f-string SQL interpolation
     sql = text("""
         SELECT d.id AS doc_id, 0 AS chunk_index, d.user_group_id,
-               ts_rank(d.content_fts, to_tsquery('simple', :query)) AS rank
+               ts_rank(d.content_fts, plainto_tsquery('simple', :query)) AS rank
         FROM documents d
         WHERE (d.user_group_id = ANY(:group_ids) OR d.user_group_id IS NULL)
-          AND d.content_fts @@ to_tsquery('simple', :query)
+          AND d.content_fts @@ plainto_tsquery('simple', :query)
         ORDER BY rank DESC
         LIMIT :top_k
     """).bindparams(
@@ -130,10 +130,8 @@ async def retrieve(
 
     async def _inner() -> list[RetrievedDocument]:
         if bm25_query:
-            dense, bm25 = await asyncio.gather(
-                _dense_search(session, query_embedding, user_group_ids, top_k),
-                _bm25_search(session, bm25_query, user_group_ids, top_k),
-            )
+            dense = await _dense_search(session, query_embedding, user_group_ids, top_k)
+            bm25 = await _bm25_search(session, bm25_query, user_group_ids, top_k)
         else:
             dense = await _dense_search(session, query_embedding, user_group_ids, top_k)
             bm25 = []

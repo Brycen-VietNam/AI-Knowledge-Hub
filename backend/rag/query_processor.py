@@ -46,4 +46,4 @@ async def embed_query(text: str) -> list[float]:
     Raises:
         EmbedderError: If Ollama API request fails or returns non-200 status
     """
-    return await _embedder._embed_one(text)
+    return await _embedder.embed_one(text)

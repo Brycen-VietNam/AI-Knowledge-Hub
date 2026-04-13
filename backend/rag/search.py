@@ -59,7 +59,6 @@ async def search(
 
     # Step 4: Hybrid retrieval with RBAC
     results = await retrieve(
-        query=query,
         query_embedding=query_embedding,
         bm25_query=bm25_query,
         user_group_ids=user_group_ids,

@@ -1,0 +1,14 @@
+openrouter.ai
+ "model": "meta-llama/llama-3.3-70b-instruct:free"
+ api-keu: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
+
+model : google/gemma-3-27b-it:free
+api-key: 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
+
+So sánh các model đã test:
+
+Model	Kết quả	Tiếng Việt
+meta-llama/llama-3.3-70b	429	—
+google/gemma-3-27b	429	—
+liquid/lfm-2.5-1.2b	OK	Kém
+openai/gpt-oss-120b	OK	Tốt

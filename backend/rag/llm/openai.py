@@ -1,3 +1,4 @@
+import math
 import os
 from pathlib import Path
 
@@ -8,16 +9,19 @@ _PROMPT_TEMPLATE = (Path(__file__).parent / "prompts" / "answer.txt").read_text(
 
 
 class OpenAIAdapter(LLMProvider):
-    """LLM adapter for the OpenAI Chat Completions API.
+    """LLM adapter for the OpenAI Chat Completions API (or compatible endpoints).
 
     Configuration via env vars:
-        OPENAI_API_KEY: OpenAI secret key.
-        LLM_MODEL:      Model name (default: gpt-4o-mini).
+        OPENAI_API_KEY:  API key (OpenAI or OpenRouter).
+        OPENAI_BASE_URL: Optional base URL override (e.g. https://openrouter.ai/api/v1).
+                         Defaults to OpenAI's endpoint when unset.
+        LLM_MODEL:       Model name (default: gpt-4o-mini).
 
     Confidence is derived from logprobs when available; falls back to sentinel 0.9 (D06).
     """
     def __init__(self):
         self._api_key = os.getenv("OPENAI_API_KEY")
+        self._base_url = os.getenv("OPENAI_BASE_URL")  # None → openai SDK default
         self._model = os.getenv("LLM_MODEL", "gpt-4o-mini")
 
     async def complete(self, prompt: str, context_chunks: list[str]) -> LLMResponse:
@@ -31,7 +35,10 @@ class OpenAIAdapter(LLMProvider):
             context="\n".join(context_chunks), question=prompt
         )
         try:
-            client = openai.AsyncOpenAI(api_key=self._api_key)
+            client = openai.AsyncOpenAI(
+                api_key=self._api_key,
+                base_url=self._base_url,  # None → SDK default (api.openai.com)
+            )
             resp = await client.chat.completions.create(
                 model=self._model,
                 messages=[{"role": "user", "content": filled}],
@@ -40,7 +47,7 @@ class OpenAIAdapter(LLMProvider):
             raise LLMError(str(exc)) from exc
         content = resp.choices[0].message.content
         logprobs = resp.choices[0].logprobs
-        confidence = float(logprobs.content[0].logprob) if logprobs else 0.9
+        confidence = math.exp(logprobs.content[0].logprob) if logprobs else 0.9
         return LLMResponse(
             answer=content,
             sources=context_chunks,

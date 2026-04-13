@@ -64,7 +64,7 @@ def test_query_returns_answer_and_sources():
         provider="ollama", model="llama3", low_confidence=False
     )
 
-    with patch("backend.api.routes.query.retrieve", new=AsyncMock(return_value=docs)), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=docs)), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()):
         with TestClient(app) as client:
@@ -73,7 +73,7 @@ def test_query_returns_answer_and_sources():
     assert resp.status_code == 200
     body = resp.json()
     assert body["answer"] == "42"
-    assert body["sources"] == ["doc-1"]
+    assert body["sources"] == [str(docs[0].doc_id)]  # R002: doc_id strings, not LLM source labels
     assert body["low_confidence"] is False
     assert "results" not in body  # D10: old field removed
     assert "request_id" in body   # D12: retained for traceability
@@ -84,7 +84,7 @@ def test_query_no_chunks_returns_200_with_null_answer():
     user = _make_user([1])
     app = _make_app(user)
 
-    with patch("backend.api.routes.query.retrieve", new=AsyncMock(return_value=[])), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[])), \
          patch("backend.api.routes.query.generate_answer",
                new=AsyncMock(side_effect=NoRelevantChunksError("no chunks"))), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()):
@@ -109,7 +109,7 @@ def test_query_low_confidence_flagged_in_response():
         provider="ollama", model="llama3", low_confidence=True
     )
 
-    with patch("backend.api.routes.query.retrieve", new=AsyncMock(return_value=docs)), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=docs)), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()):
         with TestClient(app) as client:

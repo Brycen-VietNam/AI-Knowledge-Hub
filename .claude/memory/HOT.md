@@ -1,7 +1,7 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-08 | Session: #029
+Updated: 2026-04-13 | Session: #035
 
 ---
 
@@ -34,17 +34,21 @@ Sprint end: _[date TBD]_
   Archive: `.claude/memory/COLD/multilingual-rag-pipeline.archive.md`
   Report: `docs/multilingual-rag-pipeline/reports/multilingual-rag-pipeline.report.md`
   Unblocks: query-endpoint
+- query-endpoint — DONE ✅ 5 stories, 19 tasks, 42/42 tests, 35/35 ACs, 95% coverage — finalized 2026-04-13
+  Archive: `.claude/memory/COLD/query-endpoint.archive.md`
+  Report: `docs/query-endpoint/reports/query-endpoint.report.md`
+  Unblocks: — (sprint chain complete)
 
 ## In Progress (max 3)
-_None._ All features in pipeline complete.
+_None._
 
 ## Recent Decisions (last 3 — oldest drops off)
-- 2026-04-08: D4 — `search()` signature: `lang: str | None = None` (None=auto-detect, override=skip detect)
-- 2026-04-08: D3 — Keep "en" fallback for unknown foreign langs (fr/de) — acceptable P0 scope
-- 2026-04-08: D2 — TokenizerFactory.get(lang) for ALL langs (en → WhitespaceTokenizer, no special-case)
+- 2026-04-13: query-endpoint FINALIZED — archived to COLD; 42/42 tests, 95% cov, 35 AC PASS; sprint chain complete
+- 2026-04-13: S005 DONE — 42/42 tests pass; coverage 95% (query.py=93%, rate_limiter.py=100%); AC4 needs get_db stub only
+- 2026-04-13: S004 DONE — control-char strip on query; 5 RAG exception handlers in app.py; request_id → request.state
 
 ## Active Blockers
-_None._ All dependencies DONE: auth-api-key-oidc ✅, rbac-document-filter ✅, cjk-tokenizer ✅, llm-provider ✅, document-ingestion ✅
+_None._
 
 ## Subagent Status
 | Agent | Task | Status | Last updated |
@@ -52,4 +56,4 @@ _None._ All dependencies DONE: auth-api-key-oidc ✅, rbac-document-filter ✅, 
 | — | — | — | — |
 
 ## Next Session Start
-> No active features. Query-endpoint ready to begin. Run /specify query-endpoint.
+> Auth/RAG sprint COMPLETE. All 7 features finalized. Start next sprint planning: define new sprint goal, pick next feature from backlog.

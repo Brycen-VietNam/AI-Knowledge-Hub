@@ -11,9 +11,9 @@ import os
 
 import httpx
 
+from backend.rag.config import OLLAMA_EMBED_URL
 from backend.rag.chunker import Chunk
 
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "mxbai-embed-large")
 
 
@@ -26,15 +26,24 @@ class OllamaEmbedder:
     # Decision: D10 — env-configurable URL + model (no hardcoded values)
 
     def __init__(self):
-        self._base_url = OLLAMA_BASE_URL
+        self._base_url = OLLAMA_EMBED_URL
         self._model = EMBEDDING_MODEL
+
+    async def embed_one(self, text: str) -> list[float]:
+        """Embed a single text string. Public API for query-time embedding."""
+        return await self._embed_one(text)
+
+    # mxbai-embed-large context limit: ~1500 chars before Ollama returns HTTP 500.
+    # Truncate here to stay safely within that bound without changing chunk sizes.
+    _MAX_EMBED_CHARS: int = int(os.getenv("OLLAMA_MAX_EMBED_CHARS", "1400"))
 
     async def _embed_one(self, text: str) -> list[float]:
         """POST to Ollama /api/embeddings for a single text. Raises EmbedderError on failure."""
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        prompt = text[: self._MAX_EMBED_CHARS]
+        async with httpx.AsyncClient(timeout=60.0) as client:
             resp = await client.post(
                 f"{self._base_url}/api/embeddings",
-                json={"model": self._model, "prompt": text},
+                json={"model": self._model, "prompt": prompt},
             )
         if resp.status_code != 200:
             raise EmbedderError(f"Ollama embeddings returned HTTP {resp.status_code}")
