@@ -1,7 +1,7 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-13 | Session: #035
+Updated: 2026-04-14 | Session: #043 (document-parser live test + SecurityGate fix)
 
 ---
 
@@ -38,17 +38,26 @@ Sprint end: _[date TBD]_
   Archive: `.claude/memory/COLD/query-endpoint.archive.md`
   Report: `docs/query-endpoint/reports/query-endpoint.report.md`
   Unblocks: — (sprint chain complete)
+- document-parser — DONE ✅ P0+S001–S004, 18/18 unit tests, 24/24 ACs, 5 formats (PDF/DOCX/HTML/TXT/MD) — finalized 2026-04-13
+  Archive: `.claude/memory/COLD/document-parser.archive.md`
+  Report: `docs/document-parser/reports/document-parser.report.md`
+  Unblocks: —
 
 ## In Progress (max 3)
-_None._
+_(none)_
 
 ## Recent Decisions (last 3 — oldest drops off)
-- 2026-04-13: query-endpoint FINALIZED — archived to COLD; 42/42 tests, 95% cov, 35 AC PASS; sprint chain complete
-- 2026-04-13: S005 DONE — 42/42 tests pass; coverage 95% (query.py=93%, rate_limiter.py=100%); AC4 needs get_db stub only
-- 2026-04-13: S004 DONE — control-char strip on query; 5 RAG exception handlers in app.py; request_id → request.state
+- 2026-04-14: SecurityGate MIME fix — added `frozenset({"text/plain","text/markdown"})` to _COMPATIBLE_PAIRS; libmagic detects .md as text/plain, declared text/markdown now accepted; not yet committed
+- 2026-04-14: OpenRouter key rotated — old key sk-or-v1-...e610 rejected (401); new key sk-or-v1-0861b...1c880 active; model openai/gpt-oss-120b:free confirmed working; OPENAI_API_KEY in .env updated
+- 2026-04-13: S004-fix DONE — FIX-T001 (A003 blocker resolved: langdetect replaces "en" fallback); FIX-T002–T008 (warn fixes: duplicate dep, query_hash sentinel, filename sanitize, title cap, chunked read, md_parser CJK encoding, SecurityGate request_id logging); 18/18 unit tests pass
+
+## Pending Commits (uncommitted fixes on feature/document-parser)
+- SecurityGate: skip magic check when file_bytes=b"" (pre-read pass) — security_gate.py:47
+- SecurityGate: text/markdown ↔ text/plain compatible pair — security_gate.py:18
+- docker-compose.yml: RETRIEVAL_TIMEOUT_OVERRIDE=15.0 (CPU Ollama dev machine)
 
 ## Active Blockers
-_None._
+_(none)_
 
 ## Subagent Status
 | Agent | Task | Status | Last updated |
@@ -56,4 +65,5 @@ _None._
 | — | — | — | — |
 
 ## Next Session Start
-> Auth/RAG sprint COMPLETE. All 7 features finalized. Start next sprint planning: define new sprint goal, pick next feature from backlog.
+> All features in sprint chain DONE. No active In Progress items.
+> Next: identify next sprint goal or feature backlog item.
