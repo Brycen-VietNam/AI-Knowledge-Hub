@@ -79,7 +79,7 @@ def test_api_key_user_gets_own_group_docs():
     docs = [_make_doc(1), _make_doc(1)]
     llm_resp = LLMResponse("answer", ["doc-1", "doc-2"], 0.9, "ollama", "llama3", False)
 
-    with patch("backend.api.routes.query.retrieve", new=AsyncMock(return_value=docs)), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=docs)), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()):
         with TestClient(app) as client:
@@ -100,7 +100,7 @@ def test_oidc_user_gets_own_group_docs():
     docs = [_make_doc(2)]
     llm_resp = LLMResponse("answer", ["doc-2"], 0.9, "ollama", "llama3", False)
 
-    with patch("backend.api.routes.query.retrieve", new=AsyncMock(return_value=docs)), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=docs)), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()):
         with TestClient(app) as client:
@@ -120,7 +120,7 @@ def test_zero_group_user_returns_200_not_403():
     docs = [_make_doc(None)]  # NULL group_id = public
     llm_resp = LLMResponse("public answer", ["doc-pub"], 0.9, "ollama", "llama3", False)
 
-    with patch("backend.api.routes.query.retrieve", new=AsyncMock(return_value=docs)), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=docs)), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()):
         with TestClient(app) as client:
@@ -138,7 +138,7 @@ def test_query_result_with_no_docs_returns_null_answer():
     app = _make_app(user)
 
     from backend.rag.llm import NoRelevantChunksError
-    with patch("backend.api.routes.query.retrieve", new=AsyncMock(return_value=[])), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[])), \
          patch("backend.api.routes.query.generate_answer",
                new=AsyncMock(side_effect=NoRelevantChunksError("empty"))), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()):
@@ -174,7 +174,7 @@ def test_query_timeout_returns_504():
     async def _slow(*args, **kwargs):
         raise QueryTimeoutError("timeout")
 
-    with patch("backend.api.routes.query.retrieve", new=_slow), \
+    with patch("backend.api.routes.query.search", new=_slow), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()):
         with TestClient(app) as client:
             resp = client.post("/v1/query", json={"query": "slow query"})
@@ -206,7 +206,7 @@ def test_request_id_in_response():
     app = _make_app(user)
     llm_resp = LLMResponse("ans", [], 0.9, "ollama", "llama3", False)
 
-    with patch("backend.api.routes.query.retrieve", new=AsyncMock(return_value=[])), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[])), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()):
         with TestClient(app) as client:
@@ -222,7 +222,7 @@ def test_query_too_long_returns_422():
     user = _make_user([1])
     app = _make_app(user)
 
-    with patch("backend.api.routes.query.retrieve", new=AsyncMock(return_value=[])), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[])), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()):
         with TestClient(app) as client:
             resp = client.post("/v1/query", json={"query": "x" * 513})

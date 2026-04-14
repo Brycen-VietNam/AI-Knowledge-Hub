@@ -1,8 +1,10 @@
 # Spec: docs/rbac-document-filter/spec/rbac-document-filter.spec.md#S005
 # Spec: docs/llm-provider/spec/llm-provider.spec.md#S005
+# Spec: docs/query-endpoint/spec/query-endpoint.spec.md#S003
 # Task: T002 — POST /v1/query schema + auth wire-up (stub)
 # Task: T003 — RBAC group resolution + retrieve() + audit log (full impl)
 # Task: T014 — LLM generation wire-up + D10 QueryResponse breaking change
+# Task: S003-T003 — Rate limiting: inject RateLimiter, add headers, 429 on exceed
 # Decision: D01 — user_group_id IS NULL = public document
 # Decision: D04 — 0-group users → empty/public results, not 403
 # Decision: D08 — api-agent calls generate_answer(), not LLMProviderFactory (ARCH A002)
@@ -12,24 +14,42 @@
 # Rule: R003 — verify_token on every endpoint
 # Rule: R004 — /v1/ prefix required
 # Rule: R006 — audit log before return (background task)
-# Rule: R007 — asyncio.wait_for timeout=1.8s
+# Rule: R007 — asyncio.wait_for total SLA=1.8s; split: retrieval=1.0s (A2), LLM=0.8s (S002)
+# Task: S004-T001 — Strip control chars from query (SECURITY S003)
+# Task: S004-T003 — request_id stored in request.state for exception handlers
+# Rule: S004 — 60 req/min per user_id via Valkey sliding window
 import asyncio
 import hashlib
+import re
 from uuid import uuid4
 
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.api.middleware.rate_limiter import RateLimiter
 from backend.auth.dependencies import get_db, verify_token
 from backend.auth.types import AuthenticatedUser
 from backend.db.session import async_session_factory
 from backend.rag.generator import generate_answer
-from backend.rag.llm import NoRelevantChunksError
-from backend.rag.retriever import QueryTimeoutError, RetrievedDocument, retrieve
+from backend.rag.llm import LLMError, NoRelevantChunksError
+from backend.rag.retriever import QueryTimeoutError, RetrievedDocument
+from backend.rag.search import search
+
+# S003: module-level singleton — replaced at startup via app.state in production;
+# also patchable in tests via: patch("backend.api.routes.query._rate_limiter")
+_rate_limiter = RateLimiter(resource="query", limit=60, window=60)
+
+# R007/A2: 1.8s total SLA split — retrieval 1.0s + LLM 0.8s (confirmed lb_mui 2026-04-08)
+# Dev override: *_TIMEOUT_OVERRIDE env vars allow increasing for local Ollama testing
+import os as _os
+_RETRIEVAL_TIMEOUT = float(_os.getenv("RETRIEVAL_TIMEOUT_OVERRIDE", "1.0"))
+_LLM_TIMEOUT = float(_os.getenv("LLM_TIMEOUT_OVERRIDE", "0.8"))
+# C014: confidence threshold below which low_confidence=True is set
+_LOW_CONFIDENCE_THRESHOLD = 0.4
 
 
 # ---------------------------------------------------------------------------
@@ -39,6 +59,13 @@ from backend.rag.retriever import QueryTimeoutError, RetrievedDocument, retrieve
 class QueryRequest(BaseModel):
     query: str = Field(..., max_length=512)
     top_k: int = Field(default=10, ge=1, le=100)
+    lang: str | None = None  # A1/D4: None=auto-detect; e.g. "ja" skips detection
+
+    @field_validator("query")
+    @classmethod
+    def strip_control_chars(cls, v: str) -> str:
+        # S004-T001 / SECURITY S003: strip ASCII control characters before embedding
+        return re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", v)
 
 
 class QueryResponse(BaseModel):
@@ -48,20 +75,6 @@ class QueryResponse(BaseModel):
     sources: list[str]
     low_confidence: bool
     reason: str | None = None  # populated only when answer is None (D09)
-
-
-# ---------------------------------------------------------------------------
-# Embedder — OllamaEmbedder (document-ingestion feature, D10)
-# ---------------------------------------------------------------------------
-
-async def embed(text: str) -> list[float]:
-    from backend.rag.embedder import OllamaEmbedder
-    embedder = OllamaEmbedder()
-    from backend.rag.chunker import Chunk
-    import uuid
-    chunks = [Chunk(text=text, lang="en", doc_id=uuid.uuid4(), chunk_index=0)]
-    vectors = await embedder.batch_embed(chunks)
-    return vectors[0]
 
 
 # ---------------------------------------------------------------------------
@@ -98,11 +111,13 @@ router = APIRouter()
 
 @router.post("/v1/query", response_model=QueryResponse)
 async def query_documents(
+    request: Request,
+    response: Response,
     body: QueryRequest,
     background_tasks: BackgroundTasks,
     user: Annotated[AuthenticatedUser, Depends(verify_token)],
     db: Annotated[AsyncSession, Depends(get_db)],
-) -> QueryResponse:
+) -> QueryResponse | JSONResponse:
     """POST /v1/query — hybrid RAG retrieval with RBAC hard-filter.
 
     Group IDs are pre-populated on AuthenticatedUser by verify_token:
@@ -111,25 +126,50 @@ async def query_documents(
     0-group users (user_group_ids=[]) receive public-only results — not 403 (D04).
     """
     request_id = str(uuid4())
+    # S004-T003: store in request.state so exception handlers can reuse the same id
+    request.state.request_id = request_id
     query_hash = hashlib.sha256(body.query.encode()).hexdigest()
 
+    # S003: rate limiting — 60 req/min per user_id sliding window
+    valkey_client = getattr(getattr(request, "app", None), "state", None)
+    valkey_client = getattr(valkey_client, "valkey_client", None)
+    allowed, rl_remaining, rl_reset = await _rate_limiter.check(
+        str(user.user_id), valkey_client
+    )
+    # AC7: set rate-limit headers on every response (success and 429)
+    response.headers["X-RateLimit-Remaining"] = str(rl_remaining)
+    response.headers["X-RateLimit-Reset"] = str(rl_reset)
+    if not allowed:
+        return JSONResponse(
+            status_code=429,
+            content={"error": {
+                "code": "RATE_LIMIT_EXCEEDED",
+                "message": "Rate limit of 60 requests per minute exceeded",
+                "request_id": request_id,
+            }},
+            headers={
+                "X-RateLimit-Remaining": str(rl_remaining),
+                "X-RateLimit-Reset": str(rl_reset),
+            },
+        )
+
     try:
-        query_embedding = await embed(body.query)
         docs: list[RetrievedDocument] = await asyncio.wait_for(
-            retrieve(
-                query_embedding=query_embedding,
+            search(
+                query=body.query,
+                lang=body.lang,
                 user_group_ids=user.user_group_ids,
                 top_k=body.top_k,
                 session=db,
             ),
-            timeout=1.8,
+            timeout=_RETRIEVAL_TIMEOUT,
         )
-    except (TimeoutError, QueryTimeoutError):  # TimeoutError is the builtin; asyncio.TimeoutError is an alias
+    except (asyncio.TimeoutError, QueryTimeoutError):
         return JSONResponse(
             status_code=504,
             content={"error": {
                 "code": "QUERY_TIMEOUT",
-                "message": "Retrieval exceeded 1800ms SLA",
+                "message": "Retrieval exceeded 1000ms SLA",
                 "request_id": request_id,
             }},
         )
@@ -145,10 +185,39 @@ async def query_documents(
             reason="no_relevant_chunks",
         )
 
+    # S002: T002 — LLM generation with 0.8s budget (A2)
+    try:
+        llm_response = await asyncio.wait_for(
+            generate_answer(
+                query=body.query,
+                chunks=[d.content for d in docs if d.content],
+            ),
+            timeout=_LLM_TIMEOUT,
+        )
+    except NoRelevantChunksError:
+        # D09: no context chunks → 200 with null answer (not an error)
+        return QueryResponse(
+            request_id=request_id,
+            answer=None,
+            sources=[],
+            low_confidence=False,
+            reason="no_relevant_chunks",
+        )
+    except (asyncio.TimeoutError, LLMError):
+        return JSONResponse(
+            status_code=503,
+            content={"error": {
+                "code": "LLM_UNAVAILABLE",
+                "message": "LLM generation failed or exceeded 800ms budget",
+                "request_id": request_id,
+            }},
+        )
+
+    # S002: T004 — C014 low_confidence threshold
     return QueryResponse(
         request_id=request_id,
-        answer=None,
-        sources=[d.content for d in docs if d.content],
-        low_confidence=False,
-        reason="llm_disabled",
+        answer=llm_response.answer,
+        sources=[str(d.doc_id) for d in docs],
+        low_confidence=llm_response.confidence < _LOW_CONFIDENCE_THRESHOLD,
+        reason=None,
     )

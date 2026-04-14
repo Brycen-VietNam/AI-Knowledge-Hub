@@ -1,7 +1,7 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-08 | Session: #027
+Updated: 2026-04-13 | Session: #035
 
 ---
 
@@ -30,14 +30,22 @@ Sprint end: _[date TBD]_
   Archive: `.claude/memory/COLD/document-ingestion.archive.md`
   Report: `docs/document-ingestion/reports/document-ingestion.report.md`
   Unblocks: query-endpoint, multilingual-rag-pipeline
+- multilingual-rag-pipeline — DONE ✅ 4 stories (S002–S005), 7 tasks, 24 ACs, 100% coverage (15 pass, 1 skip)
+  Archive: `.claude/memory/COLD/multilingual-rag-pipeline.archive.md`
+  Report: `docs/multilingual-rag-pipeline/reports/multilingual-rag-pipeline.report.md`
+  Unblocks: query-endpoint
+- query-endpoint — DONE ✅ 5 stories, 19 tasks, 42/42 tests, 35/35 ACs, 95% coverage — finalized 2026-04-13
+  Archive: `.claude/memory/COLD/query-endpoint.archive.md`
+  Report: `docs/query-endpoint/reports/query-endpoint.report.md`
+  Unblocks: — (sprint chain complete)
 
 ## In Progress (max 3)
 _None._
 
 ## Recent Decisions (last 3 — oldest drops off)
-- 2026-04-08: document-ingestion FINALIZED — lb_mui approved, WARM archived to COLD, feature DONE
-- 2026-04-07: D12 — /reviewcode APPROVED after fixes: W1 removed double verify_token (all 4 routes), W2 added httpx timeout=10.0, W3 removed hardcoded "en" fallback (LanguageDetectionError now propagates, A003 compliant)
-- 2026-04-07: D11 — raw content NOT stored in documents table (DB bloat); chunk text in embeddings.text TEXT NOT NULL; migration 006 covers both documents.status + embeddings.text
+- 2026-04-13: query-endpoint FINALIZED — archived to COLD; 42/42 tests, 95% cov, 35 AC PASS; sprint chain complete
+- 2026-04-13: S005 DONE — 42/42 tests pass; coverage 95% (query.py=93%, rate_limiter.py=100%); AC4 needs get_db stub only
+- 2026-04-13: S004 DONE — control-char strip on query; 5 RAG exception handlers in app.py; request_id → request.state
 
 ## Active Blockers
 _None._
@@ -48,4 +56,4 @@ _None._
 | — | — | — | — |
 
 ## Next Session Start
-> No active feature. Next up: query-endpoint or multilingual-rag-pipeline (both unblocked by document-ingestion).
+> Auth/RAG sprint COMPLETE. All 7 features finalized. Start next sprint planning: define new sprint goal, pick next feature from backlog.

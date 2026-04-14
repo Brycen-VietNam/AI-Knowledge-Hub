@@ -1,5 +1,5 @@
 # Feature Backlog — Knowledge-Hub
-> Generated: 2026-03-17 | Updated: 2026-03-18
+> Generated: 2026-03-17 | Updated: 2026-04-08
 > Source: /specify session + CONSTITUTION.md v1.2 + license review
 
 ---
@@ -29,18 +29,19 @@
 
 | # | Feature | Epic | Mô tả |
 |---|---------|------|-------|
-| 9 | `answer-citation` | rag | AI answer cite ≥1 source; confidence < 0.4 → warning (C014) |
-| 10 | `conflict-detection` | rag | Phát hiện tài liệu mâu thuẫn nhau |
-| 11 | `frontend-spa` | frontend | React/Vite SPA — search UI, multilingual |
+| 9 | `document-parser` | api | PDF/DOCX/HTML → text extraction trước khi chunk + embed |
+| 10 | `answer-citation` | rag | AI answer cite ≥1 source; confidence < 0.4 → warning (C014) |
+| 11 | `conflict-detection` | rag | Phát hiện tài liệu mâu thuẫn nhau |
+| 12 | `frontend-spa` | frontend | React/Vite SPA — search UI, multilingual |
 
 ## P2 — Mở rộng sau MVP
 
 | # | Feature | Epic | Mô tả |
 |---|---------|------|-------|
-| 12 | `teams-bot-adapter` | bots | Microsoft Teams bot → /v1/query |
-| 13 | `slack-bot-query-handler` | bots | Slack bot → /v1/query |
-| 14 | `rate-limiting` | api | Valkey sliding window — 60/min query, 20/min docs (C013) |
-| 15 | `metrics-endpoint` | api | GET /v1/metrics — latency, throughput, error rates |
+| 13 | `teams-bot-adapter` | bots | Microsoft Teams bot → /v1/query |
+| 14 | `slack-bot-query-handler` | bots | Slack bot → /v1/query |
+| 15 | `rate-limiting` | api | Valkey sliding window — 60/min query, 20/min docs (C013) |
+| 16 | `metrics-endpoint` | api | GET /v1/metrics — latency, throughput, error rates |
 
 ---
 
@@ -50,6 +51,7 @@ db-schema-embeddings
   ├── auth-api-key-oidc
   │     └── rbac-document-filter
   ├── cjk-tokenizer ──┐
+  ├── document-parser ─┤
   ├── document-ingestion ──┤
   │                        ├── multilingual-rag-pipeline
   │                        │     └── query-endpoint
@@ -89,11 +91,12 @@ db-schema-embeddings
 6. `document-ingestion` — /v1/documents endpoint
 7. `multilingual-rag-pipeline` — RAG pipeline (cần tokenizer + llm-provider)
 8. `query-endpoint` — /v1/query endpoint
-9. `answer-citation` — citation + confidence
-10. `conflict-detection` — conflict detection
-11. `frontend-spa` — SPA
-12. `teams-bot-adapter` + `slack-bot-query-handler` — bots
-13. `rate-limiting` + `metrics-endpoint` — observability
+9. `document-parser` — PDF/DOCX/HTML parser (trước document-ingestion nếu cần file upload)
+10. `answer-citation` — citation + confidence
+11. `conflict-detection` — conflict detection
+12. `frontend-spa` — SPA
+13. `teams-bot-adapter` + `slack-bot-query-handler` — bots
+14. `rate-limiting` + `metrics-endpoint` — observability
 
 ## SDD Flow (thứ tự bắt buộc cho mỗi feature)
 ```

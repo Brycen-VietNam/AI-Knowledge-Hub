@@ -3,6 +3,7 @@ from pathlib import Path
 
 import httpx
 
+from backend.rag.config import OLLAMA_LLM_URL
 from .base import LLMProvider, LLMResponse
 from .exceptions import LLMError, NoRelevantChunksError
 
@@ -18,7 +19,7 @@ class OllamaAdapter(LLMProvider):
         LLM_TIMEOUT_S:   HTTP request timeout in seconds (default: 5.0).
     """
     def __init__(self):
-        self._base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+        self._base_url = OLLAMA_LLM_URL
         self._model = os.getenv("LLM_MODEL", "llama3")
         self._timeout = float(os.getenv("LLM_TIMEOUT_S", "5.0"))
 
