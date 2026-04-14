@@ -1,7 +1,7 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-14 | Session: #043 (document-parser live test + SecurityGate fix)
+Updated: 2026-04-14 | Session: #047 (/plan answer-citation — PLAN COMPLETE)
 
 ---
 
@@ -44,10 +44,16 @@ Sprint end: _[date TBD]_
   Unblocks: —
 
 ## In Progress (max 3)
-_(none)_
+- answer-citation — P1 | PLAN COMPLETE | 5 stories, 41 ACs | Critical path: S001→S002→S003→S005 | next: /tasks S001
+  WARM: `.claude/memory/WARM/answer-citation.mem.md`
+  Spec: `docs/answer-citation/spec/answer-citation.spec.md`
+  Plan: `docs/answer-citation/plan/answer-citation.plan.md`
+  Checklist: `docs/answer-citation/reviews/checklist.md`
 
 ## Recent Decisions (last 3 — oldest drops off)
-- 2026-04-14: SecurityGate MIME fix — added `frozenset({"text/plain","text/markdown"})` to _COMPATIBLE_PAIRS; libmagic detects .md as text/plain, declared text/markdown now accepted; not yet committed
+- 2026-04-14: answer-citation /plan COMPLETE — 4 parallel groups (G1:S001, G2:S002, G3:S003‖S004, G4:S005); WARN lang-nullability mitigated in S001 task scope; plan saved to `docs/answer-citation/plan/answer-citation.plan.md`
+- 2026-04-14: answer-citation /clarify — all 3 blockers resolved: Q1 Option A (NULL ok), Q2 N/A (consumers not built → S004 AC9 mandates permissive JSON parsing), Q3 graceful fallback sufficient; S004 AC9 added; status → CLARIFIED
+- 2026-04-14: answer-citation /specify — Option C (additive `citations` field, no breaking change); `citations` mirrors `sources` exactly (no score filter); migration 007 adds `source_url TEXT NULL`; 5 stories, 40 ACs
 - 2026-04-14: OpenRouter key rotated — old key sk-or-v1-...e610 rejected (401); new key sk-or-v1-0861b...1c880 active; model openai/gpt-oss-120b:free confirmed working; OPENAI_API_KEY in .env updated
 - 2026-04-13: S004-fix DONE — FIX-T001 (A003 blocker resolved: langdetect replaces "en" fallback); FIX-T002–T008 (warn fixes: duplicate dep, query_hash sentinel, filename sanitize, title cap, chunked read, md_parser CJK encoding, SecurityGate request_id logging); 18/18 unit tests pass
 
@@ -65,5 +71,5 @@ _(none)_
 | — | — | — | — |
 
 ## Next Session Start
-> All features in sprint chain DONE. No active In Progress items.
-> Next: identify next sprint goal or feature backlog item.
+> Active feature: answer-citation (PLAN COMPLETE).
+> Next: `/tasks S001 answer-citation` — db-agent, G1 (start immediately). No blockers.

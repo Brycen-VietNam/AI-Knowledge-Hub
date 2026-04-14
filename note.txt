@@ -1,9 +1,7 @@
 openrouter.ai
  "model": "meta-llama/llama-3.3-70b-instruct:free"
- api-keu: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
-
-model : google/gemma-3-27b-it:free
-api-key: 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
+ 
+api-key: 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
 
 So sánh các model đã test:
 
@@ -12,3 +10,23 @@ meta-llama/llama-3.3-70b	429	—
 google/gemma-3-27b	429	—
 liquid/lfm-2.5-1.2b	OK	Kém
 openai/gpt-oss-120b	OK	Tốt
+
+đối với trả lời của LLM AI, mong muốn là tổng hợp được các tài liệu map.
+Nếu được có thể trích xuất thêm các chunck cạnh chunck đã map để làm phong phú.
+cũng cần phần xác nhận nguồn từ đâu
+
+curl https://openrouter.ai/api/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer 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" \
+  -d '{
+  "model": "openai/gpt-oss-120b:free",
+  "messages": [
+    {
+      "role": "user",
+      "content": "How many r`s are in the word `strawberry?`"
+    }
+  ],
+  "reasoning": {
+    "enabled": true
+  }
+}'
