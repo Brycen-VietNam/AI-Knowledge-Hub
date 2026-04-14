@@ -15,10 +15,11 @@ from fastapi.responses import JSONResponse
 
 from backend.api.config import VALKEY_URL
 from backend.api.middleware.rate_limiter import RateLimiter
-from backend.api.routes import documents, query
+from backend.api.routes import documents, query, upload
 from backend.rag.embedder import EmbedderError
 from backend.rag.llm import LLMError
 from backend.rag.retriever import QueryTimeoutError
+from backend.rag.parser.base import ParseError, SecurityError
 from backend.rag.tokenizers.exceptions import LanguageDetectionError, UnsupportedLanguageError
 
 
@@ -75,8 +76,25 @@ def create_app() -> FastAPI:
             content=_error_body(request, "LLM_UNAVAILABLE", str(exc) or "LLM service unavailable"),
         )
 
+    # S004: ParseError → 422; SecurityError → 413/415 (A005 shape)
+    @app.exception_handler(ParseError)
+    async def handle_parse_error(request: Request, exc: ParseError) -> JSONResponse:
+        return JSONResponse(
+            status_code=422,
+            content=_error_body(request, exc.code, str(exc)),
+        )
+
+    @app.exception_handler(SecurityError)
+    async def handle_security_error(request: Request, exc: SecurityError) -> JSONResponse:
+        status = 413 if exc.code == "ERR_FILE_TOO_LARGE" else 415
+        return JSONResponse(
+            status_code=status,
+            content=_error_body(request, exc.code, str(exc)),
+        )
+
     app.include_router(query.router)
     app.include_router(documents.router)
+    app.include_router(upload.router)
     return app
 
 
