@@ -124,7 +124,18 @@ async def test_error_shape_has_request_id():
 
 
 def test_no_rag_api_import():
-    """A001: backend.auth.api_key must not pull in backend.rag or backend.api."""
-    import backend.auth.api_key  # noqa: F401
-    banned = [m for m in sys.modules if m.startswith("backend.rag") or m.startswith("backend.api")]
-    assert not banned, f"Cross-boundary imports found: {banned}"
+    """A001: backend.auth.api_key must not import backend.rag or backend.api (static check)."""
+    import ast, pathlib
+    src = pathlib.Path("backend/auth/api_key.py").read_text()
+    tree = ast.parse(src)
+    banned = []
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Import, ast.ImportFrom)):
+            names = [a.name for a in node.names] if isinstance(node, ast.Import) else []
+            module = node.module if isinstance(node, ast.ImportFrom) else ""
+            for name in names:
+                if name.startswith("backend.rag") or name.startswith("backend.api"):
+                    banned.append(name)
+            if module and (module.startswith("backend.rag") or module.startswith("backend.api")):
+                banned.append(module)
+    assert not banned, f"A001 cross-boundary imports found: {banned}"

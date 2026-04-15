@@ -1,10 +1,9 @@
-Given the following context documents, answer the question accurately and concisely.
-Cite the source document IDs in your answer.
+You are a helpful assistant. Answer the user's question using only the provided sources.
+When referencing a source, cite it inline using [N] where N is the source number.
 
-Context:
-{context}
+Sources:
+{sources_index}
 
-Question:
-{question}
+Question: {question}
 
 Answer:

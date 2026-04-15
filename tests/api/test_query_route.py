@@ -60,7 +60,7 @@ def test_query_returns_answer_and_sources():
     app = _make_app(user)
     docs = [_make_doc("context about 42")]
     llm_resp = LLMResponse(
-        answer="42", sources=["doc-1"], confidence=0.9,
+        answer="42", confidence=0.9,
         provider="ollama", model="llama3", low_confidence=False
     )
 
@@ -105,7 +105,7 @@ def test_query_low_confidence_flagged_in_response():
     app = _make_app(user)
     docs = [_make_doc("uncertain context")]
     llm_resp = LLMResponse(
-        answer="maybe", sources=["doc-1"], confidence=0.3,
+        answer="maybe", confidence=0.3,
         provider="ollama", model="llama3", low_confidence=True
     )
 

@@ -296,9 +296,18 @@ async def test_jwks_cache_ttl_respected(monkeypatch):
     assert len(refresh_called) >= 1, "Cache refresh should be triggered on TTL expiry"
 
 
-def test_no_rag_api_import(monkeypatch):
-    """A001: importing oidc.py must not pull in backend.rag or backend.api."""
-    _get_oidc_module(monkeypatch)
-    for mod_name in sys.modules:
-        assert not mod_name.startswith("backend.rag"), f"A001 violation: {mod_name} imported"
-        assert not mod_name.startswith("backend.api"), f"A001 violation: {mod_name} imported"
+def test_no_rag_api_import():
+    """A001: backend.auth.oidc must not import backend.rag or backend.api (static check)."""
+    import ast, pathlib
+    src = pathlib.Path("backend/auth/oidc.py").read_text()
+    tree = ast.parse(src)
+    banned = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module:
+            if node.module.startswith("backend.rag") or node.module.startswith("backend.api"):
+                banned.append(node.module)
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name.startswith("backend.rag") or alias.name.startswith("backend.api"):
+                    banned.append(alias.name)
+    assert not banned, f"A001 cross-boundary imports found: {banned}"

@@ -77,7 +77,7 @@ def test_api_key_user_gets_own_group_docs():
     user = _make_user([1], auth_type="api_key")
     app = _make_app(user)
     docs = [_make_doc(1), _make_doc(1)]
-    llm_resp = LLMResponse("answer", ["doc-1", "doc-2"], 0.9, "ollama", "llama3", False)
+    llm_resp = LLMResponse("answer", 0.9, "ollama", "llama3", False)
 
     with patch("backend.api.routes.query.search", new=AsyncMock(return_value=docs)), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)), \
@@ -98,7 +98,7 @@ def test_oidc_user_gets_own_group_docs():
     user = _make_user([2], auth_type="oidc")
     app = _make_app(user)
     docs = [_make_doc(2)]
-    llm_resp = LLMResponse("answer", ["doc-2"], 0.9, "ollama", "llama3", False)
+    llm_resp = LLMResponse("answer", 0.9, "ollama", "llama3", False)
 
     with patch("backend.api.routes.query.search", new=AsyncMock(return_value=docs)), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)), \
@@ -118,7 +118,7 @@ def test_zero_group_user_returns_200_not_403():
     user = _make_user([])
     app = _make_app(user)
     docs = [_make_doc(None)]  # NULL group_id = public
-    llm_resp = LLMResponse("public answer", ["doc-pub"], 0.9, "ollama", "llama3", False)
+    llm_resp = LLMResponse("public answer", 0.9, "ollama", "llama3", False)
 
     with patch("backend.api.routes.query.search", new=AsyncMock(return_value=docs)), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)), \
@@ -204,7 +204,7 @@ def test_request_id_in_response():
     """Every response includes a non-empty request_id (A005, D12)."""
     user = _make_user([1])
     app = _make_app(user)
-    llm_resp = LLMResponse("ans", [], 0.9, "ollama", "llama3", False)
+    llm_resp = LLMResponse("ans", 0.9, "ollama", "llama3", False)
 
     with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[])), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)), \

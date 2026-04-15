@@ -1,7 +1,7 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-14 | Session: #043 (document-parser live test + SecurityGate fix)
+Updated: 2026-04-15 | Session: #056 (/sync — answer-citation DONE, sprint chain complete)
 
 ---
 
@@ -42,14 +42,18 @@ Sprint end: _[date TBD]_
   Archive: `.claude/memory/COLD/document-parser.archive.md`
   Report: `docs/document-parser/reports/document-parser.report.md`
   Unblocks: —
+- answer-citation — DONE ✅ S001–S005, 80/80 tests, 35/35 ACs, citation 100%/query 92%/generator 100%/retriever 91% — approved lb_mui 2026-04-15
+  Archive: `.claude/memory/COLD/answer-citation.archive.md`
+  Report: `docs/answer-citation/reports/answer-citation.report.md`
+  Unblocks: citation-quality, confidence-scoring
 
 ## In Progress (max 3)
-_(none)_
+- (none)
 
 ## Recent Decisions (last 3 — oldest drops off)
-- 2026-04-14: SecurityGate MIME fix — added `frozenset({"text/plain","text/markdown"})` to _COMPATIBLE_PAIRS; libmagic detects .md as text/plain, declared text/markdown now accepted; not yet committed
-- 2026-04-14: OpenRouter key rotated — old key sk-or-v1-...e610 rejected (401); new key sk-or-v1-0861b...1c880 active; model openai/gpt-oss-120b:free confirmed working; OPENAI_API_KEY in .env updated
-- 2026-04-13: S004-fix DONE — FIX-T001 (A003 blocker resolved: langdetect replaces "en" fallback); FIX-T002–T008 (warn fixes: duplicate dep, query_hash sentinel, filename sanitize, title cap, chunked read, md_parser CJK encoding, SecurityGate request_id logging); 18/18 unit tests pass
+- 2026-04-15: answer-citation APPROVED by lb_mui (Tech Lead + PO + QA) — feature DONE, WARM→COLD archived
+- 2026-04-15: /reviewcode APPROVED — 0 blockers; W1 retrieve() sequential (no comment), W2 sources=UUIDs confirm contract, W3 BACKLOG-2 confidence sentinel deferred
+- 2026-04-15: S005 DONE — 80 tests pass; citation.py 100%, query.py 92%, generator.py 100%, retriever.py 91%; GAP-2 OOB test added
 
 ## Pending Commits (uncommitted fixes on feature/document-parser)
 - SecurityGate: skip magic check when file_bytes=b"" (pre-read pass) — security_gate.py:47
@@ -57,7 +61,11 @@ _(none)_
 - docker-compose.yml: RETRIEVAL_TIMEOUT_OVERRIDE=15.0 (CPU Ollama dev machine)
 
 ## Active Blockers
-_(none)_
+- (none)
+
+## Deferred Features (post answer-citation)
+- `citation-quality` — `cited: bool` per CitationObject, citation parser. Ref: WARM BACKLOG-1
+- `confidence-scoring` — fix sentinel 0.9 in Ollama+Claude adapters. Ref: WARM BACKLOG-2
 
 ## Subagent Status
 | Agent | Task | Status | Last updated |
@@ -65,5 +73,8 @@ _(none)_
 | — | — | — | — |
 
 ## Next Session Start
-> All features in sprint chain DONE. No active In Progress items.
-> Next: identify next sprint goal or feature backlog item.
+> answer-citation DONE ✅ — archived WARM → COLD.
+> Sprint chain complete. No in-progress features.
+> Next features (backlog): `citation-quality` (BACKLOG-1) and `confidence-scoring` (BACKLOG-2).
+> Before starting: add W1 comment to retriever.py (`# Sequential: AsyncSession not safe for concurrent queries`).
+> answer-citation fully approved (lb_mui, 2026-04-15). Feature chain complete.

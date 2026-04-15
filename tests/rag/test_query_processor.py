@@ -103,21 +103,21 @@ def test_tokenize_query_error_propagates():
 async def test_embed_query_returns_vector(mock_embedder):
     """Verify embed_query() returns list[float] of expected shape."""
     # Setup mock to return a 768-dim vector
-    mock_embedder._embed_one = AsyncMock(return_value=[0.1, 0.2, 0.3] * 256)
+    mock_embedder.embed_one = AsyncMock(return_value=[0.1, 0.2, 0.3] * 256)
 
     result = await embed_query("hello world")
 
     assert isinstance(result, list), "Result must be list"
     assert len(result) == 768, f"Expected 768-dim vector, got {len(result)}"
     assert all(isinstance(x, float) for x in result), "All elements must be floats"
-    mock_embedder._embed_one.assert_called_once_with("hello world")
+    mock_embedder.embed_one.assert_called_once_with("hello world")
 
 
 @patch('backend.rag.query_processor._embedder')
 async def test_embed_query_embedder_error_propagates(mock_embedder):
     """Verify EmbedderError from embedder is NOT caught — propagates to caller."""
     # Setup mock to raise error
-    mock_embedder._embed_one = AsyncMock(side_effect=EmbedderError("Ollama API down"))
+    mock_embedder.embed_one = AsyncMock(side_effect=EmbedderError("Ollama API down"))
 
     with pytest.raises(EmbedderError, match="Ollama API down"):
         await embed_query("hello world")

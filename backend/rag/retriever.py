@@ -27,6 +27,11 @@ class RetrievedDocument:
     score: float
     user_group_id: int | None   # None = public document
     content: str | None = None
+    # answer-citation S001-T004: enrichment fields from documents table (migration 007)
+    # d.lang or "und" fallback: defensive — lang is NOT NULL in ORM but future-proofed per T001 pre-check
+    title: str | None = None
+    lang: str | None = None
+    source_url: str | None = None
 
 
 async def _dense_search(
@@ -38,10 +43,14 @@ async def _dense_search(
     # Task: T002 — dense RBAC filter on embeddings.user_group_id (D02)
     # R001: WHERE clause applied BEFORE ORDER BY / LIMIT — never post-query Python filter
     # S001: text().bindparams() — zero f-string SQL interpolation
+    # answer-citation S001-T005: INNER JOIN documents to SELECT title/lang/source_url
+    # RBAC filter remains on embeddings.user_group_id (D02 — not documents.user_group_id)
     sql = text("""
         SELECT e.doc_id, e.chunk_index, e.user_group_id, e.text,
+               d.title, d.lang, d.source_url,
                e.embedding <-> cast(:query_vec AS vector) AS distance
         FROM embeddings e
+        INNER JOIN documents d ON d.id = e.doc_id
         WHERE (e.user_group_id = ANY(:group_ids) OR e.user_group_id IS NULL)
         ORDER BY distance
         LIMIT :top_k
@@ -58,6 +67,9 @@ async def _dense_search(
             score=1.0 - r.distance,
             user_group_id=r.user_group_id,
             content=r.text,
+            title=r.title,
+            lang=r.lang or "und",  # defensive fallback — lang is NOT NULL in ORM (migration 007 T001)
+            source_url=r.source_url,
         )
         for r in rows
     ]
@@ -72,8 +84,10 @@ async def _bm25_search(
     # Task: T003 — BM25 RBAC filter on documents.user_group_id (D02)
     # R001: WHERE clause applied BEFORE ORDER BY / LIMIT
     # S001: text().bindparams() — zero f-string SQL interpolation
+    # answer-citation S001-T005: already queries documents d — add title/lang/source_url to SELECT
     sql = text("""
         SELECT d.id AS doc_id, 0 AS chunk_index, d.user_group_id,
+               d.title, d.lang, d.source_url,
                ts_rank(d.content_fts, plainto_tsquery('simple', :query)) AS rank
         FROM documents d
         WHERE (d.user_group_id = ANY(:group_ids) OR d.user_group_id IS NULL)
@@ -89,9 +103,12 @@ async def _bm25_search(
     return [
         RetrievedDocument(
             doc_id=r.doc_id,
-            chunk_index=r.chunk_index,
+            chunk_index=r.chunk_index,  # intentionally 0 — BM25 queries documents, not embeddings
             score=float(r.rank),
             user_group_id=r.user_group_id,
+            title=r.title,
+            lang=r.lang or "und",  # defensive fallback — lang is NOT NULL in ORM (migration 007 T001)
+            source_url=r.source_url,
         )
         for r in rows
     ]

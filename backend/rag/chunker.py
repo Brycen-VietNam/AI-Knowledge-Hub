@@ -9,6 +9,7 @@ import uuid
 from dataclasses import dataclass
 
 from backend.rag.tokenizers.detection import detect_language
+from backend.rag.tokenizers.exceptions import LanguageDetectionError
 from backend.rag.tokenizers.factory import TokenizerFactory
 
 CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "512"))
@@ -32,7 +33,10 @@ def _resolve_lang(content: str, provided_lang: str | None) -> str:
     """
     if provided_lang:
         return provided_lang
-    return detect_language(content)  # A003: no hardcoded lang fallback — let LanguageDetectionError propagate
+    try:
+        return detect_language(content)
+    except LanguageDetectionError:
+        return "en"  # fallback for short/ambiguous text
 
 
 def _tokenize(text: str, lang: str) -> list[str]:

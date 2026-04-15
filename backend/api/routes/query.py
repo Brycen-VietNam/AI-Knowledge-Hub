@@ -31,6 +31,7 @@ from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.api.middleware.rate_limiter import RateLimiter
+from backend.api.models.citation import CitationObject
 from backend.auth.dependencies import get_db, verify_token
 from backend.auth.types import AuthenticatedUser
 from backend.db.session import async_session_factory
@@ -70,11 +71,13 @@ class QueryRequest(BaseModel):
 
 class QueryResponse(BaseModel):
     # D10: breaking change — results[] replaced with answer + sources + low_confidence
+    # S002: citations added alongside sources (D-CIT-01 — additive, no breaking change)
     request_id: str          # retained — R005 traceability (D12)
     answer: str | None
     sources: list[str]
     low_confidence: bool
     reason: str | None = None  # populated only when answer is None (D09)
+    citations: list[CitationObject] = Field(default_factory=list)  # AC10: never null
 
 
 # ---------------------------------------------------------------------------
@@ -183,14 +186,18 @@ async def query_documents(
             sources=[],
             low_confidence=False,
             reason="no_relevant_chunks",
+            citations=[],
         )
 
     # S002: T002 — LLM generation with 0.8s budget (A2)
+    # S003-T006: build content_docs once so doc_titles and chunks share the same index
+    content_docs = [d for d in docs if d.content]
     try:
         llm_response = await asyncio.wait_for(
             generate_answer(
                 query=body.query,
-                chunks=[d.content for d in docs if d.content],
+                chunks=[d.content for d in content_docs],
+                doc_titles=[d.title or "" for d in content_docs],
             ),
             timeout=_LLM_TIMEOUT,
         )
@@ -202,6 +209,7 @@ async def query_documents(
             sources=[],
             low_confidence=False,
             reason="no_relevant_chunks",
+            citations=[],
         )
     except (asyncio.TimeoutError, LLMError):
         return JSONResponse(
@@ -214,10 +222,23 @@ async def query_documents(
         )
 
     # S002: T004 — C014 low_confidence threshold
+    # S002-T002 (answer-citation): build CitationObject list from same docs — D-CIT-05
+    citations = [
+        CitationObject(
+            doc_id=str(d.doc_id),
+            title=d.title or "",
+            source_url=d.source_url,
+            chunk_index=d.chunk_index,
+            score=round(d.score, 4),
+            lang=d.lang or "",
+        )
+        for d in docs
+    ]
     return QueryResponse(
         request_id=request_id,
         answer=llm_response.answer,
         sources=[str(d.doc_id) for d in docs],
         low_confidence=llm_response.confidence < _LOW_CONFIDENCE_THRESHOLD,
         reason=None,
+        citations=citations,
     )

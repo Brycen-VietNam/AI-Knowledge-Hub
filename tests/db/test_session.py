@@ -1,10 +1,36 @@
 # Spec: docs/specs/db-schema-embeddings.spec.md#S004
 # Task: T001 — Unit tests for session.py
 # No live DB required — introspect engine config + isinstance checks
+import importlib
 import os
+import sys
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
+
+_FAKE_URL = "postgresql+asyncpg://user:pass@localhost:5432/testdb"
+
+
+def _reload_session():
+    """Reload backend.db.session with DATABASE_URL set, return module."""
+    os.environ["DATABASE_URL"] = _FAKE_URL
+    for mod in list(sys.modules):
+        if mod in ("backend.db.session", "backend.db"):
+            del sys.modules[mod]
+    import backend.db.session as session_mod
+    return session_mod
+
+
+@pytest.fixture(autouse=True)
+def patch_db_url(monkeypatch):
+    monkeypatch.setenv("DATABASE_URL", _FAKE_URL)
+    for mod in list(sys.modules):
+        if mod in ("backend.db.session", "backend.db"):
+            del sys.modules[mod]
+    yield
+    for mod in list(sys.modules):
+        if mod in ("backend.db.session", "backend.db"):
+            del sys.modules[mod]
 
 
 def test_session_imports():

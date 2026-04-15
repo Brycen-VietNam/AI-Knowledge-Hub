@@ -195,9 +195,9 @@ async def test_search_integration_full_pipeline(seeded_session):
     """
     from backend.rag.search import search
 
-    # Test 1: Auto-detect English, verify results
+    # Test 1: Auto-detect English, verify results (use longer query for reliable detection)
     results = await search(
-        query="hello world",
+        query="the quick brown fox jumps over the lazy dog",
         user_group_ids=[1],  # GROUP_A_ID
         session=seeded_session,
         lang=None,  # Auto-detect
@@ -209,7 +209,7 @@ async def test_search_integration_full_pipeline(seeded_session):
 
     # Test 2: Override lang to English explicitly
     results_en = await search(
-        query="hello world",
+        query="sample text for english search",
         user_group_ids=[1],
         session=seeded_session,
         lang="en",  # Explicit override
