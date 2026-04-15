@@ -34,17 +34,18 @@ def test_llm_package_importable():
 
 class TestLLMBase:
     def test_llm_response_fields(self):
+        # S003-T001: sources removed (D-CIT-09); inline_markers_present added
         r = LLMResponse(
-            answer="42", sources=["doc-1"], confidence=0.9,
+            answer="42", confidence=0.9,
             provider="ollama", model="llama3", low_confidence=False
         )
         assert r.answer == "42"
-        assert r.sources == ["doc-1"]
         assert r.low_confidence is False
+        assert r.inline_markers_present is False  # default
 
     def test_llm_response_low_confidence_flag(self):
         r = LLMResponse(
-            answer="maybe", sources=["doc-2"], confidence=0.3,
+            answer="maybe", confidence=0.3,
             provider="ollama", model="llama3", low_confidence=True
         )
         assert r.low_confidence is True
@@ -56,14 +57,22 @@ class TestLLMBase:
     # T004 additions below
     def test_llm_response_all_fields_required(self):
         with pytest.raises(TypeError):
-            LLMResponse(answer="x", sources=[])  # missing confidence, provider, model, low_confidence
+            LLMResponse(answer="x")  # missing confidence, provider, model, low_confidence
 
     def test_complete_is_coroutine(self):
         class FakeProvider(LLMProvider):
-            async def complete(self, prompt, context_chunks):
-                return LLMResponse("a", [], 0.9, "fake", "m", False)
+            async def complete(self, prompt, context_chunks, doc_titles):
+                return LLMResponse("a", 0.9, "fake", "m", False)
         p = FakeProvider()
         assert inspect.iscoroutinefunction(p.complete)
+
+    def test_llm_response_inline_markers_present(self):
+        r = LLMResponse(
+            answer="See [1] for details.", confidence=0.9,
+            provider="test", model="m", low_confidence=False,
+            inline_markers_present=True,
+        )
+        assert r.inline_markers_present is True
 
 
 # ---------------------------------------------------------------------------
@@ -71,10 +80,12 @@ class TestLLMBase:
 # ---------------------------------------------------------------------------
 
 def test_answer_prompt_template_exists():
+    # S003-T003: template renamed {context} → {sources_index}
     from pathlib import Path
     tmpl = Path("backend/rag/llm/prompts/answer.txt").read_text()
-    assert "{context}" in tmpl
+    assert "{sources_index}" in tmpl
     assert "{question}" in tmpl
+    assert "[N]" in tmpl  # inline citation marker instruction
 
 
 # ---------------------------------------------------------------------------
@@ -97,18 +108,18 @@ class TestAdapters:
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=False)
         with patch("httpx.AsyncClient", return_value=mock_client):
-            result = await OllamaAdapter().complete("What is 42?", ["doc-1: context text"])
+            result = await OllamaAdapter().complete("What is 42?", ["doc-1: context text"], ["Doc 1"])
         assert result.provider == "ollama"
         assert result.model == "llama3"
         assert result.answer == "The answer is 42."
-        assert result.confidence == 0.9
+        assert result.confidence == pytest.approx(0.9)
         assert result.low_confidence is False
 
     @pytest.mark.asyncio
     async def test_ollama_no_chunks_raises(self):
         from backend.rag.llm.ollama import OllamaAdapter
         with pytest.raises(NoRelevantChunksError):
-            await OllamaAdapter().complete("query", [])
+            await OllamaAdapter().complete("query", [], [])
 
     @pytest.mark.asyncio
     async def test_ollama_network_error_raises_llm_error(self):
@@ -119,7 +130,7 @@ class TestAdapters:
         mock_client.__aexit__ = AsyncMock(return_value=False)
         with patch("httpx.AsyncClient", return_value=mock_client):
             with pytest.raises(LLMError):
-                await OllamaAdapter().complete("q", ["chunk"])
+                await OllamaAdapter().complete("q", ["chunk"], ["Doc"])
 
     @pytest.mark.asyncio
     async def test_ollama_http_error_raises_llm_error(self, monkeypatch):
@@ -135,7 +146,7 @@ class TestAdapters:
         mock_client.__aexit__ = AsyncMock(return_value=False)
         with patch("httpx.AsyncClient", return_value=mock_client):
             with pytest.raises(LLMError):
-                await OllamaAdapter().complete("q", ["chunk"])
+                await OllamaAdapter().complete("q", ["chunk"], ["Doc"])
 
     # --- OpenAIAdapter ---
 
@@ -152,15 +163,15 @@ class TestAdapters:
             from backend.rag.llm import openai as _openai_mod
             import importlib
             importlib.reload(_openai_mod)
-            result = await _openai_mod.OpenAIAdapter().complete("Q?", ["chunk1"])
+            result = await _openai_mod.OpenAIAdapter().complete("Q?", ["chunk1"], ["Doc 1"])
         assert result.provider == "openai"
-        assert result.confidence == 0.9
+        assert result.confidence == pytest.approx(0.9)
 
     @pytest.mark.asyncio
     async def test_openai_no_chunks_raises(self):
         from backend.rag.llm.openai import OpenAIAdapter
         with pytest.raises(NoRelevantChunksError):
-            await OpenAIAdapter().complete("q", [])
+            await OpenAIAdapter().complete("q", [], [])
 
     @pytest.mark.asyncio
     async def test_openai_api_error_raises_llm_error(self, monkeypatch):
@@ -172,7 +183,7 @@ class TestAdapters:
             import importlib
             importlib.reload(_openai_mod)
             with pytest.raises(LLMError):
-                await _openai_mod.OpenAIAdapter().complete("q", ["chunk"])
+                await _openai_mod.OpenAIAdapter().complete("q", ["chunk"], ["Doc"])
 
     # --- ClaudeAdapter ---
 
@@ -188,16 +199,16 @@ class TestAdapters:
             from backend.rag.llm import claude as _claude_mod
             import importlib
             importlib.reload(_claude_mod)
-            result = await _claude_mod.ClaudeAdapter().complete("Q?", ["chunk1"])
+            result = await _claude_mod.ClaudeAdapter().complete("Q?", ["chunk1"], ["Doc 1"])
         assert result.provider == "claude"
         assert result.model == "claude-haiku-4-5-20251001"
-        assert result.confidence == 0.9
+        assert result.confidence == pytest.approx(0.9)
 
     @pytest.mark.asyncio
     async def test_claude_no_chunks_raises(self):
         from backend.rag.llm.claude import ClaudeAdapter
         with pytest.raises(NoRelevantChunksError):
-            await ClaudeAdapter().complete("q", [])
+            await ClaudeAdapter().complete("q", [], [])
 
     @pytest.mark.asyncio
     async def test_claude_api_error_raises_llm_error(self, monkeypatch):
@@ -209,7 +220,7 @@ class TestAdapters:
             import importlib
             importlib.reload(_claude_mod)
             with pytest.raises(LLMError):
-                await _claude_mod.ClaudeAdapter().complete("q", ["chunk"])
+                await _claude_mod.ClaudeAdapter().complete("q", ["chunk"], ["Doc"])
 
 
 # ---------------------------------------------------------------------------
@@ -305,14 +316,13 @@ class TestAnswerGate:
         else:
             from backend.rag.llm.claude import ClaudeAdapter as Adapter
         with pytest.raises(NoRelevantChunksError):
-            await Adapter().complete("any query", [])
+            await Adapter().complete("any query", [], [])
 
     def test_low_confidence_flag_set_when_below_threshold(self):
         """AC6 — C014: confidence < 0.4 → low_confidence=True on LLMResponse."""
         r = LLMResponse(
-            answer="uncertain", sources=["doc-1"],
-            confidence=0.3, provider="test", model="m",
-            low_confidence=True
+            answer="uncertain", confidence=0.3,
+            provider="test", model="m", low_confidence=True
         )
         assert r.low_confidence is True
         assert r.confidence < 0.4
@@ -320,18 +330,16 @@ class TestAnswerGate:
     def test_low_confidence_flag_not_set_when_above_threshold(self):
         """Complement: confidence >= 0.4 → low_confidence=False."""
         r = LLMResponse(
-            answer="confident", sources=["doc-1"],
-            confidence=0.4, provider="test", model="m",
-            low_confidence=False
+            answer="confident", confidence=0.4,
+            provider="test", model="m", low_confidence=False
         )
         assert r.low_confidence is False
 
     def test_low_confidence_boundary_exactly_04(self):
         """Boundary: confidence == 0.4 is NOT low confidence (< not <=)."""
         r = LLMResponse(
-            answer="ok", sources=["doc-1"],
-            confidence=0.4, provider="test", model="m",
-            low_confidence=False  # 0.4 is NOT < 0.4
+            answer="ok", confidence=0.4,
+            provider="test", model="m", low_confidence=False  # 0.4 is NOT < 0.4
         )
         assert r.low_confidence is False
 
@@ -344,5 +352,5 @@ class TestAnswerGate:
         mock_client.__aexit__ = AsyncMock(return_value=False)
         with patch("httpx.AsyncClient", return_value=mock_client):
             with pytest.raises(NoRelevantChunksError):
-                await OllamaAdapter().complete("q", [])
+                await OllamaAdapter().complete("q", [], [])
             mock_client.post.assert_not_called()  # HTTP call never made

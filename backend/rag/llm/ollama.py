@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 
 import httpx
@@ -23,15 +24,22 @@ class OllamaAdapter(LLMProvider):
         self._model = os.getenv("LLM_MODEL", "llama3")
         self._timeout = float(os.getenv("LLM_TIMEOUT_S", "5.0"))
 
-    async def complete(self, prompt: str, context_chunks: list[str]) -> LLMResponse:
-        # Spec: docs/llm-provider/spec/llm-provider.spec.md#S002
-        # Task: T006 — OllamaAdapter (async httpx, D07)
+    async def complete(
+        self,
+        prompt: str,
+        context_chunks: list[str],
+        doc_titles: list[str],
+    ) -> LLMResponse:
+        # Spec: docs/answer-citation/spec/answer-citation.spec.md#S003
+        # Task: T004 — OllamaAdapter updated complete() (D-CIT-09, AC5 fallback)
         # Decision: D03 — NoRelevantChunksError gates generation (C014)
         if not context_chunks:
             raise NoRelevantChunksError("No relevant chunks — cannot generate answer (C014)")
-        filled = _PROMPT_TEMPLATE.format(
-            context="\n".join(context_chunks), question=prompt
+        sources_index = "\n\n".join(
+            f"[{i + 1}] {title}\n{chunk}"
+            for i, (title, chunk) in enumerate(zip(doc_titles, context_chunks))
         )
+        filled = _PROMPT_TEMPLATE.format(sources_index=sources_index, question=prompt)
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
@@ -43,11 +51,12 @@ class OllamaAdapter(LLMProvider):
                 data = resp.json()
         except Exception as exc:
             raise LLMError(str(exc)) from exc
+        answer = data["response"]
         return LLMResponse(
-            answer=data["response"],
-            sources=context_chunks,
+            answer=answer,
             confidence=0.9,  # sentinel — Ollama has no logprobs (D06)
             provider="ollama",
             model=self._model,
             low_confidence=False,  # 0.9 is never < 0.4
+            inline_markers_present=bool(re.search(r"\[\d+\]", answer)),
         )

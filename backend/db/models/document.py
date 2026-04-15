@@ -23,3 +23,4 @@ class Document(Base):
     updated_at: Mapped[datetime] = mapped_column(nullable=False, server_default=func.now(), onupdate=func.now())
     content_fts: Mapped[str | None] = mapped_column(Text().with_variant(TSVECTOR, "postgresql"), nullable=True)  # nullable: rag-agent populates post-ingestion (D02)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="processing")  # D07: processing → ready | failed
+    source_url: Mapped[str | None] = mapped_column(Text, nullable=True)  # migration 007 — D-CIT-02; NULL = URL not set yet (D-CIT-06)

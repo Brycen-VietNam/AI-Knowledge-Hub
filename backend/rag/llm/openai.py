@@ -24,16 +24,24 @@ class OpenAIAdapter(LLMProvider):
         self._base_url = os.getenv("OPENAI_BASE_URL")  # None → openai SDK default
         self._model = os.getenv("LLM_MODEL", "gpt-4o-mini")
 
-    async def complete(self, prompt: str, context_chunks: list[str]) -> LLMResponse:
-        # Spec: docs/llm-provider/spec/llm-provider.spec.md#S002
-        # Task: T007 — OpenAIAdapter (lazy import, D07)
+    async def complete(
+        self,
+        prompt: str,
+        context_chunks: list[str],
+        doc_titles: list[str],
+    ) -> LLMResponse:
+        # Spec: docs/answer-citation/spec/answer-citation.spec.md#S003
+        # Task: T005 — OpenAIAdapter updated complete() (D-CIT-09, AC5 fallback)
         # Decision: D06 — logprobs → confidence; sentinel 0.9 if unavailable
         if not context_chunks:
             raise NoRelevantChunksError("No relevant chunks (C014)")
         import openai  # lazy import — SDK not loaded until needed
-        filled = _PROMPT_TEMPLATE.format(
-            context="\n".join(context_chunks), question=prompt
+        import re
+        sources_index = "\n\n".join(
+            f"[{i + 1}] {title}\n{chunk}"
+            for i, (title, chunk) in enumerate(zip(doc_titles, context_chunks))
         )
+        filled = _PROMPT_TEMPLATE.format(sources_index=sources_index, question=prompt)
         try:
             client = openai.AsyncOpenAI(
                 api_key=self._api_key,
@@ -50,9 +58,9 @@ class OpenAIAdapter(LLMProvider):
         confidence = math.exp(logprobs.content[0].logprob) if logprobs else 0.9
         return LLMResponse(
             answer=content,
-            sources=context_chunks,
             confidence=confidence,
             provider="openai",
             model=self._model,
             low_confidence=confidence < 0.4,
+            inline_markers_present=bool(re.search(r"\[\d+\]", content)),
         )

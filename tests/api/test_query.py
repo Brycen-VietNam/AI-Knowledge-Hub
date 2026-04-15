@@ -98,7 +98,6 @@ def mock_audit():
 def default_llm_response():
     return LLMResponse(
         answer="test answer",
-        sources=["doc-001"],
         confidence=0.9,
         provider="ollama",
         model="llama3",
@@ -176,7 +175,7 @@ def test_ac7_zero_group_user_gets_results(mock_audit, user_no_groups):
     doc = _make_doc()
     app = _make_app(user_no_groups)
     llm_resp = LLMResponse(
-        answer="public answer", sources=[], confidence=0.9,
+        answer="public answer", confidence=0.9,
         provider="ollama", model="llama3", low_confidence=False,
     )
     with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[doc])), \
@@ -264,7 +263,7 @@ def test_low_confidence_flag(mock_search, mock_audit, user_with_groups):
     """S002/C014: confidence < 0.4 → low_confidence=True."""
     app = _make_app(user_with_groups)
     low_conf = LLMResponse(
-        answer="uncertain", sources=[], confidence=0.3,
+        answer="uncertain", confidence=0.3,
         provider="ollama", model="llama3", low_confidence=True,
     )
     with patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=low_conf)):
@@ -277,7 +276,7 @@ def test_high_confidence_not_flagged(mock_search, mock_audit, user_with_groups):
     """S002/C014: confidence >= 0.4 → low_confidence=False."""
     app = _make_app(user_with_groups)
     high_conf = LLMResponse(
-        answer="confident", sources=[], confidence=0.8,
+        answer="confident", confidence=0.8,
         provider="ollama", model="llama3", low_confidence=False,
     )
     with patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=high_conf)):
@@ -368,7 +367,7 @@ def test_ac1_happy_path_multilang(lang, mock_audit, user_with_groups):
     app = _make_app(user_with_groups)
     doc = _make_doc()
     llm_resp = LLMResponse(
-        answer=f"answer in {lang}", sources=[], confidence=0.9,
+        answer=f"answer in {lang}", confidence=0.9,
         provider="ollama", model="llama3", low_confidence=False,
     )
     with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[doc])), \
@@ -423,7 +422,7 @@ def test_ac5_zero_group_user_gets_200_not_403(mock_audit, user_no_groups):
     app = _make_app(user_no_groups)
     doc = _make_doc()
     llm_resp = LLMResponse(
-        answer="public result", sources=[], confidence=0.9,
+        answer="public result", confidence=0.9,
         provider="ollama", model="llama3", low_confidence=False,
     )
     with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[doc])), \
@@ -451,7 +450,7 @@ def test_ac9_low_confidence_flag_set(mock_search, mock_audit, user_with_groups):
     """AC9 (S005-T001): LLM returns confidence=0.3 → low_confidence=True in response."""
     app = _make_app(user_with_groups)
     low_conf = LLMResponse(
-        answer="uncertain answer", sources=[], confidence=0.3,
+        answer="uncertain answer", confidence=0.3,
         provider="ollama", model="llama3", low_confidence=True,
     )
     with patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=low_conf)):
@@ -472,3 +471,76 @@ def test_ac11_no_relevant_chunks_returns_200_null_answer(mock_search, mock_audit
     body = resp.json()
     assert body["answer"] is None
     assert body["reason"] == "no_relevant_chunks"
+
+
+# ---------------------------------------------------------------------------
+# S005 / answer-citation T002 — AC9, AC10, AC11 integration (citations field)
+# ---------------------------------------------------------------------------
+
+def _make_enriched_doc(doc_id=None):
+    """RetrievedDocument with title/lang/source_url populated (answer-citation S001)."""
+    return RetrievedDocument(
+        doc_id=doc_id or uuid.uuid4(),
+        chunk_index=0,
+        score=0.85,
+        user_group_id=1,
+        content="chunk text",
+        title="Integration Doc",
+        lang="en",
+        source_url="https://example.com/doc.pdf",
+    )
+
+
+def test_query_response_has_citations_and_sources(mock_audit, user_with_groups):
+    """AC9 (T002): /v1/query response contains both 'sources' and 'citations' fields."""
+    # Spec: docs/answer-citation/spec/answer-citation.spec.md#AC9
+    # Decision: D-CIT-01 — additive; sources unchanged
+    app = _make_app(user_with_groups)
+    doc = _make_enriched_doc()
+    llm_resp = LLMResponse(answer="ok", confidence=0.9, provider="ollama", model="llama3", low_confidence=False)
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[doc])), \
+         patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)):
+        with TestClient(app) as client:
+            resp = client.post("/v1/query", json={"query": "test"})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "sources" in body
+    assert "citations" in body
+    assert isinstance(body["sources"], list)
+    assert isinstance(body["citations"], list)
+    assert len(body["citations"]) == len(body["sources"])
+
+
+def test_query_response_citations_not_null(mock_audit, user_with_groups):
+    """AC10 (T002): citations is always a list — never null, even with empty results."""
+    # Spec: docs/answer-citation/spec/answer-citation.spec.md#AC10
+    app = _make_app(user_with_groups)
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[])):
+        with TestClient(app) as client:
+            resp = client.post("/v1/query", json={"query": "nothing"})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "citations" in body
+    assert body["citations"] is not None
+    assert isinstance(body["citations"], list)
+
+
+def test_query_response_citation_fields_complete(mock_audit, user_with_groups):
+    """AC11 (T002): each CitationObject has all 6 required fields with correct types."""
+    # Spec: docs/answer-citation/spec/answer-citation.spec.md#AC11
+    # Fields: doc_id(str), title(str), source_url(str|None), chunk_index(int), score(float), lang(str)
+    app = _make_app(user_with_groups)
+    doc = _make_enriched_doc()
+    llm_resp = LLMResponse(answer="ok", confidence=0.9, provider="ollama", model="llama3", low_confidence=False)
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[doc])), \
+         patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)):
+        with TestClient(app) as client:
+            resp = client.post("/v1/query", json={"query": "fields check"})
+    assert resp.status_code == 200
+    citation = resp.json()["citations"][0]
+    assert isinstance(citation["doc_id"], str)
+    assert isinstance(citation["title"], str)
+    assert citation["source_url"] is None or isinstance(citation["source_url"], str)
+    assert isinstance(citation["chunk_index"], int)
+    assert isinstance(citation["score"], float)
+    assert isinstance(citation["lang"], str)

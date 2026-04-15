@@ -53,10 +53,14 @@ X-API-Key: <key>
 ```json
 {
   "request_id": "a2ddb50e-33d0-40bf-bae1-a46e870fa7a6",
-  "answer": "Contractors are entitled to ...",
+  "answer": "Contractors are entitled to [1] 10 days annual leave per contract year.",
   "sources": [
     "100038c2-ad58-40fe-990e-66171a50f840",
     "abce4c10-1589-4b5e-bf28-4910501f4190"
+  ],
+  "citations": [
+    { "doc_id": "100038c2-ad58-40fe-990e-66171a50f840", "title": "Leave Policy 2024", "source_url": "https://intranet.example.com/hr/leave-policy" },
+    { "doc_id": "abce4c10-1589-4b5e-bf28-4910501f4190", "title": "HR Handbook Q1", "source_url": null }
   ],
   "low_confidence": false,
   "reason": null
@@ -66,10 +70,21 @@ X-API-Key: <key>
 | Field | Type | Description |
 |-------|------|-------------|
 | `request_id` | string (UUID) | Unique ID for this request. Include in support tickets. Present on all responses. |
-| `answer` | string \| null | AI-generated answer. `null` when no relevant documents were found. |
-| `sources` | string[] | List of document UUIDs used to generate the answer. Empty when `answer` is null. |
+| `answer` | string \| null | AI-generated answer. May contain `[N]` inline markers referencing `citations[N-1]`. `null` when no relevant documents were found. |
+| `sources` | string[] | List of document UUIDs used to generate the answer. Preserved for backward compatibility. Empty when `answer` is null. |
+| `citations` | CitationObject[] | Enriched citation list — same order as `sources`. Each entry contains `doc_id`, `title`, and `source_url` (nullable). Empty when `answer` is null. |
 | `low_confidence` | boolean | `true` when model confidence < 0.4. Treat the answer as uncertain. |
 | `reason` | string \| null | Populated only when `answer` is null. Value: `"no_relevant_chunks"`. |
+
+**CitationObject**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `doc_id` | string (UUID) | Document UUID. Matches the corresponding entry in `sources`. |
+| `title` | string | Document title as stored at ingestion time. |
+| `source_url` | string \| null | URL to the source document. `null` when not set for the document. |
+
+See [Citation Rendering Contract](../answer-citation/citation-rendering-contract.md)
 
 **Response headers (always present)**
 

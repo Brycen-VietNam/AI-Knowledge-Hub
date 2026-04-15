@@ -261,6 +261,181 @@ class TestHybridMerge:
         assert results == []
 
 
+# ---------------------------------------------------------------------------
+# answer-citation S001-T005 — RetrievedDocument enrichment AC12
+# ---------------------------------------------------------------------------
+
+class TestEnrichment:
+    """Unit: RetrievedDocument carries title/lang/source_url from retriever. AC12."""
+
+    DOC_ID = uuid.UUID("eeeeeeee-0000-0000-0000-000000000001")
+
+    def _make_dense_row(self, doc_id, title, lang, source_url, distance=0.2):
+        row = MagicMock()
+        row.doc_id = doc_id
+        row.chunk_index = 0
+        row.user_group_id = 1
+        row.distance = distance
+        row.text = "chunk content"
+        row.title = title
+        row.lang = lang
+        row.source_url = source_url
+        return row
+
+    def _make_bm25_row_enriched(self, doc_id, title, lang, source_url, rank=0.75):
+        row = MagicMock()
+        row.doc_id = doc_id
+        row.chunk_index = 0
+        row.user_group_id = 1
+        row.rank = rank
+        row.title = title
+        row.lang = lang
+        row.source_url = source_url
+        return row
+
+    @pytest.mark.asyncio
+    async def test_dense_search_enriches_title_lang_source_url(self):
+        """_dense_search result must populate title, lang, source_url on RetrievedDocument."""
+        row = self._make_dense_row(self.DOC_ID, "Policy Document", "en", "https://example.com/policy.pdf")
+        session = _mock_session([row])
+        results = await _dense_search(session, [0.1] * 1024, [1], 10)
+        assert len(results) == 1
+        doc = results[0]
+        assert doc.title == "Policy Document"
+        assert doc.lang == "en"
+        assert doc.source_url == "https://example.com/policy.pdf"
+
+    @pytest.mark.asyncio
+    async def test_dense_search_null_source_url_is_none(self):
+        """source_url=NULL in DB → RetrievedDocument.source_url is None (D-CIT-06)."""
+        row = self._make_dense_row(self.DOC_ID, "Untitled", "ja", None)
+        session = _mock_session([row])
+        results = await _dense_search(session, [0.1] * 1024, [1], 10)
+        assert results[0].source_url is None
+
+    @pytest.mark.asyncio
+    async def test_dense_search_null_lang_falls_back_to_und(self):
+        """lang=NULL in DB → RetrievedDocument.lang falls back to 'und' (defensive T001)."""
+        row = self._make_dense_row(self.DOC_ID, "Legacy Doc", None, None)
+        session = _mock_session([row])
+        results = await _dense_search(session, [0.1] * 1024, [1], 10)
+        assert results[0].lang == "und"
+
+    @pytest.mark.asyncio
+    async def test_bm25_search_enriches_title_lang_source_url(self):
+        """_bm25_search result must populate title, lang, source_url on RetrievedDocument."""
+        row = self._make_bm25_row_enriched(self.DOC_ID, "HR Guidelines", "ja", "https://intranet/hr.pdf")
+        session = _mock_session([row])
+        results = await _bm25_search(session, "guidelines", [1], 10)
+        assert len(results) == 1
+        doc = results[0]
+        assert doc.title == "HR Guidelines"
+        assert doc.lang == "ja"
+        assert doc.source_url == "https://intranet/hr.pdf"
+        assert doc.chunk_index >= 0  # intentionally 0 for BM25 — assert >=0 not exact value
+
+    @pytest.mark.asyncio
+    async def test_merge_propagates_enrichment_fields(self):
+        """_merge must propagate title/lang/source_url via **vars() spread (no _merge change needed)."""
+        doc = RetrievedDocument(
+            doc_id=self.DOC_ID,
+            chunk_index=0,
+            score=0.8,
+            user_group_id=1,
+            title="Spread Doc",
+            lang="ko",
+            source_url="https://example.com/ko.pdf",
+        )
+        merged = _merge([doc], [], top_k=10)
+        assert len(merged) == 1
+        assert merged[0].title == "Spread Doc"
+        assert merged[0].lang == "ko"
+        assert merged[0].source_url == "https://example.com/ko.pdf"
+
+    @pytest.mark.asyncio
+    async def test_dense_sql_contains_inner_join_documents(self):
+        """_dense_search SQL must contain INNER JOIN documents (AC7 — no extra query)."""
+        session = _mock_session([])
+        await _dense_search(session, [0.1] * 1024, [1], 5)
+        call_args = session.execute.call_args[0][0]
+        sql_text = str(call_args)
+        assert "INNER JOIN documents" in sql_text or "JOIN documents" in sql_text
+        assert session.execute.call_count == 1  # AC7: single SQL call, no N+1
+
+
+# ---------------------------------------------------------------------------
+# S005-T004 — AC12: consolidated enrichment smoke test
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_retrieved_document_enrichment():
+    """AC12: search() results have title, lang, source_url; lang='und' fallback; source_url may be None.
+
+    Consolidated smoke test exercising both _dense_search and _bm25_search enrichment paths
+    in a single test function (detailed path coverage is in TestEnrichment above).
+    """
+    # Spec: docs/answer-citation/spec/answer-citation.spec.md#AC12
+    # Task: S001-T004 — _dense_search INNER JOIN documents; T005 — _bm25_search title/lang/source_url
+    doc_id = uuid.UUID("ffffffff-0000-0000-0000-000000000001")
+
+    # --- dense path: normal enrichment ---
+    dense_row = MagicMock()
+    dense_row.doc_id = doc_id
+    dense_row.chunk_index = 0
+    dense_row.user_group_id = 1
+    dense_row.distance = 0.2
+    dense_row.text = "chunk"
+    dense_row.title = "Dense Doc"
+    dense_row.lang = "en"
+    dense_row.source_url = "https://example.com/dense.pdf"
+
+    session = AsyncMock()
+    session.execute.return_value = iter([dense_row])
+    dense_results = await _dense_search(session, [0.1] * 1024, [1], 10)
+    assert len(dense_results) == 1
+    d = dense_results[0]
+    assert d.title == "Dense Doc"
+    assert d.lang == "en"
+    assert d.source_url == "https://example.com/dense.pdf"
+
+    # --- dense path: source_url=None + lang=None → 'und' fallback ---
+    null_row = MagicMock()
+    null_row.doc_id = doc_id
+    null_row.chunk_index = 0
+    null_row.user_group_id = 1
+    null_row.distance = 0.3
+    null_row.text = "chunk"
+    null_row.title = "Legacy Doc"
+    null_row.lang = None
+    null_row.source_url = None
+
+    session2 = AsyncMock()
+    session2.execute.return_value = iter([null_row])
+    null_results = await _dense_search(session2, [0.1] * 1024, [1], 10)
+    assert null_results[0].source_url is None
+    assert null_results[0].lang == "und"
+
+    # --- bm25 path: normal enrichment ---
+    bm25_row = MagicMock()
+    bm25_row.doc_id = doc_id
+    bm25_row.chunk_index = 0
+    bm25_row.user_group_id = 1
+    bm25_row.rank = 0.75
+    bm25_row.title = "BM25 Doc"
+    bm25_row.lang = "ja"
+    bm25_row.source_url = "https://intranet/bm25.pdf"
+
+    session3 = AsyncMock()
+    session3.execute.return_value = iter([bm25_row])
+    bm25_results = await _bm25_search(session3, "test query", [1], 10)
+    assert len(bm25_results) == 1
+    b = bm25_results[0]
+    assert b.title == "BM25 Doc"
+    assert b.lang == "ja"
+    assert b.source_url == "https://intranet/bm25.pdf"
+    assert b.chunk_index >= 0  # BM25 hardcodes chunk_index=0 — assert >=0 not exact value
+
+
 class TestTimeout:
     @pytest.mark.asyncio
     async def test_query_timeout_error_raised_on_timeout(self, monkeypatch):

@@ -184,7 +184,7 @@ def test_rate_limit_headers_present():
         user_group_id=1, content="ctx",
     )
     llm_resp = LLMResponse(
-        answer="ok", sources=["d1"], confidence=0.9,
+        answer="ok", confidence=0.9,
         provider="ollama", model="llama3", low_confidence=False
     )
 
@@ -265,7 +265,7 @@ def test_ac10_rate_limit_not_exceeded_returns_200_with_remaining():
         user_group_id=1, content="ctx",
     )
     llm_resp = LLMResponse(
-        answer="ok", sources=[], confidence=0.9,
+        answer="ok", confidence=0.9,
         provider="ollama", model="llama3", low_confidence=False,
     )
     reset_ts = int(time.time()) + 60
