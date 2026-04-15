@@ -1,9 +1,12 @@
 # Spec: docs/answer-citation/spec/answer-citation.spec.md#S002
+# Spec: docs/citation-quality/spec/citation-quality.spec.md#S003
 # Task: S002-T001 — CitationObject construction (AC1, AC2)
 # Task: S002-T002 — QueryResponse citations field (AC3, AC4, AC10)
 # Task: S002-T003 — Full AC coverage
+# Task: citation-quality/S003-T002 — cited field integration tests
 # Decision: D-CIT-01 (additive — sources unchanged), D-CIT-03 (no score filter),
 #           D-CIT-05 (API layer builds CitationObject from RetrievedDocument)
+# Decision: D-CQ-01 (cited default False), D-CQ-02 (fast path), D-CQ-03 (OOB ignored)
 import uuid
 from unittest.mock import AsyncMock, patch
 
@@ -250,3 +253,96 @@ def test_citation_score_rounded_to_4dp():
     score = citation["score"]
     # Must be rounded to at most 4 decimal places
     assert score == round(score, 4), f"score {score} exceeds 4dp precision"
+
+
+# ---------------------------------------------------------------------------
+# citation-quality/S003-T002 — cited field integration tests
+# ---------------------------------------------------------------------------
+
+def test_cited_true_when_marker_present():
+    """D-CQ-01: cited=True when LLM emitted [1] marker matching this doc's position."""
+    user = _make_user()
+    app = _make_app(user)
+    doc = _make_doc()  # content="chunk text" → goes into content_docs at index 0
+
+    llm = LLMResponse(
+        answer="See [1] for the answer.",
+        confidence=0.9,
+        provider="ollama",
+        model="llama3",
+        low_confidence=False,
+        inline_markers_present=True,
+    )
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[doc])), \
+         patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm)), \
+         patch("backend.api.routes.query._write_audit", new=AsyncMock()):
+        with TestClient(app) as client:
+            resp = client.post("/v1/query", json={"query": "cited doc"})
+
+    assert resp.status_code == 200
+    citation = resp.json()["citations"][0]
+    assert citation["cited"] is True
+
+
+def test_cited_false_when_no_markers():
+    """D-CQ-02: cited=False for all docs when inline_markers_present=False (fast path)."""
+    user = _make_user()
+    app = _make_app(user)
+    docs = [_make_doc(), _make_doc()]
+
+    llm = LLMResponse(
+        answer="General answer with no markers.",
+        confidence=0.9,
+        provider="ollama",
+        model="llama3",
+        low_confidence=False,
+        inline_markers_present=False,  # fast path — no regex
+    )
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=docs)), \
+         patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm)), \
+         patch("backend.api.routes.query._write_audit", new=AsyncMock()):
+        with TestClient(app) as client:
+            resp = client.post("/v1/query", json={"query": "no markers"})
+
+    assert resp.status_code == 200
+    for citation in resp.json()["citations"]:
+        assert citation["cited"] is False
+
+
+def test_cited_false_oob_marker():
+    """D-CQ-03: [99] with 3 docs → all cited=False (OOB silently ignored)."""
+    user = _make_user()
+    app = _make_app(user)
+    docs = [_make_doc(), _make_doc(), _make_doc()]
+
+    llm = LLMResponse(
+        answer="See [99] — this is out of bounds.",
+        confidence=0.9,
+        provider="ollama",
+        model="llama3",
+        low_confidence=False,
+        inline_markers_present=True,
+    )
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=docs)), \
+         patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm)), \
+         patch("backend.api.routes.query._write_audit", new=AsyncMock()):
+        with TestClient(app) as client:
+            resp = client.post("/v1/query", json={"query": "oob marker"})
+
+    assert resp.status_code == 200
+    for citation in resp.json()["citations"]:
+        assert citation["cited"] is False
+
+
+def test_cited_false_default_on_empty_citations():
+    """AC6 regression: citations=[] when no docs — no cited field issues."""
+    user = _make_user()
+    app = _make_app(user)
+
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[])), \
+         patch("backend.api.routes.query._write_audit", new=AsyncMock()):
+        with TestClient(app) as client:
+            resp = client.post("/v1/query", json={"query": "empty path"})
+
+    assert resp.status_code == 200
+    assert resp.json()["citations"] == []

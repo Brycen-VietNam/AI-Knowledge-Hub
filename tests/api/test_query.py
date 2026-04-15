@@ -1,9 +1,12 @@
 # Spec: docs/query-endpoint/spec/query-endpoint.spec.md#S001
 # Spec: docs/query-endpoint/spec/query-endpoint.spec.md#S002
+# Spec: docs/citation-quality/spec/citation-quality.spec.md#S003
 # Task: S001-T003 — Scaffold fixtures; S001-T004 — search() wire; S001-T005 — AC tests
 # Task: S002-T001 — mock_generate fixture; S002-T002 — LLM wire; S002-T003/T004 — error+confidence
+# Task: citation-quality/S003-T003 — cited field assertions on integration mocks
 # Decision: D04 — 0-group users get public results (not 403)
 # Decision: D09 — NoRelevantChunksError → 200 {answer: null, reason: no_relevant_chunks}
+# Decision: D-CQ-01 (cited default False), D-CQ-02 (fast path skip), D-CQ-05 (non-content cited=False)
 # Rule: R002 — sources must be doc_ids (not content)
 # Rule: R006 — audit log called as BackgroundTask
 import asyncio
@@ -544,3 +547,95 @@ def test_query_response_citation_fields_complete(mock_audit, user_with_groups):
     assert isinstance(citation["chunk_index"], int)
     assert isinstance(citation["score"], float)
     assert isinstance(citation["lang"], str)
+
+
+# ---------------------------------------------------------------------------
+# citation-quality/S003-T003 — cited field assertions on integration mocks
+# ---------------------------------------------------------------------------
+
+def test_cited_field_present_in_citation_objects(mock_audit, user_with_groups):
+    """D-CQ-01: every CitationObject in /v1/query response has a 'cited' bool field."""
+    app = _make_app(user_with_groups)
+    doc = _make_enriched_doc()
+    llm_resp = LLMResponse(
+        answer="ok", confidence=0.9, provider="ollama", model="llama3", low_confidence=False,
+    )
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[doc])), \
+         patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)):
+        with TestClient(app) as client:
+            resp = client.post("/v1/query", json={"query": "cited field present"})
+    assert resp.status_code == 200
+    for citation in resp.json()["citations"]:
+        assert "cited" in citation, "cited field must be present on every CitationObject"
+        assert isinstance(citation["cited"], bool)
+
+
+def test_cited_true_when_inline_marker_matches(mock_audit, user_with_groups):
+    """D-CQ-01/D-CQ-04: cited=True when LLM answer has [1] and doc is at content_docs index 0."""
+    app = _make_app(user_with_groups)
+    doc = _make_enriched_doc()  # has content → goes into content_docs at index 0
+    llm_resp = LLMResponse(
+        answer="Refer to [1] for details.",
+        confidence=0.9,
+        provider="ollama",
+        model="llama3",
+        low_confidence=False,
+        inline_markers_present=True,
+    )
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[doc])), \
+         patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)):
+        with TestClient(app) as client:
+            resp = client.post("/v1/query", json={"query": "marker test"})
+    assert resp.status_code == 200
+    assert resp.json()["citations"][0]["cited"] is True
+
+
+def test_cited_false_fast_path_no_markers(mock_audit, user_with_groups):
+    """D-CQ-02: inline_markers_present=False → all cited=False without regex (fast path)."""
+    app = _make_app(user_with_groups)
+    docs = [_make_enriched_doc(), _make_enriched_doc()]
+    llm_resp = LLMResponse(
+        answer="General answer.",
+        confidence=0.9,
+        provider="ollama",
+        model="llama3",
+        low_confidence=False,
+        inline_markers_present=False,
+    )
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=docs)), \
+         patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)):
+        with TestClient(app) as client:
+            resp = client.post("/v1/query", json={"query": "no markers fast path"})
+    assert resp.status_code == 200
+    for citation in resp.json()["citations"]:
+        assert citation["cited"] is False
+
+
+def test_cited_false_for_no_content_doc(mock_audit, user_with_groups):
+    """D-CQ-05: doc with no content is always cited=False (not in content_docs)."""
+    app = _make_app(user_with_groups)
+    # doc without content → not in content_docs → cited=False even if LLM emits [1]
+    no_content_doc = RetrievedDocument(
+        doc_id=uuid.uuid4(),
+        chunk_index=0,
+        score=0.8,
+        user_group_id=1,
+        content=None,  # D-CQ-05: excluded from content_docs
+        title="No Content Doc",
+        lang="en",
+        source_url=None,
+    )
+    llm_resp = LLMResponse(
+        answer="See [1].",
+        confidence=0.9,
+        provider="ollama",
+        model="llama3",
+        low_confidence=False,
+        inline_markers_present=True,
+    )
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[no_content_doc])), \
+         patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)):
+        with TestClient(app) as client:
+            resp = client.post("/v1/query", json={"query": "no content cited"})
+    assert resp.status_code == 200
+    assert resp.json()["citations"][0]["cited"] is False
