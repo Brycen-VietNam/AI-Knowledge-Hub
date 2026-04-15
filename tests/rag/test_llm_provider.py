@@ -112,8 +112,9 @@ class TestAdapters:
         assert result.provider == "ollama"
         assert result.model == "llama3"
         assert result.answer == "The answer is 42."
-        assert result.confidence == pytest.approx(0.9)
-        assert result.low_confidence is False
+        # BACKLOG-2: no [N] markers in answer → cited_ratio=0 → confidence=0.2, low_confidence=True
+        assert result.confidence == pytest.approx(0.2)
+        assert result.low_confidence is True
 
     @pytest.mark.asyncio
     async def test_ollama_no_chunks_raises(self):
@@ -202,7 +203,8 @@ class TestAdapters:
             result = await _claude_mod.ClaudeAdapter().complete("Q?", ["chunk1"], ["Doc 1"])
         assert result.provider == "claude"
         assert result.model == "claude-haiku-4-5-20251001"
-        assert result.confidence == pytest.approx(0.9)
+        # BACKLOG-2: no [N] markers in answer → cited_ratio=0 → confidence=0.2
+        assert result.confidence == pytest.approx(0.2)
 
     @pytest.mark.asyncio
     async def test_claude_no_chunks_raises(self):

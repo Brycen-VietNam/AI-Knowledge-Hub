@@ -4,6 +4,7 @@ from pathlib import Path
 
 import httpx
 
+from backend.rag.citation_parser import _parse_citations
 from backend.rag.config import OLLAMA_LLM_URL
 from .base import LLMProvider, LLMResponse
 from .exceptions import LLMError, NoRelevantChunksError
@@ -52,11 +53,16 @@ class OllamaAdapter(LLMProvider):
         except Exception as exc:
             raise LLMError(str(exc)) from exc
         answer = data["response"]
+        # BACKLOG-2: derive confidence from cited_ratio — Ollama has no logprobs (D06)
+        # Formula: cited_ratio * 0.8 + 0.2  (range [0.2, 1.0]; low_confidence triggers when < 0.4)
+        num_docs = len(context_chunks)
+        cited_ratio = len(_parse_citations(answer, num_docs)) / num_docs if num_docs else 0.0
+        confidence = cited_ratio * 0.8 + 0.2
         return LLMResponse(
             answer=answer,
-            confidence=0.9,  # sentinel — Ollama has no logprobs (D06)
+            confidence=confidence,
             provider="ollama",
             model=self._model,
-            low_confidence=False,  # 0.9 is never < 0.4
+            low_confidence=confidence < 0.4,
             inline_markers_present=bool(re.search(r"\[\d+\]", answer)),
         )

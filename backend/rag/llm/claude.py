@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+from backend.rag.citation_parser import _parse_citations
 from .base import LLMProvider, LLMResponse
 from .exceptions import LLMError, NoRelevantChunksError
 
@@ -14,7 +15,7 @@ class ClaudeAdapter(LLMProvider):
         ANTHROPIC_API_KEY: Anthropic secret key.
         LLM_MODEL:         Model ID (default: claude-haiku-4-5-20251001, per D02/A02).
 
-    Confidence is always the sentinel 0.9 — Claude has no logprobs endpoint (D06).
+    Confidence is derived from cited_ratio (BACKLOG-2) — Claude has no logprobs endpoint (D06).
     """
     def __init__(self):
         self._api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -49,11 +50,16 @@ class ClaudeAdapter(LLMProvider):
         except Exception as exc:
             raise LLMError(str(exc)) from exc
         answer = msg.content[0].text
+        # BACKLOG-2: derive confidence from cited_ratio — Claude has no logprobs (D06)
+        # Formula: cited_ratio * 0.8 + 0.2  (range [0.2, 1.0]; low_confidence triggers when < 0.4)
+        num_docs = len(context_chunks)
+        cited_ratio = len(_parse_citations(answer, num_docs)) / num_docs if num_docs else 0.0
+        confidence = cited_ratio * 0.8 + 0.2
         return LLMResponse(
             answer=answer,
-            confidence=0.9,  # sentinel — Claude API has no logprobs (D06)
+            confidence=confidence,
             provider="claude",
             model=self._model,
-            low_confidence=False,  # 0.9 is never < 0.4
+            low_confidence=confidence < 0.4,
             inline_markers_present=bool(re.search(r"\[\d+\]", answer)),
         )

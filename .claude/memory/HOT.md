@@ -69,7 +69,7 @@ Sprint end: _[date TBD]_
 - (none)
 
 ## Deferred Features (post answer-citation)
-- `confidence-scoring` — fix sentinel 0.9 in Ollama+Claude adapters. Ref: answer-citation BACKLOG-2
+- `confidence-scoring` — DONE ✅ 2026-04-15: fixed sentinel 0.9 in Ollama+Claude; formula cited_ratio*0.8+0.2; 34 tests pass
 
 ## Subagent Status
 | Agent | Task | Status | Last updated |
