@@ -35,6 +35,7 @@ from backend.api.models.citation import CitationObject
 from backend.auth.dependencies import get_db, verify_token
 from backend.auth.types import AuthenticatedUser
 from backend.db.session import async_session_factory
+from backend.rag.citation_parser import _parse_citations
 from backend.rag.generator import generate_answer
 from backend.rag.llm import LLMError, NoRelevantChunksError
 from backend.rag.retriever import QueryTimeoutError, RetrievedDocument
@@ -223,6 +224,15 @@ async def query_documents(
 
     # S002: T004 — C014 low_confidence threshold
     # S002-T002 (answer-citation): build CitationObject list from same docs — D-CIT-05
+    # citation-quality/S002-T002: cited flag — D-CQ-01/D-CQ-02/D-CQ-04/D-CQ-05
+    # content_idx: 0-based position of each doc within content_docs (D-CQ-05: non-content → cited=False)
+    content_idx = {id(d): i for i, d in enumerate(content_docs)}
+    # D-CQ-02: skip parse when inline_markers_present=False (fast path, no regex overhead)
+    cited_set = (
+        _parse_citations(llm_response.answer, len(content_docs))
+        if llm_response.inline_markers_present
+        else set()
+    )
     citations = [
         CitationObject(
             doc_id=str(d.doc_id),
@@ -231,6 +241,7 @@ async def query_documents(
             chunk_index=d.chunk_index,
             score=round(d.score, 4),
             lang=d.lang or "",
+            cited=(content_idx.get(id(d), -1) in cited_set),
         )
         for d in docs
     ]

@@ -1,7 +1,7 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-15 | Session: #056 (/sync — answer-citation DONE, sprint chain complete)
+Updated: 2026-04-15 | Session: #059 (/reviewcode citation-quality — APPROVED)
 
 ---
 
@@ -48,12 +48,17 @@ Sprint end: _[date TBD]_
   Unblocks: citation-quality, confidence-scoring
 
 ## In Progress (max 3)
-- (none)
+- citation-quality — REPORT PENDING SIGN-OFF (2026-04-15) — /report complete; awaiting Tech Lead + PO + QA approval
+  WARM: `.claude/memory/WARM/citation-quality.mem.md`
+  Plan: `docs/citation-quality/plan/citation-quality.plan.md`
+  Review: `docs/citation-quality/reviews/citation-quality.review.md`
+  Report: `docs/citation-quality/reports/citation-quality.report.md`
+  Results: 21/21 AC PASS, 389 pass, 0 failures, citation_parser 100% — pending /report --finalize
 
 ## Recent Decisions (last 3 — oldest drops off)
-- 2026-04-15: answer-citation APPROVED by lb_mui (Tech Lead + PO + QA) — feature DONE, WARM→COLD archived
-- 2026-04-15: /reviewcode APPROVED — 0 blockers; W1 retrieve() sequential (no comment), W2 sources=UUIDs confirm contract, W3 BACKLOG-2 confidence sentinel deferred
-- 2026-04-15: S005 DONE — 80 tests pass; citation.py 100%, query.py 92%, generator.py 100%, retriever.py 91%; GAP-2 OOB test added
+- 2026-04-15: citation-quality /report SAVED — 21/21 AC PASS, 389 pass, 0 failures; pending lb_mui sign-off
+- 2026-04-15: citation-quality APPROVED by /reviewcode — 0 blockers; 2 minor warnings (id() invariant, __all__ underscore); ready for /report
+- 2026-04-15: citation-quality PLAN COMPLETE — checklist 30/30 PASS; G1 S001 rag-agent → G2 S002 api-agent → G3 S003 api-agent; A-CQ-01 resolved
 
 ## Pending Commits (uncommitted fixes on feature/document-parser)
 - SecurityGate: skip magic check when file_bytes=b"" (pre-read pass) — security_gate.py:47
@@ -64,8 +69,7 @@ Sprint end: _[date TBD]_
 - (none)
 
 ## Deferred Features (post answer-citation)
-- `citation-quality` — `cited: bool` per CitationObject, citation parser. Ref: WARM BACKLOG-1
-- `confidence-scoring` — fix sentinel 0.9 in Ollama+Claude adapters. Ref: WARM BACKLOG-2
+- `confidence-scoring` — fix sentinel 0.9 in Ollama+Claude adapters. Ref: answer-citation BACKLOG-2
 
 ## Subagent Status
 | Agent | Task | Status | Last updated |
@@ -73,8 +77,5 @@ Sprint end: _[date TBD]_
 | — | — | — | — |
 
 ## Next Session Start
-> answer-citation DONE ✅ — archived WARM → COLD.
-> Sprint chain complete. No in-progress features.
-> Next features (backlog): `citation-quality` (BACKLOG-1) and `confidence-scoring` (BACKLOG-2).
-> Before starting: add W1 comment to retriever.py (`# Sequential: AsyncSession not safe for concurrent queries`).
-> answer-citation fully approved (lb_mui, 2026-04-15). Feature chain complete.
+> citation-quality REPORT SAVED ✅ — /report complete; 21/21 AC PASS, 389 tests pass.
+> Next: collect sign-offs (Tech Lead + PO + QA), then /report citation-quality --finalize
