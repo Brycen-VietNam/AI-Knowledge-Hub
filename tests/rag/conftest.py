@@ -11,6 +11,16 @@ from sqlalchemy import text
 from sqlalchemy.pool import NullPool
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+# Load .env.test if present — sets TEST_DATABASE_URL without requiring python-dotenv
+_env_test = os.path.join(os.path.dirname(__file__), "..", "..", ".env.test")
+if os.path.isfile(_env_test):
+    with open(_env_test) as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _k, _, _v = _line.partition("=")
+                os.environ.setdefault(_k.strip(), _v.strip())
+
 # Integration tests require TEST_DATABASE_URL. No default — avoids hardcoded credentials (S005).
 TEST_DB_URL = os.getenv("TEST_DATABASE_URL", "")
 
@@ -23,6 +33,8 @@ _integration_available = bool(os.getenv("TEST_DATABASE_URL"))
 
 @pytest_asyncio.fixture(scope="function")
 async def db_engine():
+    if not _integration_available:
+        pytest.skip("TEST_DATABASE_URL not set — skipping integration test")
     # NullPool: no connection reuse across event loops — required for asyncpg on Windows
     engine = create_async_engine(TEST_DB_URL, echo=False, poolclass=NullPool)
     yield engine
@@ -41,6 +53,17 @@ async def db_session(db_engine) -> AsyncSession:
             # Create SAVEPOINT so we can rollback seeded data without closing connection
             await session.begin_nested()
             yield session
+            # audit_logs rows written by background tasks (own session) are outside the
+            # SAVEPOINT scope — delete them first to avoid FK violation on rollback
+            await session.execute(text(
+                "DELETE FROM audit_logs WHERE doc_id IN ("
+                "  SELECT id FROM documents"
+                "  WHERE id::text LIKE 'aa000000%'"
+                "  OR id::text LIKE 'bb000000%'"
+                "  OR id::text LIKE 'cc000000%'"
+                "  OR id::text LIKE '00000000-0000-0000-0000-0000000000%'"
+                ")"
+            ))
             await session.rollback()
 
 
@@ -106,8 +129,9 @@ async def _seed_embeddings(session: AsyncSession) -> None:
     rows = []
     for label, gid in group_map.items():
         for i, doc_id in enumerate(_SEED_DOC_IDS[label]):
-            # Vary embedding slightly so distance ordering is deterministic
-            vec_val = [float(i + 1) / 1024] * 1024
+            # Embeddings near [0.1]*1024 so they rank above dev data when queried with [0.1]*1024
+            # Vary slightly per doc so distance ordering is deterministic
+            vec_val = [0.1 + float(i + 1) / 10000] * 1024
             rows.append({
                 "id": uuid.uuid4(),
                 "doc_id": doc_id,
@@ -232,8 +256,13 @@ async def large_seeded_session(db_engine) -> AsyncSession:
         yield session
 
     # Cleanup: delete rows inserted by this fixture to prevent cross-test contamination
+    # audit_logs has FK → documents(id); must delete audit_logs first to avoid FK violation
     async with session_factory() as cleanup:
         async with cleanup.begin():
+            await cleanup.execute(text(
+                "DELETE FROM audit_logs WHERE doc_id IN "
+                "(SELECT id FROM documents WHERE user_group_id IN (1, 2))"
+            ))
             await cleanup.execute(text(
                 "DELETE FROM embeddings WHERE user_group_id IN (1, 2)"
             ))
