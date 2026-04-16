@@ -1,0 +1,34 @@
+{
+  "app": {
+    "title": "Knowledge Hub"
+  },
+  "login": {
+    "username": "Username",
+    "password": "Password",
+    "submit": "Sign In",
+    "error_invalid": "Invalid username or password",
+    "error_unavailable": "Service unavailable. Please try again later.",
+    "session_expired": "Your session has expired. Please sign in again."
+  },
+  "search": {
+    "placeholder": "Search knowledge base...",
+    "button": "Search",
+    "char_count": "{{count}}/512"
+  },
+  "lang": {
+    "selector_label": "Language"
+  },
+  "results": {
+    "no_results": "No relevant documents found.",
+    "low_confidence_warning": "This answer has low confidence. Please verify with source documents.",
+    "show_more": "Show {{count}} more",
+    "hide": "Hide",
+    "error_rate_limit": "Rate limit exceeded. Please wait a moment and try again.",
+    "error_service": "Service error. Please try again.",
+    "no_source_warning": "No source documents were found for this answer."
+  },
+  "history": {
+    "title": "Search History",
+    "clear": "Clear History"
+  }
+}

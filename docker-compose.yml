@@ -73,6 +73,20 @@ services:
       ollama:
         condition: service_started
 
+  # Task: T004 (S005) — frontend SPA container (D007, D013)
+  # NOTE: VITE_* vars are baked at BUILD TIME — must use build.args, not environment:
+  frontend-spa:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+    container_name: knowledge-hub-frontend
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - app
+
 volumes:
   postgres_data:
   valkey_data:

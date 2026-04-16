@@ -1,7 +1,7 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-15 | Session: #059 (/reviewcode citation-quality — APPROVED)
+Updated: 2026-04-16 | Session: #074 (/sync — frontend-spa S004 DONE)
 
 ---
 
@@ -46,19 +46,25 @@ Sprint end: _[date TBD]_
   Archive: `.claude/memory/COLD/answer-citation.archive.md`
   Report: `docs/answer-citation/reports/answer-citation.report.md`
   Unblocks: citation-quality, confidence-scoring
+- confidence-scoring — DONE ✅ PR merged 2026-04-16; 34 tests pass; formula cited_ratio*0.8+0.2; fixed sentinel 0.9 Ollama+Claude
+  Archive: (no archive yet)
+  Unblocks: —
+- citation-quality — DONE ✅ PR merged 2026-04-16; 21/21 AC PASS, 389 pass, 0 failures, citation_parser 100%
+  WARM: `.claude/memory/WARM/citation-quality.mem.md`
+  Report: `docs/citation-quality/reports/citation-quality.report.md`
+  Unblocks: —
 
 ## In Progress (max 3)
-- citation-quality — REPORT PENDING SIGN-OFF (2026-04-15) — /report complete; awaiting Tech Lead + PO + QA approval
-  WARM: `.claude/memory/WARM/citation-quality.mem.md`
-  Plan: `docs/citation-quality/plan/citation-quality.plan.md`
-  Review: `docs/citation-quality/reviews/citation-quality.review.md`
-  Report: `docs/citation-quality/reports/citation-quality.report.md`
-  Results: 21/21 AC PASS, 389 pass, 0 failures, citation_parser 100% — pending /report --finalize
+- frontend-spa — S004 IMPLEMENTED ✅ (208/208 pass); S005 is next
+  WARM: `.claude/memory/WARM/frontend-spa.mem.md`
+  Plan: `docs/frontend-spa/plan/frontend-spa.plan.md`
+  S003: DONE ✅ 188/188 pass
+  S004: DONE ✅ 208/208 pass — Next: /reviewcode frontend-spa S004 → /tasks S005
 
 ## Recent Decisions (last 3 — oldest drops off)
-- 2026-04-15: citation-quality /report SAVED — 21/21 AC PASS, 389 pass, 0 failures; pending lb_mui sign-off
-- 2026-04-15: citation-quality APPROVED by /reviewcode — 0 blockers; 2 minor warnings (id() invariant, __all__ underscore); ready for /report
-- 2026-04-15: citation-quality PLAN COMPLETE — checklist 30/30 PASS; G1 S001 rag-agent → G2 S002 api-agent → G3 S003 api-agent; A-CQ-01 resolved
+- 2026-04-16: S004 IMPLEMENTED — 208/208 pass (20 new tests); HistoryItem CJK truncation=[...str].slice(0,60); HistoryPanel returns null when empty; authStore.logout calls clearHistory first; addHistory only on successful submitQuery; reset() preserves history (D004)
+- 2026-04-16: S004 /tasks DONE — 5 tasks; G1[T001]→G2[T002∥T004]→G3[T003]→G4[T005]; CJK truncation=[...str].slice(0,60); reset() preserves history; logout→clearHistory; addHistory only on successful submitQuery
+- 2026-04-16: S003 IMPLEMENTED — 188/188 pass; AnswerPanel isLoading=spinner/error=alert/empty=no-results/answer-no-citations=no-source-warning; LowConfidenceWarning at confidence<0.4; App.test regression fixed (results-area div removed)
 
 ## Pending Commits (uncommitted fixes on feature/document-parser)
 - SecurityGate: skip magic check when file_bytes=b"" (pre-read pass) — security_gate.py:47
@@ -69,7 +75,7 @@ Sprint end: _[date TBD]_
 - (none)
 
 ## Deferred Features (post answer-citation)
-- `confidence-scoring` — DONE ✅ 2026-04-15: fixed sentinel 0.9 in Ollama+Claude; formula cited_ratio*0.8+0.2; 34 tests pass
+- (none remaining)
 
 ## Subagent Status
 | Agent | Task | Status | Last updated |
@@ -77,5 +83,6 @@ Sprint end: _[date TBD]_
 | — | — | — | — |
 
 ## Next Session Start
-> citation-quality REPORT SAVED ✅ — /report complete; 21/21 AC PASS, 389 tests pass.
-> Next: collect sign-offs (Tech Lead + PO + QA), then /report citation-quality --finalize
+> frontend-spa S003 IMPLEMENTED (188/188 pass). S004 tasks ready (5 tasks, all TODO).
+> Priority 1: /reviewcode frontend-spa S003
+> Priority 2: /implement frontend-spa S004 (after S003 review approved)

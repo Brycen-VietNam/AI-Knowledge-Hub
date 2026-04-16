@@ -1,21 +1,24 @@
 # Spec: docs/document-ingestion/spec/document-ingestion.spec.md#S001
 # Spec: docs/query-endpoint/spec/query-endpoint.spec.md#S003
 # Spec: docs/query-endpoint/spec/query-endpoint.spec.md#S004
+# Spec: docs/frontend-spa/spec/frontend-spa.spec.md#S000
 # Task: S001-T001 — FastAPI application factory
 # Task: S003-T003 — Valkey connection pool at startup; RateLimiter singleton
 # Task: S004-T002 — Register RAG exception handlers (A005 shape, no stack traces)
-# Rule: R003 — all /v1/* endpoints require authentication
+# Task: T005 — Register auth router (POST /v1/auth/token)
+# Rule: R003 — all /v1/* endpoints require authentication (except /v1/auth/token — R003 exception)
 # Rule: S004 — 60 req/min sliding window via Valkey (not per-request connection)
 # Rule: A005 — error shape: {"error": {"code": ..., "message": ..., "request_id": ...}}
 import uuid
 
 import valkey.asyncio as valkey_asyncio
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from backend.api.config import VALKEY_URL
 from backend.api.middleware.rate_limiter import RateLimiter
-from backend.api.routes import documents, query, upload
+from backend.api.routes import auth, documents, query, upload
 from backend.rag.embedder import EmbedderError
 from backend.rag.llm import LLMError
 from backend.rag.retriever import QueryTimeoutError
@@ -31,6 +34,15 @@ def _error_body(request: Request, code: str, message: str) -> dict:
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Knowledge Hub API")
+
+    # CORS: Allow frontend origins (dev: localhost:8080, localhost:5173)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:8080", "http://localhost:5173", "http://127.0.0.1:8080", "http://127.0.0.1:5173"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     # S003: create Valkey connection pool once at startup (not per-request)
     _valkey_client = valkey_asyncio.from_url(VALKEY_URL, decode_responses=False)
@@ -95,6 +107,7 @@ def create_app() -> FastAPI:
     app.include_router(query.router)
     app.include_router(documents.router)
     app.include_router(upload.router)
+    app.include_router(auth.router)  # T005: public login endpoint (R003 exception)
     return app
 
 

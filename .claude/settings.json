@@ -25,7 +25,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python .claude/scripts/track_tokens.py"
+            "command": "python \"d:\\Work\\Projects\\00. AI-Knowledge-Hub\\Sources\\knowledge-hub\\.claude\\scripts\\track_tokens.py\""
           }
         ]
       }
