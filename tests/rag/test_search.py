@@ -58,8 +58,9 @@ async def test_search_with_auto_detect(mock_detect, mock_tokenize, mock_embed, m
 @patch('backend.rag.search.tokenize_query')
 @patch('backend.rag.search.detect_language')
 async def test_search_with_lang_override(mock_detect, mock_tokenize, mock_embed, mock_retrieve):
-    """Verify search() skips detect_language when lang is provided."""
+    """Verify search() attempts detection first; detected lang takes priority over UI lang."""
     # Setup mocks
+    mock_detect.return_value = "ja"  # Query detected as Japanese
     mock_tokenize.return_value = "hello world"
     mock_embed.return_value = [0.2] * 768
     mock_retrieve.return_value = []
@@ -67,17 +68,19 @@ async def test_search_with_lang_override(mock_detect, mock_tokenize, mock_embed,
     from backend.rag.search import search
 
     docs, detected_lang = await search(
-        query="hello",
+        query="こんにちは",
         user_group_ids=[1],
         session=MagicMock(),
-        lang="en",
+        lang="en",  # UI language preference (ignored because query is Japanese)
     )
 
-    # detect_language should NOT be called
-    mock_detect.assert_not_called()
-    mock_tokenize.assert_called_once_with("hello", "en")
-    mock_embed.assert_called_once_with("hello")
-    assert detected_lang == "en"
+    # detect_language SHOULD be called (always attempt detection)
+    mock_detect.assert_called_once_with("こんにちは")
+    # Tokenize uses detected lang (ja), not UI lang (en)
+    mock_tokenize.assert_called_once_with("こんにちは", "ja")
+    mock_embed.assert_called_once_with("こんにちは")
+    # Returns detected lang (ja), not UI lang (en)
+    assert detected_lang == "ja"
 
 
 @patch('backend.rag.search.retrieve')
@@ -85,18 +88,26 @@ async def test_search_with_lang_override(mock_detect, mock_tokenize, mock_embed,
 @patch('backend.rag.search.tokenize_query')
 @patch('backend.rag.search.detect_language')
 async def test_search_language_detection_error(mock_detect, mock_tokenize, mock_embed, mock_retrieve):
-    """Verify LanguageDetectionError propagates when lang=None and detection fails."""
+    """Verify search() falls back to UI lang (or 'en') when detection fails."""
     mock_detect.side_effect = LanguageDetectionError("Failed to detect")
+    mock_tokenize.return_value = "text"
+    mock_embed.return_value = [0.1] * 768
+    mock_retrieve.return_value = []
 
     from backend.rag.search import search
 
-    with pytest.raises(LanguageDetectionError):
-        await search(
-            query="",
-            user_group_ids=[1],
-            session=MagicMock(),
-            lang=None,
-        )
+    # Detection fails, but lang="en" is provided → falls back to UI lang
+    docs, detected_lang = await search(
+        query="ambiguous text",
+        user_group_ids=[1],
+        session=MagicMock(),
+        lang="en",  # UI lang fallback
+    )
+
+    mock_detect.assert_called_once()
+    # Falls back to UI lang (en) when detection fails
+    assert detected_lang == "en"
+    mock_tokenize.assert_called_once_with("ambiguous text", "en")
 
 
 @patch('backend.rag.search.retrieve')
