@@ -1,0 +1,34 @@
+{
+  "app": {
+    "title": "Trung Tâm Kiến Thức"
+  },
+  "login": {
+    "username": "Tên đăng nhập",
+    "password": "Mật khẩu",
+    "submit": "Đăng nhập",
+    "error_invalid": "Tên đăng nhập hoặc mật khẩu không hợp lệ",
+    "error_unavailable": "Dịch vụ không khả dụng. Vui lòng thử lại sau.",
+    "session_expired": "Phiên của bạn đã hết hạn. Vui lòng đăng nhập lại."
+  },
+  "search": {
+    "placeholder": "Tìm kiếm trong kho kiến thức...",
+    "button": "Tìm kiếm",
+    "char_count": "{{count}}/512"
+  },
+  "lang": {
+    "selector_label": "Ngôn ngữ"
+  },
+  "results": {
+    "no_results": "Không tìm thấy tài liệu liên quan.",
+    "low_confidence_warning": "Câu trả lời này có độ tin cậy thấp. Vui lòng kiểm tra lại với tài liệu nguồn.",
+    "show_more": "Hiển thị thêm {{count}}",
+    "hide": "Ẩn",
+    "error_rate_limit": "Đã vượt quá giới hạn tốc độ. Vui lòng đợi một chút và thử lại.",
+    "error_service": "Lỗi dịch vụ. Vui lòng thử lại.",
+    "no_source_warning": "Không tìm thấy tài liệu nguồn cho câu trả lời này."
+  },
+  "history": {
+    "title": "Lịch sử tìm kiếm",
+    "clear": "Xóa lịch sử"
+  }
+}

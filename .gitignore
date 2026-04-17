@@ -16,3 +16,7 @@ __pycache__/
 
 # Claude Code — local logs (never commit token usage data)
 .claude/logs/
+
+frontend/node_modules/
+frontend/dist/
+

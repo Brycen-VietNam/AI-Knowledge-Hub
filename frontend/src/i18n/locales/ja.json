@@ -1,0 +1,34 @@
+{
+  "app": {
+    "title": "ナレッジハブ"
+  },
+  "login": {
+    "username": "ユーザー名",
+    "password": "パスワード",
+    "submit": "サインイン",
+    "error_invalid": "ユーザー名またはパスワードが無効です",
+    "error_unavailable": "サービスが利用できません。後でもう一度お試しください。",
+    "session_expired": "セッションの有効期限が切れました。再度サインインしてください。"
+  },
+  "search": {
+    "placeholder": "ナレッジベースを検索...",
+    "button": "検索",
+    "char_count": "{{count}}/512"
+  },
+  "lang": {
+    "selector_label": "言語"
+  },
+  "results": {
+    "no_results": "関連するドキュメントが見つかりませんでした。",
+    "low_confidence_warning": "この回答の信頼度が低いです。ソースドキュメントで確認してください。",
+    "show_more": "あと{{count}}件を表示",
+    "hide": "非表示",
+    "error_rate_limit": "レート制限を超えました。少し待ってから再試行してください。",
+    "error_service": "サービスエラーが発生しました。再試行してください。",
+    "no_source_warning": "この回答のソースドキュメントが見つかりませんでした。"
+  },
+  "history": {
+    "title": "検索履歴",
+    "clear": "履歴をクリア"
+  }
+}

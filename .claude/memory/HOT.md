@@ -1,7 +1,81 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-15 | Session: #059 (/reviewcode citation-quality — APPROVED)
+Updated: 2026-04-17 | Session: #080 (/sync — frontend-theme + frontend-spa REPORTS FINALIZED)
+
+---
+
+## Current Sprint (Session #080)
+Status: **frontend-theme + frontend-spa REPORTS COMPLETE** ✅
+Next: Await PO approval (lb_mui) → merge to main
+Branch: `feature/frontend-spa` (ready for merge)
+
+## Completed Features (All Prior, Archived)
+- auth-api-key-oidc, rbac-document-filter, cjk-tokenizer, llm-provider, document-ingestion
+- multilingual-rag-pipeline, query-endpoint, document-parser, answer-citation
+- confidence-scoring, citation-quality
+→ All archived in `.claude/memory/COLD/`
+
+## In Progress (max 3)
+- (none — ready for merge to main)
+
+## Recent Decisions (Session #080)
+- 2026-04-17: D008 — Backend Language Preference deferred (post-launch); frontend correctly sends `lang` param [Tech Lead]
+- 2026-04-17: D007 — Global CSS classes in index.css (no modules, no inline style) [User]
+- 2026-04-17: D006 — Logo: "Knowledge Hub" + "BRYSEN GROUP" [User]
+
+## Pending Commits (uncommitted fixes on feature/document-parser)
+- SecurityGate: skip magic check when file_bytes=b"" — security_gate.py:47
+- SecurityGate: text/markdown ↔ text/plain compatible pair — security_gate.py:18
+- docker-compose.yml: RETRIEVAL_TIMEOUT_OVERRIDE=15.0
+
+## Session #080 Summary ✅ COMPLETE
+**Task:** Finalize frontend-theme + frontend-spa reports; ghi nhận backend language preference issue
+
+**Completed:**
+1. ✅ /report frontend-theme → `docs/frontend-theme/reports/frontend-theme.report.md` (48/48 ACs, 208/208 tests)
+2. ✅ /report frontend-spa → `docs/frontend-spa/reports/frontend-spa.report.md` (48/48 ACs, 208/208 tests)
+3. ✅ Commit: "Report: frontend-theme + frontend-spa — Feature complete, 100% test coverage"
+4. ✅ Updated HOT.md + ghi nhận backend language preference issue
+
+**Key Decision: D008**
+- Backend Language Preference: `generate_answer()` does NOT receive `lang` parameter
+- Frontend correctly sends `lang` (user's UI language preference)
+- Backend detects query language but ignores user preference in LLM generation
+- Action: Backend team to add `lang` param to generate_answer(), control LLM output language
+- Impact: Post-launch fix (medium UX friction)
+- Fully documented in both reports + HOT.md
+
+**Status:**
+- Branch: `feature/frontend-spa` (all code committed, reports signed)
+- Tests: 208/208 PASS (0 failures)
+- Ready: Await PO approval (lb_mui) → merge to main
+
+## Active Blockers
+- (none)
+
+## Session #079 — What was done
+**frontend-theme S002–S005 implemented (this session):**
+
+| Story | Files modified | Result |
+|-------|---------------|--------|
+| S002 | index.css (header+grid CSS), App.tsx, QueryPage.tsx, QueryPage.test.tsx | 208 ✅ |
+| S003 | index.css (search CSS), SearchInput.tsx, LanguageSelector.tsx | 208 ✅ |
+| S004 | index.css (results CSS), AnswerPanel.tsx, ConfidenceBadge.tsx+test, LowConfidenceWarning.tsx, CitationList.tsx, CitationItem.tsx | 208 ✅ |
+| S005 | index.css (login+history CSS), LoginPage.tsx, LoginForm.tsx, HistoryPanel.tsx, HistoryItem.tsx | 208 ✅ |
+
+**Tasks files created:** S002.tasks.md, S003.tasks.md, S004.tasks.md, S005.tasks.md
+
+**Key changes summary:**
+- `frontend/src/index.css`: grew from ~80 lines (tokens only) to ~490 lines (full design system)
+- All Tailwind classes removed from 9 components (AnswerPanel, ConfidenceBadge, LowConfidenceWarning, CitationList, CitationItem, LoginPage, LoginForm, HistoryPanel, HistoryItem)
+- LanguageSelector moved from QueryPage → App.tsx header
+- CSS bundle: 2.52 KB → 11.58 KB (gzip 2.89 KB)
+
+## Next Session Start
+> Priority 1: /report frontend-theme → commit + merge feature/frontend-theme → main
+> Priority 2: /report frontend-spa → commit + merge feature/frontend-spa → main
+> Both features fully implemented and tested (208/208 green)
 
 ---
 
@@ -46,19 +120,28 @@ Sprint end: _[date TBD]_
   Archive: `.claude/memory/COLD/answer-citation.archive.md`
   Report: `docs/answer-citation/reports/answer-citation.report.md`
   Unblocks: citation-quality, confidence-scoring
+- confidence-scoring — DONE ✅ PR merged 2026-04-16; 34 tests pass; formula cited_ratio*0.8+0.2; fixed sentinel 0.9 Ollama+Claude
+  Archive: (no archive yet)
+  Unblocks: —
+- citation-quality — DONE ✅ PR merged 2026-04-16; 21/21 AC PASS, 389 pass, 0 failures, citation_parser 100%
+  WARM: `.claude/memory/WARM/citation-quality.mem.md`
+  Report: `docs/citation-quality/reports/citation-quality.report.md`
+  Unblocks: —
 
 ## In Progress (max 3)
-- citation-quality — REPORT PENDING SIGN-OFF (2026-04-15) — /report complete; awaiting Tech Lead + PO + QA approval
-  WARM: `.claude/memory/WARM/citation-quality.mem.md`
-  Plan: `docs/citation-quality/plan/citation-quality.plan.md`
-  Review: `docs/citation-quality/reviews/citation-quality.review.md`
-  Report: `docs/citation-quality/reports/citation-quality.report.md`
-  Results: 21/21 AC PASS, 389 pass, 0 failures, citation_parser 100% — pending /report --finalize
+- frontend-theme — S001–S005 ALL DONE ✅ (5 stories, 48 ACs, 208/208 tests, build 1.95s clean)
+  WARM: `.claude/memory/WARM/frontend-theme.mem.md`
+  Next: /report frontend-theme → commit + merge to main
+- frontend-spa — S005 READY for /report (all stories DONE + REVIEWED)
+  WARM: `.claude/memory/WARM/frontend-spa.mem.md`
+  S003: DONE ✅ 188/188 pass — REVIEWED 2026-04-16
+  S004: DONE ✅ 208/208 pass — REVIEWED 2026-04-17
+  Next: /report frontend-spa → commit + merge to main
 
 ## Recent Decisions (last 3 — oldest drops off)
-- 2026-04-15: citation-quality /report SAVED — 21/21 AC PASS, 389 pass, 0 failures; pending lb_mui sign-off
-- 2026-04-15: citation-quality APPROVED by /reviewcode — 0 blockers; 2 minor warnings (id() invariant, __all__ underscore); ready for /report
-- 2026-04-15: citation-quality PLAN COMPLETE — checklist 30/30 PASS; G1 S001 rag-agent → G2 S002 api-agent → G3 S003 api-agent; A-CQ-01 resolved
+- 2026-04-17: D007 — Global CSS classes in index.css (no modules, no inline style) — supports pseudo-states, single file [User]
+- 2026-04-17: D006 — Logo: "Knowledge Hub" + "BRYSEN GROUP" — confirmed from reference [User]
+- 2026-04-17: D005 — Header on all pages; user pill hidden on LoginPage (token === null); username only, no role [User]
 
 ## Pending Commits (uncommitted fixes on feature/document-parser)
 - SecurityGate: skip magic check when file_bytes=b"" (pre-read pass) — security_gate.py:47
@@ -69,7 +152,7 @@ Sprint end: _[date TBD]_
 - (none)
 
 ## Deferred Features (post answer-citation)
-- `confidence-scoring` — DONE ✅ 2026-04-15: fixed sentinel 0.9 in Ollama+Claude; formula cited_ratio*0.8+0.2; 34 tests pass
+- (none remaining)
 
 ## Subagent Status
 | Agent | Task | Status | Last updated |
@@ -77,5 +160,7 @@ Sprint end: _[date TBD]_
 | — | — | — | — |
 
 ## Next Session Start
-> citation-quality REPORT SAVED ✅ — /report complete; 21/21 AC PASS, 389 tests pass.
-> Next: collect sign-offs (Tech Lead + PO + QA), then /report citation-quality --finalize
+> frontend-theme PLANNED (D005–D007 locked, checklist + plan complete).
+> Priority 1: /tasks frontend-theme S001 (token creation task definition)
+> Priority 2: Implement stories S001–S005 sequentially (all in one feature branch session)
+> Or: /report frontend-spa → finalize + commit + merge feature/frontend-spa to main
