@@ -47,8 +47,10 @@ async def test_search_with_auto_detect(mock_detect, mock_tokenize, mock_embed, m
     mock_tokenize.assert_called_once_with("こんにちは", "ja")
     mock_embed.assert_called_once_with("こんにちは")
     mock_retrieve.assert_called_once()
-    assert len(result) == 1
-    assert result[0].score == 0.95
+    docs, detected_lang = result
+    assert len(docs) == 1
+    assert docs[0].score == 0.95
+    assert detected_lang == "ja"
 
 
 @patch('backend.rag.search.retrieve')
@@ -56,25 +58,29 @@ async def test_search_with_auto_detect(mock_detect, mock_tokenize, mock_embed, m
 @patch('backend.rag.search.tokenize_query')
 @patch('backend.rag.search.detect_language')
 async def test_search_with_lang_override(mock_detect, mock_tokenize, mock_embed, mock_retrieve):
-    """Verify search() skips detect_language when lang is provided."""
+    """Verify search() attempts detection first; detected lang takes priority over UI lang."""
     # Setup mocks
+    mock_detect.return_value = "ja"  # Query detected as Japanese
     mock_tokenize.return_value = "hello world"
     mock_embed.return_value = [0.2] * 768
     mock_retrieve.return_value = []
 
     from backend.rag.search import search
 
-    await search(
-        query="hello",
+    docs, detected_lang = await search(
+        query="こんにちは",
         user_group_ids=[1],
         session=MagicMock(),
-        lang="en",
+        lang="en",  # UI language preference (ignored because query is Japanese)
     )
 
-    # detect_language should NOT be called
-    mock_detect.assert_not_called()
-    mock_tokenize.assert_called_once_with("hello", "en")
-    mock_embed.assert_called_once_with("hello")
+    # detect_language SHOULD be called (always attempt detection)
+    mock_detect.assert_called_once_with("こんにちは")
+    # Tokenize uses detected lang (ja), not UI lang (en)
+    mock_tokenize.assert_called_once_with("こんにちは", "ja")
+    mock_embed.assert_called_once_with("こんにちは")
+    # Returns detected lang (ja), not UI lang (en)
+    assert detected_lang == "ja"
 
 
 @patch('backend.rag.search.retrieve')
@@ -82,18 +88,26 @@ async def test_search_with_lang_override(mock_detect, mock_tokenize, mock_embed,
 @patch('backend.rag.search.tokenize_query')
 @patch('backend.rag.search.detect_language')
 async def test_search_language_detection_error(mock_detect, mock_tokenize, mock_embed, mock_retrieve):
-    """Verify LanguageDetectionError propagates when lang=None and detection fails."""
+    """Verify search() falls back to UI lang (or 'en') when detection fails."""
     mock_detect.side_effect = LanguageDetectionError("Failed to detect")
+    mock_tokenize.return_value = "text"
+    mock_embed.return_value = [0.1] * 768
+    mock_retrieve.return_value = []
 
     from backend.rag.search import search
 
-    with pytest.raises(LanguageDetectionError):
-        await search(
-            query="",
-            user_group_ids=[1],
-            session=MagicMock(),
-            lang=None,
-        )
+    # Detection fails, but lang="en" is provided → falls back to UI lang
+    docs, detected_lang = await search(
+        query="ambiguous text",
+        user_group_ids=[1],
+        session=MagicMock(),
+        lang="en",  # UI lang fallback
+    )
+
+    mock_detect.assert_called_once()
+    # Falls back to UI lang (en) when detection fails
+    assert detected_lang == "en"
+    mock_tokenize.assert_called_once_with("ambiguous text", "en")
 
 
 @patch('backend.rag.search.retrieve')
@@ -169,7 +183,7 @@ async def test_search_rbac_passthrough(mock_detect, mock_tokenize, mock_embed, m
 
     from backend.rag.search import search
 
-    await search(
+    _, detected_lang = await search(
         query="hello",
         user_group_ids=[1, 2, 3],  # Multiple groups
         session=MagicMock(),
@@ -179,6 +193,7 @@ async def test_search_rbac_passthrough(mock_detect, mock_tokenize, mock_embed, m
     # Verify user_group_ids passed unchanged
     call_kwargs = mock_retrieve.call_args[1]
     assert call_kwargs["user_group_ids"] == [1, 2, 3]
+    assert detected_lang == "en"
 
 
 # ============================================================================
@@ -196,26 +211,28 @@ async def test_search_integration_full_pipeline(seeded_session):
     from backend.rag.search import search
 
     # Test 1: Auto-detect English, verify results (use longer query for reliable detection)
-    results = await search(
+    docs, detected_lang = await search(
         query="the quick brown fox jumps over the lazy dog",
         user_group_ids=[1],  # GROUP_A_ID
         session=seeded_session,
         lang=None,  # Auto-detect
     )
 
-    assert isinstance(results, list), "Results must be list[RetrievedDocument]"
+    assert isinstance(docs, list), "Results must be list[RetrievedDocument]"
+    assert isinstance(detected_lang, str), "Detected lang must be string"
     # Results may be empty or populated depending on embedding distance
     # but should not raise an error
 
     # Test 2: Override lang to English explicitly
-    results_en = await search(
+    docs_en, detected_lang_en = await search(
         query="sample text for english search",
         user_group_ids=[1],
         session=seeded_session,
         lang="en",  # Explicit override
     )
 
-    assert isinstance(results_en, list), "Results must be list"
+    assert isinstance(docs_en, list), "Results must be list"
+    assert detected_lang_en == "en", "Detected lang must match override"
 
 
 @pytest.mark.integration
@@ -223,7 +240,7 @@ async def test_search_integration_rbac_filter(seeded_session):
     """Verify RBAC: empty user_group_ids returns only public documents (user_group_id IS NULL)."""
     from backend.rag.search import search
 
-    results = await search(
+    docs, _ = await search(
         query="hello",
         user_group_ids=[],  # No groups → only public
         session=seeded_session,
@@ -231,5 +248,5 @@ async def test_search_integration_rbac_filter(seeded_session):
     )
 
     # All results should have user_group_id = None (public)
-    for result in results:
+    for result in docs:
         assert result.user_group_id is None, f"RBAC filter failed: got group {result.user_group_id}"

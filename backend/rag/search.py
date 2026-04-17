@@ -21,10 +21,10 @@ async def search(
     session: AsyncSession,
     top_k: int = 10,
     lang: str | None = None,
-) -> list[RetrievedDocument]:
+) -> tuple[list[RetrievedDocument], str]:
     """Unified RAG search orchestration.
 
-    Detects language (if not provided) → tokenizes → embeds → retrieves.
+    Always detects query language (best effort) → tokenizes → embeds → retrieves.
     Propagates all errors: LanguageDetectionError, UnsupportedLanguageError,
     EmbedderError, QueryTimeoutError.
 
@@ -33,26 +33,34 @@ async def search(
         user_group_ids: RBAC user groups (from token) — passed unchanged to retrieve()
         session: AsyncSession for database access
         top_k: Max results to return (default 10)
-        lang: Override language code. None = auto-detect. If provided, must be in _SUPPORTED.
+        lang: UI language preference fallback. Priority: detected query lang > UI lang preference.
 
     Returns:
-        list[RetrievedDocument] ranked by hybrid score (0.7*dense + 0.3*BM25)
+        tuple of (list[RetrievedDocument] ranked by hybrid score, detected_lang: str)
+        detected_lang is the query language (detected if possible, else UI lang, else 'en')
 
     Raises:
-        LanguageDetectionError: If lang=None and detection fails
-        UnsupportedLanguageError: If lang not in _SUPPORTED
+        UnsupportedLanguageError: If detected/provided lang not in _SUPPORTED
         EmbedderError: If embedding API fails
         QueryTimeoutError: If retrieval exceeds SLA (1800ms)
     """
-    # Step 1: Detect or validate language
-    if lang is None:
-        lang = detect_language(query)  # Raises LanguageDetectionError on failure
-    else:
-        if lang not in _SUPPORTED:
-            raise UnsupportedLanguageError(f"Unsupported language: {lang!r}")
+    # Step 1: Detect query language first (priority), fallback to UI lang pref
+    detected_lang = None
+    try:
+        detected_lang = detect_language(query)
+    except Exception:
+        # Detection failed — use UI language preference as fallback
+        detected_lang = lang or "en"
 
-    # Step 2: Tokenize for BM25
-    bm25_query = tokenize_query(query, lang)  # Raises UnsupportedLanguageError if invalid
+    # Determine effective language: detected > UI preference > default "en"
+    effective_lang = detected_lang or lang or "en"
+
+    # Validate the effective language is supported
+    if effective_lang not in _SUPPORTED:
+        raise UnsupportedLanguageError(f"Unsupported language: {effective_lang!r}")
+
+    # Step 2: Tokenize for BM25 using effective language
+    bm25_query = tokenize_query(query, effective_lang)
 
     # Step 3: Embed for dense search
     query_embedding = await embed_query(query)  # Raises EmbedderError on failure
@@ -66,4 +74,4 @@ async def search(
         top_k=top_k,
     )  # Raises QueryTimeoutError on timeout
 
-    return results
+    return results, effective_lang

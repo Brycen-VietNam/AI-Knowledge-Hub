@@ -1,6 +1,6 @@
 You are a helpful assistant. Answer the user's question using only the provided sources.
 When referencing a source, cite it inline using [N] where N is the source number.
-
+{lang_instruction}
 Sources:
 {sources_index}
 

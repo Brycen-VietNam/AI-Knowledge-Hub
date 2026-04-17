@@ -143,10 +143,8 @@ Sprint end: _[date TBD]_
 - 2026-04-17: D006 — Logo: "Knowledge Hub" + "BRYSEN GROUP" — confirmed from reference [User]
 - 2026-04-17: D005 — Header on all pages; user pill hidden on LoginPage (token === null); username only, no role [User]
 
-## Pending Commits (uncommitted fixes on feature/document-parser)
-- SecurityGate: skip magic check when file_bytes=b"" (pre-read pass) — security_gate.py:47
-- SecurityGate: text/markdown ↔ text/plain compatible pair — security_gate.py:18
-- docker-compose.yml: RETRIEVAL_TIMEOUT_OVERRIDE=15.0 (CPU Ollama dev machine)
+## Pending Commits
+- (none — all fixes committed in `6ee36f7 final document parser`)
 
 ## Active Blockers
 - (none)

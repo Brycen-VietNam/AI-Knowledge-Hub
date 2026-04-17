@@ -4,9 +4,9 @@
 from .llm import LLMProviderFactory, LLMResponse
 
 
-async def generate_answer(query: str, chunks: list[str], doc_titles: list[str]) -> LLMResponse:
+async def generate_answer(query: str, chunks: list[str], doc_titles: list[str], lang: str | None = None) -> LLMResponse:
     """Service layer: api-agent calls this — never imports LLMProviderFactory directly (ARCH A002)."""
     # Spec: docs/answer-citation/spec/answer-citation.spec.md#S003
     # Task: T006 — pass doc_titles through to adapter (AC6: no lang hardcoded)
     provider = LLMProviderFactory.get()
-    return await provider.complete(query, chunks, doc_titles)
+    return await provider.complete(query, chunks, doc_titles, lang)

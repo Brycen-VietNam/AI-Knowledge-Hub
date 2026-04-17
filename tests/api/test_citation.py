@@ -140,7 +140,7 @@ def test_citation_order_matches_sources():
         _make_doc(doc_id=doc2_id, title="Doc Two", score=0.7, chunk_index=1),
     ]
 
-    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=docs)), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=(docs, "en"))), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=_default_llm())), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()):
         with TestClient(app) as client:
@@ -167,7 +167,7 @@ def test_empty_citations_on_no_chunks():
     user = _make_user()
     app = _make_app(user)
 
-    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[])), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=([], "en"))), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()):
         with TestClient(app) as client:
             resp = client.post("/v1/query", json={"query": "nothing here"})
@@ -189,7 +189,7 @@ def test_citations_not_null_in_response():
 
     # Test both success path and empty-docs path
     for search_result in [[], [_make_doc()]]:
-        with patch("backend.api.routes.query.search", new=AsyncMock(return_value=search_result)), \
+        with patch("backend.api.routes.query.search", new=AsyncMock(return_value=(search_result, "en"))), \
              patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=_default_llm())), \
              patch("backend.api.routes.query._write_audit", new=AsyncMock()):
             with TestClient(app) as client:
@@ -212,7 +212,7 @@ def test_citations_backward_compat_sources_present():
     app = _make_app(user)
     doc = _make_doc(title="Compat Doc", source_url="https://example.com/doc.pdf")
 
-    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[doc])), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=([doc], "en"))), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=_default_llm())), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()):
         with TestClient(app) as client:
@@ -242,7 +242,7 @@ def test_citation_score_rounded_to_4dp():
     app = _make_app(user)
     doc = _make_doc(score=0.123456789)  # raw score from retriever
 
-    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[doc])), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=([doc], "en"))), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=_default_llm())), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()):
         with TestClient(app) as client:
@@ -273,7 +273,7 @@ def test_cited_true_when_marker_present():
         low_confidence=False,
         inline_markers_present=True,
     )
-    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[doc])), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=([doc], "en"))), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm)), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()):
         with TestClient(app) as client:
@@ -298,7 +298,7 @@ def test_cited_false_when_no_markers():
         low_confidence=False,
         inline_markers_present=False,  # fast path — no regex
     )
-    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=docs)), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=(docs, "en"))), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm)), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()):
         with TestClient(app) as client:
@@ -323,7 +323,7 @@ def test_cited_false_oob_marker():
         low_confidence=False,
         inline_markers_present=True,
     )
-    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=docs)), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=(docs, "en"))), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm)), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()):
         with TestClient(app) as client:
@@ -339,7 +339,7 @@ def test_cited_false_default_on_empty_citations():
     user = _make_user()
     app = _make_app(user)
 
-    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[])), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=([], "en"))), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()):
         with TestClient(app) as client:
             resp = client.post("/v1/query", json={"query": "empty path"})
