@@ -31,19 +31,23 @@ export function SearchInput({ value, onChange, onSubmit, isLoading, disabled }: 
   }
 
   return (
-    <div>
-      <textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder={t('search.placeholder')}
-        disabled={isLoading || !!disabled}
-        aria-label={t('search.placeholder')}
-      />
-      <div>
-        <span>{t('search.char_count', { count: value.length, max: 512 })}</span>
+    <div className="search-panel">
+      <div className="search-input-wrap">
+        <textarea
+          className="search-input"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={t('search.placeholder')}
+          disabled={isLoading || !!disabled}
+          aria-label={t('search.placeholder')}
+        />
+      </div>
+      <div className="search-footer">
+        <span className="token-badge">{t('search.char_count', { count: value.length, max: 512 })}</span>
         <button
           type="button"
+          className="btn-search"
           onClick={onSubmit}
           disabled={isDisabled}
         >

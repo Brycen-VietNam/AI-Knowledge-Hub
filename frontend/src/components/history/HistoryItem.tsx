@@ -1,4 +1,5 @@
 // Task: T002 (S004) — HistoryItem presentational component
+// Task: S005/T003 — Apply CSS classes; remove inline style
 import { QueryHistoryItem } from '../../store/queryStore'
 
 interface Props {
@@ -19,9 +20,12 @@ function formatTime(date: Date): string {
 
 export function HistoryItem({ item, onSelect }: Props) {
   return (
-    <li role="listitem" onClick={() => onSelect(item)} style={{ cursor: 'pointer' }}>
-      <span data-testid="history-query">{truncate(item.query)}</span>
-      <time data-testid="history-time">{formatTime(item.timestamp)}</time>
+    <li role="listitem" className="history-item" onClick={() => onSelect(item)}>
+      <div className="history-bullet" />
+      <div className="history-content">
+        <span data-testid="history-query" className="history-q">{truncate(item.query)}</span>
+        <time data-testid="history-time" className="history-time">{formatTime(item.timestamp)}</time>
+      </div>
     </li>
   )
 }

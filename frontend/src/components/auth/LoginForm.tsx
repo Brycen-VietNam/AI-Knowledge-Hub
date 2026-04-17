@@ -64,31 +64,33 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} aria-label="login-form">
-      <div>
-        <label htmlFor="username">{t('login.username')}</label>
+    <form onSubmit={handleSubmit} aria-label="login-form" className="login-form">
+      <div className="form-group">
+        <label htmlFor="username" className="form-label">{t('login.username')}</label>
         <input
           id="username"
           type="text"
+          className="form-input"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           required
           autoComplete="username"
         />
       </div>
-      <div>
-        <label htmlFor="password">{t('login.password')}</label>
+      <div className="form-group">
+        <label htmlFor="password" className="form-label">{t('login.password')}</label>
         <input
           id="password"
           type="password"
+          className="form-input"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
           autoComplete="current-password"
         />
       </div>
-      {error && <p role="alert">{error}</p>}
-      <button type="submit" disabled={isLoading}>
+      {error && <p role="alert" className="login-error">{error}</p>}
+      <button type="submit" className="btn-primary" disabled={isLoading}>
         {t('login.submit')}
       </button>
     </form>

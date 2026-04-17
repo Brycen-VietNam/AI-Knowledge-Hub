@@ -21,7 +21,8 @@ export function LanguageSelector() {
   }
 
   return (
-    <div>
+    <div className="inline-lang">
+      <span className="lang-dot" />
       <label htmlFor="lang-selector">{t('lang.selector_label')}</label>
       <select
         id="lang-selector"

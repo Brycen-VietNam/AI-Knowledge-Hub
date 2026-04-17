@@ -60,9 +60,9 @@ describe('QueryPage — renders', () => {
     expect(screen.getByRole('textbox')).toBeInTheDocument()
   })
 
-  it('renders LanguageSelector', () => {
+  it('renders main content area', () => {
     renderPage()
-    expect(screen.getByRole('combobox')).toBeInTheDocument()
+    expect(screen.getByRole('main')).toBeInTheDocument()
   })
 
   it('renders AnswerPanel', () => {

@@ -31,3 +31,28 @@ curl https://openrouter.ai/api/v1/chat/completions \
   }
 }'
 
+Field	Value
+Username	demo
+Password	demo123
+Email	demo@example.com
+Display Name	Demo User
+
+Now I have a very good picture of the entire UI. Let me create a comprehensive HTML demo page based on:
+
+Project: Brysen Group AI Knowledge Hub - internal multilingual knowledge platform
+Languages: Japanese, English, Vietnamese, Korean + more Asian languages
+Layout:
+Header with logo + user info + language selector
+Main area = SearchInput + AnswerPanel (left/main) + HistoryPanel (right sidebar)
+AnswerPanel: confidence badge, low-confidence warning, markdown answer, citation list
+HistoryPanel: list of previous queries
+
+Color scheme - I'll go with a professional corporate dark-light hybrid:
+Light slate background with white cards and an indigo primary accent for that AI tech feel
+Secondary sky blue for information elements
+Confidence indicators using emerald for high, amber for medium, and red for low
+Dark slate header with an indigo gradient for the brand
+Warm warning backgrounds with dark text for low-confidence alerts
+I'm setting up demo data with multilingual queries starting with Japanese to showcase the platform's language support.
+
+Building the full page layout with a header containing the Knowledge Hub logo, language switcher, and user controls, then a prominent search area with inline language selection, and finally the answer panel displaying the confidence badge, formatted response, and source citations.

@@ -20,15 +20,17 @@ export function CitationList({ citations }: Props) {
   const remaining = citations.length - COLLAPSED_LIMIT
 
   return (
-    <div className="flex flex-col divide-y divide-gray-100">
-      {visible.map((c) => (
-        <CitationItem key={c.doc_id} citation={c} />
-      ))}
+    <div className="sources-section">
+      <div className="source-list">
+        {visible.map((c) => (
+          <CitationItem key={c.doc_id} citation={c} />
+        ))}
+      </div>
       {citations.length > COLLAPSED_LIMIT && (
         <button
           type="button"
           onClick={() => setExpanded((prev) => !prev)}
-          className="mt-2 text-sm text-blue-600 hover:underline text-left"
+          className="btn-more"
         >
           {expanded ? t('results.hide') : t('results.show_more', { count: remaining })}
         </button>

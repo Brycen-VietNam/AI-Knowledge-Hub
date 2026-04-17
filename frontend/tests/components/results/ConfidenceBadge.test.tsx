@@ -13,11 +13,11 @@ describe('ConfidenceBadge — HIGH (>= 0.7)', () => {
     expect(screen.getByText('HIGH')).toBeInTheDocument()
   })
 
-  it('HIGH badge has green styling', () => {
+  it('HIGH badge has high variant class', () => {
     render(<ConfidenceBadge score={0.8} />)
     const badge = screen.getByText('HIGH')
-    expect(badge.className).toContain('bg-green-100')
-    expect(badge.className).toContain('text-green-800')
+    expect(badge.className).toContain('confidence-badge')
+    expect(badge.className).toContain('high')
   })
 })
 
@@ -32,11 +32,11 @@ describe('ConfidenceBadge — MEDIUM (>= 0.4 and < 0.7)', () => {
     expect(screen.getByText('MEDIUM')).toBeInTheDocument()
   })
 
-  it('MEDIUM badge has yellow styling', () => {
+  it('MEDIUM badge has medium variant class', () => {
     render(<ConfidenceBadge score={0.55} />)
     const badge = screen.getByText('MEDIUM')
-    expect(badge.className).toContain('bg-yellow-100')
-    expect(badge.className).toContain('text-yellow-800')
+    expect(badge.className).toContain('confidence-badge')
+    expect(badge.className).toContain('medium')
   })
 })
 
@@ -51,10 +51,10 @@ describe('ConfidenceBadge — LOW (< 0.4)', () => {
     expect(screen.getByText('LOW')).toBeInTheDocument()
   })
 
-  it('LOW badge has red styling', () => {
+  it('LOW badge has low variant class', () => {
     render(<ConfidenceBadge score={0.2} />)
     const badge = screen.getByText('LOW')
-    expect(badge.className).toContain('bg-red-100')
-    expect(badge.className).toContain('text-red-800')
+    expect(badge.className).toContain('confidence-badge')
+    expect(badge.className).toContain('low')
   })
 })

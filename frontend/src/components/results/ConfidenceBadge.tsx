@@ -1,4 +1,5 @@
 // Task: T002 (S003) — ConfidenceBadge — score threshold display
+// Task: S004/T002 — Replace Tailwind classes with confidence-badge CSS vars
 // Decision: D012 — score displayed as % (badge labels are fixed identifiers, not i18n)
 
 interface Props {
@@ -7,21 +8,21 @@ interface Props {
 
 export function ConfidenceBadge({ score }: Props) {
   let label: string
-  let className: string
+  let variant: string
 
   if (score >= 0.7) {
     label = 'HIGH'
-    className = 'bg-green-100 text-green-800'
+    variant = 'high'
   } else if (score >= 0.4) {
     label = 'MEDIUM'
-    className = 'bg-yellow-100 text-yellow-800'
+    variant = 'medium'
   } else {
     label = 'LOW'
-    className = 'bg-red-100 text-red-800'
+    variant = 'low'
   }
 
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${className}`}>
+    <span className={`confidence-badge ${variant}`}>
       {label}
     </span>
   )

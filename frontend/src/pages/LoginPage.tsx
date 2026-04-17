@@ -1,16 +1,20 @@
 // Spec: docs/frontend-spa/spec/frontend-spa.spec.md
 // Task: T004 — LoginPage — centered layout wrapping LoginForm
-import { useTranslation } from 'react-i18next'
+// Task: S005/T002 — Replace inline styles with login-page CSS classes
 import { LoginForm } from '../components/auth/LoginForm'
 
 export function LoginPage() {
-  const { t } = useTranslation()
   return (
-    <main style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-      <section>
-        <h1>{t('app.title')}</h1>
-        <LoginForm />
-      </section>
+    <main className="login-page">
+      <div className="login-card">
+        <div className="login-brand">
+          <span className="login-brand-title">Knowledge Hub</span>
+          <span className="login-brand-sub">BRYSEN GROUP</span>
+        </div>
+        <div className="login-body">
+          <LoginForm />
+        </div>
+      </div>
     </main>
   )
 }

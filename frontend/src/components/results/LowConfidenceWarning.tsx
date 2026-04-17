@@ -1,10 +1,12 @@
 // Task: T005 (S003) — LowConfidenceWarning banner
+// Task: S004/T003 — Replace Tailwind classes with warning-banner CSS
 import { useTranslation } from 'react-i18next'
 
 export function LowConfidenceWarning() {
   const { t } = useTranslation()
   return (
-    <div role="alert" className="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+    <div role="alert" className="warning-banner">
+      <span className="warning-icon">⚠</span>
       {t('results.low_confidence_warning')}
     </div>
   )

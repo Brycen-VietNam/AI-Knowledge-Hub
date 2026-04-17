@@ -1,5 +1,6 @@
 // Spec: docs/frontend-spa/spec/frontend-spa.spec.md#S003
 // Task: T006 (S003) — AnswerPanel — answer + citations + confidence display
+// Task: S004/T003 — Replace Tailwind classes with CSS vars
 // Decision: D012 — score as %; chunk_preview plain text; D002 — token never in localStorage
 import ReactMarkdown from 'react-markdown'
 import { useTranslation } from 'react-i18next'
@@ -21,8 +22,8 @@ export function AnswerPanel({ answer, citations, confidence, isLoading, error }:
 
   if (isLoading) {
     return (
-      <div role="status" className="flex items-center gap-2 py-4 text-gray-500 text-sm">
-        <span className="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
+      <div role="status" className="answer-loading">
+        <span className="answer-spinner" />
         <span>Loading...</span>
       </div>
     )
@@ -30,7 +31,7 @@ export function AnswerPanel({ answer, citations, confidence, isLoading, error }:
 
   if (error) {
     return (
-      <div role="alert" className="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+      <div role="alert" className="answer-error">
         {error}
       </div>
     )
@@ -38,14 +39,14 @@ export function AnswerPanel({ answer, citations, confidence, isLoading, error }:
 
   if (!answer && citations.length === 0) {
     return (
-      <p className="text-sm text-gray-500 py-4">{t('results.no_results')}</p>
+      <p className="answer-empty">{t('results.no_results')}</p>
     )
   }
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="answer-panel">
       {answer && (
-        <div className="flex items-center gap-2">
+        <div className="answer-meta">
           <ConfidenceBadge score={confidence} />
         </div>
       )}
@@ -53,13 +54,15 @@ export function AnswerPanel({ answer, citations, confidence, isLoading, error }:
       {confidence < 0.4 && answer && <LowConfidenceWarning />}
 
       {answer && (
-        <div className="prose prose-sm max-w-none text-gray-800">
-          <ReactMarkdown>{answer}</ReactMarkdown>
+        <div className="answer-body">
+          <div className="answer-text">
+            <ReactMarkdown>{answer}</ReactMarkdown>
+          </div>
         </div>
       )}
 
       {answer && citations.length === 0 && (
-        <p className="text-xs text-amber-700">{t('results.no_source_warning')}</p>
+        <p className="answer-no-source">{t('results.no_source_warning')}</p>
       )}
 
       {citations.length > 0 && <CitationList citations={citations} />}
