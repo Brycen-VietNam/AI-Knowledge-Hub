@@ -1,0 +1,25 @@
+{
+  "login": {
+    "title": "管理パネル",
+    "username": "ユーザー名",
+    "password": "パスワード",
+    "submit": "サインイン",
+    "error_invalid": "認証情報が無効です",
+    "error_unavailable": "サービスが利用できません。もう一度お試しください。",
+    "access_denied": "アクセスが拒否されました。管理者権限が必要です。",
+    "session_expired": "セッションが期限切れです。再度サインインしてください。"
+  },
+  "lang": {
+    "selector_label": "言語",
+    "en": "English",
+    "ja": "日本語",
+    "vi": "Tiếng Việt",
+    "ko": "한국어"
+  },
+  "nav": {
+    "dashboard": "ダッシュボード",
+    "documents": "ドキュメント",
+    "users_groups": "ユーザーとグループ",
+    "logout": "サインアウト"
+  }
+}

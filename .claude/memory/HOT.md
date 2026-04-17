@@ -1,14 +1,14 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-17 | Session: #080 (/sync — frontend-theme + frontend-spa REPORTS FINALIZED)
+Updated: 2026-04-17 | Session: #085 (admin-spa S001 — /implement complete, 35/35 tests pass)
 
 ---
 
-## Current Sprint (Session #080)
-Status: **frontend-theme + frontend-spa REPORTS COMPLETE** ✅
-Next: Await PO approval (lb_mui) → merge to main
-Branch: `feature/frontend-spa` (ready for merge)
+## Current Sprint (Session #086)
+Status: **admin-spa S001 DONE** ✅ | 35/35 tests pass | **3 backend BLOCKERs identified pre-S002**
+Next: Fix G1+G2+G3 (backend patches) → /analyze T001 (admin-spa S002 — documentsApi.ts)
+Branch: `feature/admin-spa`
 
 ## Completed Features (All Prior, Archived)
 - auth-api-key-oidc, rbac-document-filter, cjk-tokenizer, llm-provider, document-ingestion
@@ -17,12 +17,16 @@ Branch: `feature/frontend-spa` (ready for merge)
 → All archived in `.claude/memory/COLD/`
 
 ## In Progress (max 3)
-- (none — ready for merge to main)
+- admin-spa — S000 DONE+REVIEWED ✅ | **S001 DONE ✅** | S002–S005 pending (frontend-agent)
+  WARM: `.claude/memory/WARM/admin-spa.mem.md`
+  Plan: `docs/admin-spa/plan/admin-spa.plan.md`
+  Tasks: `docs/admin-spa/tasks/S001.tasks.md` ✅ ALL DONE (T001–T008)
+  Next: /analyze T001 (admin-spa S002 — documentsApi.ts)
 
-## Recent Decisions (Session #080)
-- 2026-04-17: D008 — Backend Language Preference deferred (post-launch); frontend correctly sends `lang` param [Tech Lead]
-- 2026-04-17: D007 — Global CSS classes in index.css (no modules, no inline style) [User]
-- 2026-04-17: D006 — Logo: "Knowledge Hub" + "BRYSEN GROUP" [User]
+## Recent Decisions (Session #086)
+- 2026-04-17: admin-spa S002 — D11: chuẩn hóa upload response key về `doc_id` (fix upload.py:184, bỏ `document_id`) [gap]
+- 2026-04-17: admin-spa S002 — G4 source_url: đã có migration 007 + Document model, chỉ cần expose qua upload.py form + frontend T001/T004 [gap]
+- 2026-04-17: admin-spa S001 — 401 interceptor skips `/v1/auth/token` URL to avoid false session-expired on login fail [impl]
 
 ## Pending Commits (uncommitted fixes on feature/document-parser)
 - SecurityGate: skip magic check when file_bytes=b"" — security_gate.py:47

@@ -14,3 +14,6 @@ class AuthenticatedUser:
     user_id: uuid.UUID
     user_group_ids: list[int]
     auth_type: Literal["api_key", "oidc"]
+    # Spec: docs/admin-spa/spec/admin-spa.spec.md#S000/AC2
+    # Task: S000/T003 — computed by verify_token from user_group_memberships JOIN
+    is_admin: bool = False

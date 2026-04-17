@@ -1,18 +1,20 @@
 # Spec: docs/specs/auth-api-key-oidc.spec.md#S004
+# Spec: docs/admin-spa/spec/admin-spa.spec.md#S000
 # Task: T004 — Tests for verify_token + AuthenticatedUser (TDD)
+# Task: S000/T012 — tests for _compute_is_admin + verify_token is_admin injection (AC2, AC3)
 # Decision: D05 — X-API-Key takes precedence over Bearer
 # Rule: A001 — backend.auth exports only verify_token + AuthenticatedUser
 # Rule: A005 — all 401 responses conform to error shape
 import uuid
 from dataclasses import FrozenInstanceError
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import Depends, FastAPI
 from fastapi.testclient import TestClient
 
 # OIDC env vars set by tests/auth/conftest.py before collection.
-from backend.auth.dependencies import get_db, verify_token
+from backend.auth.dependencies import _compute_is_admin, get_db, verify_token
 from backend.auth.types import AuthenticatedUser
 
 # ---------------------------------------------------------------------------
@@ -43,8 +45,12 @@ def _make_app() -> FastAPI:
             "auth_type": user.auth_type,
         }
 
-    # Override get_db — no real DB needed
-    app.dependency_overrides[get_db] = lambda: None
+    # Mock db: returns is_admin=False for _compute_is_admin (no real DB needed)
+    _mock_db = AsyncMock()
+    _scalar_result = MagicMock()
+    _scalar_result.scalar.return_value = False
+    _mock_db.execute = AsyncMock(return_value=_scalar_result)
+    app.dependency_overrides[get_db] = lambda: _mock_db
     return app
 
 
@@ -148,3 +154,102 @@ class TestAuthModuleInterface:
             assert not hasattr(auth_pkg, name), (
                 f"backend.auth should not export '{name}'"
             )
+
+
+# ---------------------------------------------------------------------------
+# S000/T012: _compute_is_admin + verify_token is_admin injection (AC2, AC3)
+# ---------------------------------------------------------------------------
+
+class TestComputeIsAdmin:
+    """Tests for _compute_is_admin helper (S000/AC3)."""
+
+    @pytest.mark.asyncio
+    async def test_returns_true_when_user_in_admin_group(self):
+        """AC3: is_admin=True when user belongs to a group with is_admin=TRUE."""
+        db = AsyncMock()
+        result = MagicMock()
+        result.scalar.return_value = True
+        db.execute = AsyncMock(return_value=result)
+
+        user_id = uuid.uuid4()
+        is_admin = await _compute_is_admin(user_id, db)
+        assert is_admin is True
+
+    @pytest.mark.asyncio
+    async def test_returns_false_when_no_admin_groups(self):
+        """AC3: is_admin=False when user has no admin group memberships."""
+        db = AsyncMock()
+        result = MagicMock()
+        result.scalar.return_value = False
+        db.execute = AsyncMock(return_value=result)
+
+        is_admin = await _compute_is_admin(uuid.uuid4(), db)
+        assert is_admin is False
+
+    @pytest.mark.asyncio
+    async def test_returns_false_when_no_memberships(self):
+        """AC3: BOOL_OR returns NULL (no rows) → is_admin=False."""
+        db = AsyncMock()
+        result = MagicMock()
+        result.scalar.return_value = None  # BOOL_OR on empty set returns NULL
+        db.execute = AsyncMock(return_value=result)
+
+        is_admin = await _compute_is_admin(uuid.uuid4(), db)
+        assert is_admin is False
+
+
+class TestVerifyTokenIsAdmin:
+    """Tests for verify_token injecting is_admin=True via dataclasses.replace (AC2)."""
+
+    def test_verify_token_injects_is_admin_true(self):
+        """AC2: verify_token returns AuthenticatedUser with is_admin=True from admin group."""
+        admin_stub = AuthenticatedUser(
+            user_id=uuid.uuid4(),
+            user_group_ids=[1],
+            auth_type="api_key",
+            is_admin=False,  # starts False; verify_token recomputes
+        )
+        app = FastAPI()
+
+        @app.get("/check")
+        async def check(user: AuthenticatedUser = Depends(verify_token)):
+            return {"is_admin": user.is_admin}
+
+        mock_db = AsyncMock()
+        admin_result = MagicMock()
+        admin_result.scalar.return_value = True  # DB says is_admin=True
+        mock_db.execute = AsyncMock(return_value=admin_result)
+        app.dependency_overrides[get_db] = lambda: mock_db
+
+        with patch("backend.auth.dependencies.verify_api_key", new=AsyncMock(return_value=admin_stub)):
+            client = TestClient(app, raise_server_exceptions=False)
+            resp = client.get("/check", headers={"X-API-Key": "any-key"})
+
+        assert resp.status_code == 200
+        assert resp.json()["is_admin"] is True
+
+    def test_verify_token_injects_is_admin_false_for_non_admin(self):
+        """AC2: verify_token returns is_admin=False when user is not in admin group."""
+        stub = AuthenticatedUser(
+            user_id=uuid.uuid4(),
+            user_group_ids=[1],
+            auth_type="api_key",
+        )
+        app = FastAPI()
+
+        @app.get("/check")
+        async def check(user: AuthenticatedUser = Depends(verify_token)):
+            return {"is_admin": user.is_admin}
+
+        mock_db = AsyncMock()
+        no_admin_result = MagicMock()
+        no_admin_result.scalar.return_value = False
+        mock_db.execute = AsyncMock(return_value=no_admin_result)
+        app.dependency_overrides[get_db] = lambda: mock_db
+
+        with patch("backend.auth.dependencies.verify_api_key", new=AsyncMock(return_value=stub)):
+            client = TestClient(app, raise_server_exceptions=False)
+            resp = client.get("/check", headers={"X-API-Key": "any-key"})
+
+        assert resp.status_code == 200
+        assert resp.json()["is_admin"] is False

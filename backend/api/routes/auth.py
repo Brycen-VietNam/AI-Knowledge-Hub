@@ -1,5 +1,7 @@
 # Spec: docs/frontend-spa/spec/frontend-spa.spec.md#S000
+# Spec: docs/admin-spa/spec/admin-spa.spec.md#S000
 # Task: T002 — POST /v1/auth/token route + bcrypt verify
+# Task: S000/T009 — add is_admin to token response (AC14)
 # Decision: D005 — username/password local auth (bcrypt + HS256 JWT)
 # Decision: D008 — this endpoint is public (no verify_token); like /v1/health
 # Decision: D010 — AUTH_SECRET_KEY generated and stored in .env (never committed)
@@ -23,7 +25,7 @@ from typing import Annotated
 
 from backend.api.middleware.rate_limiter import RateLimiter
 from backend.auth._errors import auth_error
-from backend.auth.dependencies import get_db
+from backend.auth.dependencies import _compute_is_admin, get_db
 
 # ---------------------------------------------------------------------------
 # Config — S005: all secrets from env; fail fast at startup if missing
@@ -108,8 +110,12 @@ async def login(
         algorithm="HS256",
     )
 
+    # AC14: compute is_admin from group membership — NOT stored in JWT (recomputed at verify_token)
+    is_admin = await _compute_is_admin(user_id, db)
+
     return {
         "access_token": token,
         "token_type": "bearer",
         "expires_in": _AUTH_TOKEN_EXPIRE_MINUTES * 60,
+        "is_admin": is_admin,
     }

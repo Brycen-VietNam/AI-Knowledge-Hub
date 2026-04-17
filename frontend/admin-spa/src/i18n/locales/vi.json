@@ -1,0 +1,25 @@
+{
+  "login": {
+    "title": "Bảng Quản Trị",
+    "username": "Tên đăng nhập",
+    "password": "Mật khẩu",
+    "submit": "Đăng nhập",
+    "error_invalid": "Thông tin đăng nhập không hợp lệ",
+    "error_unavailable": "Dịch vụ không khả dụng. Vui lòng thử lại.",
+    "access_denied": "Truy cập bị từ chối. Cần quyền quản trị viên.",
+    "session_expired": "Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại."
+  },
+  "lang": {
+    "selector_label": "Ngôn ngữ",
+    "en": "English",
+    "ja": "日本語",
+    "vi": "Tiếng Việt",
+    "ko": "한국어"
+  },
+  "nav": {
+    "dashboard": "Tổng quan",
+    "documents": "Tài liệu",
+    "users_groups": "Người dùng & Nhóm",
+    "logout": "Đăng xuất"
+  }
+}

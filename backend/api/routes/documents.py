@@ -25,6 +25,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.auth.dependencies import get_db, verify_token
 from backend.auth.types import AuthenticatedUser
+from backend.db.models.audit_log import AuditLog
 from backend.db.models.document import Document
 from backend.db.models.embedding import Embedding
 
@@ -132,11 +133,11 @@ async def upload_document(
 ) -> JSONResponse:
     request_id = str(uuid.uuid4())
 
-    # T002: auth_type write gate (D09)
-    if user.auth_type != "api_key":
+    # T002: auth_type write gate (D09) — AC13: expanded to api_key OR (jwt AND is_admin)
+    if user.auth_type != "api_key" and not user.is_admin:
         return JSONResponse(
             status_code=403,
-            content=_error(request_id, "FORBIDDEN", "Write access requires API-key authentication"),
+            content=_error(request_id, "FORBIDDEN", "Write access requires API-key authentication or admin JWT"),
         )
 
     # T003: input validation
@@ -303,5 +304,7 @@ async def delete_document(
             content=_error(request_id, "NOT_FOUND", "Document not found"),
         )
 
+    # R006: audit log — write in same transaction before commit (doc_id FK still valid)
+    db.add(AuditLog(user_id=user.user_id, doc_id=doc_id, query_hash="USER_DELETE"))
     await db.commit()
     return Response(status_code=204)

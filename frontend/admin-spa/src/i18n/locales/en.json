@@ -1,0 +1,25 @@
+{
+  "login": {
+    "title": "Admin Panel",
+    "username": "Username",
+    "password": "Password",
+    "submit": "Sign In",
+    "error_invalid": "Invalid credentials",
+    "error_unavailable": "Service unavailable. Please try again.",
+    "access_denied": "Access denied. Admin privileges required.",
+    "session_expired": "Session expired. Please sign in again."
+  },
+  "lang": {
+    "selector_label": "Language",
+    "en": "English",
+    "ja": "日本語",
+    "vi": "Tiếng Việt",
+    "ko": "한국어"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "documents": "Documents",
+    "users_groups": "Users & Groups",
+    "logout": "Sign Out"
+  }
+}

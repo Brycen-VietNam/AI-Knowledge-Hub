@@ -53,15 +53,23 @@ def _make_app(db=None) -> FastAPI:
 
 
 def _mock_db_row(username: str, password_hash: str | None, user_id: uuid.UUID):
-    """Return a mock AsyncSession that yields one user row on execute()."""
+    """Return a mock AsyncSession yielding one user row, then is_admin=False.
+
+    auth.py now calls db.execute twice:
+      1. User lookup (fetchone)
+      2. _compute_is_admin (scalar) — S000/T009
+    """
     row = MagicMock()
     row.__getitem__ = lambda self, i: [user_id, password_hash][i]
 
-    result = MagicMock()
-    result.fetchone = MagicMock(return_value=row)
+    user_result = MagicMock()
+    user_result.fetchone = MagicMock(return_value=row)
+
+    admin_result = MagicMock()
+    admin_result.scalar.return_value = False  # default: not admin
 
     session = AsyncMock()
-    session.execute = AsyncMock(return_value=result)
+    session.execute = AsyncMock(side_effect=[user_result, admin_result])
     return session
 
 
@@ -98,6 +106,9 @@ class TestLoginEndpoint:
         assert body["token_type"] == "bearer"
         assert isinstance(body["expires_in"], int)
         assert body["expires_in"] > 0
+        # AC14: is_admin field present in token response (S000/T009)
+        assert "is_admin" in body
+        assert isinstance(body["is_admin"], bool)
 
         # Token must be a valid HS256 JWT with correct claims
         secret = os.environ["AUTH_SECRET_KEY"]
