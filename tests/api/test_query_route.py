@@ -116,3 +116,29 @@ def test_query_low_confidence_flagged_in_response():
             resp = client.post("/v1/query", json={"query": "Q?"})
 
     assert resp.json()["low_confidence"] is True
+
+
+def test_query_lang_priority_detected_over_ui():
+    """D008: Query language (detected) takes priority over UI language preference."""
+    user = _make_user([1])
+    app = _make_app(user)
+    docs = [_make_doc("context about something")]
+    llm_resp = LLMResponse(
+        answer="English response", confidence=0.9,
+        provider="ollama", model="llama3", low_confidence=False
+    )
+
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=(docs, "en"))), \
+         patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)) as mock_gen, \
+         patch("backend.api.routes.query._write_audit", new=AsyncMock()):
+        with TestClient(app) as client:
+            # English query with Vietnamese UI lang → search() detects "en"
+            resp = client.post("/v1/query", json={"query": "what is this", "lang": "vi"})
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["answer"] == "English response"
+    # Verify generate_answer was called with detected lang (en), not UI lang (vi)
+    mock_gen.assert_called_once()
+    call_kwargs = mock_gen.call_args[1]
+    assert call_kwargs["lang"] == "en"  # Detected lang, not "vi"
