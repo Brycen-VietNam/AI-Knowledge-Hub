@@ -79,10 +79,10 @@ def sample_docs():
 
 @pytest.fixture
 def mock_search(sample_docs):
-    """Patch search() to return 2 fake RetrievedDocument objects."""
+    """Patch search() to return tuple (docs, detected_lang)."""
     with patch(
         "backend.api.routes.query.search",
-        new=AsyncMock(return_value=sample_docs),
+        new=AsyncMock(return_value=(sample_docs, "en")),
     ) as m:
         yield m
 
@@ -136,7 +136,7 @@ def test_sources_are_doc_ids(mock_search, mock_audit, mock_generate, user_with_g
 def test_query_request_lang_optional(user_with_groups, mock_audit):
     """AC: lang field is optional — absent defaults to None (auto-detect)."""
     app = _make_app(user_with_groups)
-    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[])):
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=([], "en"))):
         with TestClient(app) as client:
             resp_no_lang = client.post("/v1/query", json={"query": "hello"})
             resp_with_lang = client.post("/v1/query", json={"query": "hello", "lang": "ja"})
@@ -181,7 +181,7 @@ def test_ac7_zero_group_user_gets_results(mock_audit, user_no_groups):
         answer="public answer", confidence=0.9,
         provider="ollama", model="llama3", low_confidence=False,
     )
-    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[doc])), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=([doc], "en"))), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)):
         with TestClient(app) as client:
             resp = client.post("/v1/query", json={"query": "public content"})
@@ -214,7 +214,7 @@ def test_answer_returned_on_success(mock_search, mock_audit, mock_generate, user
 def test_no_answer_on_empty_docs(mock_audit, user_with_groups):
     """S002: empty search results → answer=null, reason=no_relevant_chunks, LLM not called (D09)."""
     app = _make_app(user_with_groups)
-    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[])), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=([], "en"))), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock()) as gen_mock:
         with TestClient(app) as client:
             resp = client.post("/v1/query", json={"query": "nothing here"})
@@ -325,7 +325,7 @@ def test_control_chars_stripped_from_query(user_with_groups, mock_audit):
 
     def _side_effect(**kwargs):
         captured["query"] = kwargs.get("query", "")
-        return []
+        return ([], "en")
 
     mock = AsyncMock(side_effect=_side_effect)
     with patch("backend.api.routes.query.search", new=mock):
@@ -373,7 +373,7 @@ def test_ac1_happy_path_multilang(lang, mock_audit, user_with_groups):
         answer=f"answer in {lang}", confidence=0.9,
         provider="ollama", model="llama3", low_confidence=False,
     )
-    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[doc])), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=([doc], "en"))), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)):
         with TestClient(app) as client:
             resp = client.post("/v1/query", json={"query": "policy question", "lang": lang})
@@ -388,7 +388,7 @@ def test_ac2_rbac_group_ids_passed_to_search(mock_audit, mock_generate):
     user = _make_user([7, 8, 9])
     app = _make_app(user)
     doc = _make_doc()
-    search_mock = AsyncMock(return_value=[doc])
+    search_mock = AsyncMock(return_value=([doc], "en"))
     with patch("backend.api.routes.query.search", new=search_mock):
         with TestClient(app) as client:
             client.post("/v1/query", json={"query": "rbac check"})
@@ -428,7 +428,7 @@ def test_ac5_zero_group_user_gets_200_not_403(mock_audit, user_no_groups):
         answer="public result", confidence=0.9,
         provider="ollama", model="llama3", low_confidence=False,
     )
-    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[doc])), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=([doc], "en"))), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)):
         with TestClient(app) as client:
             resp = client.post("/v1/query", json={"query": "public info"})
@@ -501,7 +501,7 @@ def test_query_response_has_citations_and_sources(mock_audit, user_with_groups):
     app = _make_app(user_with_groups)
     doc = _make_enriched_doc()
     llm_resp = LLMResponse(answer="ok", confidence=0.9, provider="ollama", model="llama3", low_confidence=False)
-    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[doc])), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=([doc], "en"))), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)):
         with TestClient(app) as client:
             resp = client.post("/v1/query", json={"query": "test"})
@@ -518,7 +518,7 @@ def test_query_response_citations_not_null(mock_audit, user_with_groups):
     """AC10 (T002): citations is always a list — never null, even with empty results."""
     # Spec: docs/answer-citation/spec/answer-citation.spec.md#AC10
     app = _make_app(user_with_groups)
-    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[])):
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=([], "en"))):
         with TestClient(app) as client:
             resp = client.post("/v1/query", json={"query": "nothing"})
     assert resp.status_code == 200
@@ -535,7 +535,7 @@ def test_query_response_citation_fields_complete(mock_audit, user_with_groups):
     app = _make_app(user_with_groups)
     doc = _make_enriched_doc()
     llm_resp = LLMResponse(answer="ok", confidence=0.9, provider="ollama", model="llama3", low_confidence=False)
-    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[doc])), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=([doc], "en"))), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)):
         with TestClient(app) as client:
             resp = client.post("/v1/query", json={"query": "fields check"})
@@ -560,7 +560,7 @@ def test_cited_field_present_in_citation_objects(mock_audit, user_with_groups):
     llm_resp = LLMResponse(
         answer="ok", confidence=0.9, provider="ollama", model="llama3", low_confidence=False,
     )
-    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[doc])), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=([doc], "en"))), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)):
         with TestClient(app) as client:
             resp = client.post("/v1/query", json={"query": "cited field present"})
@@ -582,7 +582,7 @@ def test_cited_true_when_inline_marker_matches(mock_audit, user_with_groups):
         low_confidence=False,
         inline_markers_present=True,
     )
-    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[doc])), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=([doc], "en"))), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)):
         with TestClient(app) as client:
             resp = client.post("/v1/query", json={"query": "marker test"})
@@ -602,7 +602,7 @@ def test_cited_false_fast_path_no_markers(mock_audit, user_with_groups):
         low_confidence=False,
         inline_markers_present=False,
     )
-    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=docs)), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=(docs, "en"))), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)):
         with TestClient(app) as client:
             resp = client.post("/v1/query", json={"query": "no markers fast path"})
@@ -633,7 +633,7 @@ def test_cited_false_for_no_content_doc(mock_audit, user_with_groups):
         low_confidence=False,
         inline_markers_present=True,
     )
-    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[no_content_doc])), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=([no_content_doc], "en"))), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)):
         with TestClient(app) as client:
             resp = client.post("/v1/query", json={"query": "no content cited"})

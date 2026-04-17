@@ -158,7 +158,7 @@ async def query_documents(
         )
 
     try:
-        docs: list[RetrievedDocument] = await asyncio.wait_for(
+        docs, detected_lang = await asyncio.wait_for(
             search(
                 query=body.query,
                 lang=body.lang,
@@ -168,6 +168,8 @@ async def query_documents(
             ),
             timeout=_RETRIEVAL_TIMEOUT,
         )
+        # Determine effective language for LLM: query lang (detected) first, then UI lang fallback
+        effective_lang = detected_lang or body.lang
     except (asyncio.TimeoutError, QueryTimeoutError):
         return JSONResponse(
             status_code=504,
@@ -199,6 +201,7 @@ async def query_documents(
                 query=body.query,
                 chunks=[d.content for d in content_docs],
                 doc_titles=[d.title or "" for d in content_docs],
+                lang=effective_lang,
             ),
             timeout=_LLM_TIMEOUT,
         )

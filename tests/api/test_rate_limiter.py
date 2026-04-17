@@ -195,7 +195,7 @@ def test_rate_limit_headers_present():
     app.dependency_overrides[verify_token] = lambda: user
     app.dependency_overrides[get_db] = lambda: (yield None)
 
-    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=[doc])), \
+    with patch("backend.api.routes.query.search", new=AsyncMock(return_value=([doc], "en"))), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()), \
          patch("backend.api.routes.query._rate_limiter.check", new=mock_rl):
@@ -277,7 +277,7 @@ def test_ac10_rate_limit_not_exceeded_returns_200_with_remaining():
     app.dependency_overrides[get_db] = lambda: (yield None)
 
     with patch("backend.api.routes.query._rate_limiter.check", new=mock_rl), \
-         patch("backend.api.routes.query.search", new=AsyncMock(return_value=[doc])), \
+         patch("backend.api.routes.query.search", new=AsyncMock(return_value=([doc], "en"))), \
          patch("backend.api.routes.query.generate_answer", new=AsyncMock(return_value=llm_resp)), \
          patch("backend.api.routes.query._write_audit", new=AsyncMock()):
         with TestClient(app) as client:

@@ -21,7 +21,7 @@ async def search(
     session: AsyncSession,
     top_k: int = 10,
     lang: str | None = None,
-) -> list[RetrievedDocument]:
+) -> tuple[list[RetrievedDocument], str]:
     """Unified RAG search orchestration.
 
     Detects language (if not provided) → tokenizes → embeds → retrieves.
@@ -36,7 +36,8 @@ async def search(
         lang: Override language code. None = auto-detect. If provided, must be in _SUPPORTED.
 
     Returns:
-        list[RetrievedDocument] ranked by hybrid score (0.7*dense + 0.3*BM25)
+        tuple of (list[RetrievedDocument] ranked by hybrid score, detected_lang: str)
+        detected_lang is the language code determined (either provided or detected)
 
     Raises:
         LanguageDetectionError: If lang=None and detection fails
@@ -66,4 +67,4 @@ async def search(
         top_k=top_k,
     )  # Raises QueryTimeoutError on timeout
 
-    return results
+    return results, lang

@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 from backend.rag.citation_parser import _parse_citations
-from .base import LLMProvider, LLMResponse
+from .base import LLMProvider, LLMResponse, LANG_NAMES
 from .exceptions import LLMError, NoRelevantChunksError
 
 _PROMPT_TEMPLATE = (Path(__file__).parent / "prompts" / "answer.txt").read_text()
@@ -26,6 +26,7 @@ class ClaudeAdapter(LLMProvider):
         prompt: str,
         context_chunks: list[str],
         doc_titles: list[str],
+        lang: str | None = None,
     ) -> LLMResponse:
         # Spec: docs/answer-citation/spec/answer-citation.spec.md#S003
         # Task: T006 — ClaudeAdapter updated complete() (D-CIT-09, AC5 fallback)
@@ -39,7 +40,8 @@ class ClaudeAdapter(LLMProvider):
             f"[{i + 1}] {title}\n{chunk}"
             for i, (title, chunk) in enumerate(zip(doc_titles, context_chunks))
         )
-        filled = _PROMPT_TEMPLATE.format(sources_index=sources_index, question=prompt)
+        lang_instruction = f"Respond in {LANG_NAMES[lang]}." if lang in LANG_NAMES else ""
+        filled = _PROMPT_TEMPLATE.format(sources_index=sources_index, question=prompt, lang_instruction=lang_instruction)
         try:
             client = anthropic.AsyncAnthropic(api_key=self._api_key)
             msg = await client.messages.create(
