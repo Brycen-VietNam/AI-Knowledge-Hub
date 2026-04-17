@@ -1,66 +1,55 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-17 | Session: #079 (/sync — frontend-theme S001–S005 ALL DONE)
+Updated: 2026-04-17 | Session: #080 (/sync — frontend-theme + frontend-spa REPORTS FINALIZED)
 
 ---
 
-## Active Sprint
-Goal: Frontend theme + SPA finalization → /report both features → merge to main
-Sprint end: _[date TBD]_
+## Current Sprint (Session #080)
+Status: **frontend-theme + frontend-spa REPORTS COMPLETE** ✅
+Next: Await PO approval (lb_mui) → merge to main
+Branch: `feature/frontend-spa` (ready for merge)
 
-## Completed Features
-- auth-api-key-oidc — DONE ✅ 4 stories, 16 tasks, 51 tests, 20/20 ACs
-  Archive: `.claude/memory/COLD/auth-api-key-oidc.archive.md`
-- rbac-document-filter — DONE ✅ 5 stories, 41 ACs — approved lb_mui 2026-04-06
-  Archive: `.claude/memory/COLD/rbac-document-filter.archive.md`
-- cjk-tokenizer — DONE ✅ 4 stories, 22 ACs, 56/0/0 Docker — approved 2026-04-06
-  Archive: `.claude/memory/COLD/cjk-tokenizer.archive.md`
-- llm-provider — DONE ✅ 5 stories, 22 ACs, 36/38 pass — finalized 2026-04-06
-  Archive: `.claude/memory/COLD/llm-provider.archive.md`
-- document-ingestion — DONE ✅ 5 stories, 22 ACs, 230 pass — approved lb_mui 2026-04-08
-  Archive: `.claude/memory/COLD/document-ingestion.archive.md`
-- multilingual-rag-pipeline — DONE ✅ 4 stories, 24 ACs, 100% coverage
-  Archive: `.claude/memory/COLD/multilingual-rag-pipeline.archive.md`
-- query-endpoint — DONE ✅ 5 stories, 42/42 tests, 35/35 ACs, 95% cov — finalized 2026-04-13
-  Archive: `.claude/memory/COLD/query-endpoint.archive.md`
-- document-parser — DONE ✅ P0+S001–S004, 18/18 tests, 24/24 ACs — finalized 2026-04-13
-  Archive: `.claude/memory/COLD/document-parser.archive.md`
-- answer-citation — DONE ✅ S001–S005, 80/80 tests, 35/35 ACs — approved lb_mui 2026-04-15
-  Archive: `.claude/memory/COLD/answer-citation.archive.md`
-- confidence-scoring — DONE ✅ PR merged 2026-04-16; 34 tests; cited_ratio*0.8+0.2
-- citation-quality — DONE ✅ PR merged 2026-04-16; 21/21 ACs, 389 pass
-  Report: `docs/citation-quality/reports/citation-quality.report.md`
+## Completed Features (All Prior, Archived)
+- auth-api-key-oidc, rbac-document-filter, cjk-tokenizer, llm-provider, document-ingestion
+- multilingual-rag-pipeline, query-endpoint, document-parser, answer-citation
+- confidence-scoring, citation-quality
+→ All archived in `.claude/memory/COLD/`
 
 ## In Progress (max 3)
 - (none — ready for merge to main)
 
-## Recent Decisions (last 3)
+## Recent Decisions (Session #080)
+- 2026-04-17: D008 — Backend Language Preference deferred (post-launch); frontend correctly sends `lang` param [Tech Lead]
 - 2026-04-17: D007 — Global CSS classes in index.css (no modules, no inline style) [User]
 - 2026-04-17: D006 — Logo: "Knowledge Hub" + "BRYSEN GROUP" [User]
-- 2026-04-17: D005 — Header on all pages; user pill hidden when token === null [User]
 
 ## Pending Commits (uncommitted fixes on feature/document-parser)
 - SecurityGate: skip magic check when file_bytes=b"" — security_gate.py:47
 - SecurityGate: text/markdown ↔ text/plain compatible pair — security_gate.py:18
 - docker-compose.yml: RETRIEVAL_TIMEOUT_OVERRIDE=15.0
 
-## Completed Features (Session #080 — /report frontend-theme + frontend-spa)
-- **frontend-theme** — ALL DONE ✅ S001–S005 (5 stories, 48 ACs, 208/208 tests, build 1.95s clean)
-  Report: `docs/frontend-theme/reports/frontend-theme.report.md` (READY for merge)
-  Archive: → COLD/frontend-theme.archive.md after merge to main
-- **frontend-spa** — ALL DONE ✅ S001–S005 (5 stories, 48 ACs, 208/208 tests)
-  Report: `docs/frontend-spa/reports/frontend-spa.report.md` (READY for merge)
-  Archive: → COLD/frontend-spa.archive.md after merge to main
+## Session #080 Summary ✅ COMPLETE
+**Task:** Finalize frontend-theme + frontend-spa reports; ghi nhận backend language preference issue
 
-## Known Deferred Issues
-- **Backend Language Preference** (P1, backend team):
-  - Issue: `generate_answer()` does not receive `lang` parameter from `/v1/query`
-  - Effect: Query "what is knowledge hub?" + UI language="Tiếng Việt" → English answer (uses detected query lang, not UI pref)
-  - Root: Backend language detection for retrieval is correct, but LLM generation ignores user's language preference
-  - Action: Add `lang` parameter to `generate_answer()`, control LLM output language via prompt
-  - Ticket: (separate backend issue to be created)
-  - Impact: Medium UX friction (users in non-native language get results in wrong language) — post-launch fix
+**Completed:**
+1. ✅ /report frontend-theme → `docs/frontend-theme/reports/frontend-theme.report.md` (48/48 ACs, 208/208 tests)
+2. ✅ /report frontend-spa → `docs/frontend-spa/reports/frontend-spa.report.md` (48/48 ACs, 208/208 tests)
+3. ✅ Commit: "Report: frontend-theme + frontend-spa — Feature complete, 100% test coverage"
+4. ✅ Updated HOT.md + ghi nhận backend language preference issue
+
+**Key Decision: D008**
+- Backend Language Preference: `generate_answer()` does NOT receive `lang` parameter
+- Frontend correctly sends `lang` (user's UI language preference)
+- Backend detects query language but ignores user preference in LLM generation
+- Action: Backend team to add `lang` param to generate_answer(), control LLM output language
+- Impact: Post-launch fix (medium UX friction)
+- Fully documented in both reports + HOT.md
+
+**Status:**
+- Branch: `feature/frontend-spa` (all code committed, reports signed)
+- Tests: 208/208 PASS (0 failures)
+- Ready: Await PO approval (lb_mui) → merge to main
 
 ## Active Blockers
 - (none)
