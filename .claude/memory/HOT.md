@@ -1,14 +1,13 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-17 | Session: #080 (/sync — frontend-theme + frontend-spa REPORTS FINALIZED)
+Updated: 2026-04-20 | Session: #094 (admin-spa S005 — /implement DONE)
 
 ---
 
-## Current Sprint (Session #080)
-Status: **frontend-theme + frontend-spa REPORTS COMPLETE** ✅
-Next: Await PO approval (lb_mui) → merge to main
-Branch: `feature/frontend-spa` (ready for merge)
+## Current Sprint (Session #094)
+Status: **admin-spa S005 DONE ✅** | All 6 stories complete | Ready for /reviewcode S005 → /report admin-spa
+Branch: `feature/admin-spa`
 
 ## Completed Features (All Prior, Archived)
 - auth-api-key-oidc, rbac-document-filter, cjk-tokenizer, llm-provider, document-ingestion
@@ -17,12 +16,14 @@ Branch: `feature/frontend-spa` (ready for merge)
 → All archived in `.claude/memory/COLD/`
 
 ## In Progress (max 3)
-- (none — ready for merge to main)
+- admin-spa — S000 ✅ | S001 ✅ | S002 ✅ | S003 ✅ | S004 ✅ | **S005 DONE ✅**
+  WARM: `.claude/memory/WARM/admin-spa.mem.md`
+  Next: /reviewcode S005 → commit → /report admin-spa → merge feature/admin-spa → main
 
-## Recent Decisions (Session #080)
-- 2026-04-17: D008 — Backend Language Preference deferred (post-launch); frontend correctly sends `lang` param [Tech Lead]
-- 2026-04-17: D007 — Global CSS classes in index.css (no modules, no inline style) [User]
-- 2026-04-17: D006 — Logo: "Knowledge Hub" + "BRYSEN GROUP" [User]
+## Recent Decisions (Session #094)
+- 2026-04-20: D-S005-01 — admin-spa Docker port 8081:80 (D05 confirmed, no conflict with 8000/8080/3000)
+- 2026-04-20: D-S005-02 — VITE_API_BASE_URL passed as build ARG (not runtime env) — Vite build-time baking
+- 2026-04-20: D-S004-R01 — CSS health dots use undefined `--success`/`--danger`; fix to `--emerald`/`--red` DONE
 
 ## Pending Commits (uncommitted fixes on feature/document-parser)
 - SecurityGate: skip magic check when file_bytes=b"" — security_gate.py:47

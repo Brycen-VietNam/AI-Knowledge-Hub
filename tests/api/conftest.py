@@ -1,6 +1,8 @@
 # Stub OIDC env vars so backend.auth.oidc can be imported in unit tests
 # without a real OIDC provider. Values are intentionally invalid — tests
 # override verify_token via dependency injection and never call verify_oidc_token.
+# AUTH_SECRET_KEY set here (before any test module import) so _LOCAL_SECRET in
+# backend.auth.dependencies is populated regardless of test collection order.
 import asyncio
 import os
 
@@ -9,6 +11,7 @@ import pytest
 os.environ.setdefault("OIDC_ISSUER", "https://test.example.com")
 os.environ.setdefault("OIDC_AUDIENCE", "test-audience")
 os.environ.setdefault("OIDC_JWKS_URI", "https://test.example.com/.well-known/jwks.json")
+os.environ.setdefault("AUTH_SECRET_KEY", "test-secret-key-for-unit-tests-only-32bytes!!")
 
 _TEST_DB_URL = os.getenv("TEST_DATABASE_URL", "")
 _integration_available = bool(_TEST_DB_URL)

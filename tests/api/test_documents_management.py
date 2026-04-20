@@ -1,7 +1,9 @@
 # Spec: docs/document-ingestion/spec/document-ingestion.spec.md#S005-api
+# Spec: docs/admin-spa/spec/admin-spa.spec.md#S000
 # Task: S005-api-T001 — GET /v1/documents (paginated, RBAC-filtered list)
 # Task: S005-api-T002 — GET /v1/documents/{id} (metadata + 404)
 # Task: S005-api-T003 — DELETE /v1/documents/{id} (204 + 404)
+# Task: S000/T012 — AC13: write gate expanded to api_key OR (jwt AND is_admin)
 # Rule: R001 — RBAC at WHERE clause; R003 — auth required; R004 — /v1/ prefix
 import uuid
 from unittest.mock import AsyncMock, MagicMock
@@ -199,3 +201,58 @@ def test_delete_document_success_returns_204():
     resp = client.delete(f"/v1/documents/{doc_id}")
     assert resp.status_code == 204
     assert resp.content == b""
+
+
+# ---------------------------------------------------------------------------
+# S000/T012: AC13 — write gate expanded to api_key OR (jwt AND is_admin)
+# ---------------------------------------------------------------------------
+
+def _make_user_with_is_admin(is_admin: bool) -> AuthenticatedUser:
+    return AuthenticatedUser(
+        user_id=uuid.uuid4(),
+        user_group_ids=[1],
+        auth_type="oidc",
+        is_admin=is_admin,
+    )
+
+
+def test_post_document_jwt_admin_is_allowed():
+    """AC13: JWT user with is_admin=True can POST documents."""
+    user = _make_user_with_is_admin(is_admin=True)
+    db = AsyncMock()
+    doc_id = uuid.uuid4()
+
+    doc_mock = MagicMock()
+    doc_mock.id = doc_id
+    db.add = MagicMock()
+    db.commit = AsyncMock()
+    db.refresh = AsyncMock()
+
+    from backend.api.routes import documents as doc_module
+    import backend.api.routes.documents as doc_route_mod
+
+    app = _make_app(user, db)
+    # Patch ingest_pipeline to avoid real background task
+    with pytest.MonkeyPatch().context() as mp:
+        mp.setattr(doc_route_mod, "ingest_pipeline", AsyncMock())
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.post(
+            "/v1/documents",
+            json={"title": "Test", "content": "Some content", "lang": "en"},
+        )
+    # 202 Accepted (not 403) — admin JWT passes write gate
+    assert resp.status_code == 202
+
+
+def test_post_document_jwt_non_admin_is_blocked():
+    """AC13: JWT user with is_admin=False is rejected with 403."""
+    user = _make_user_with_is_admin(is_admin=False)
+    db = AsyncMock()
+    app = _make_app(user, db)
+    client = TestClient(app, raise_server_exceptions=False)
+    resp = client.post(
+        "/v1/documents",
+        json={"title": "Test", "content": "Some content", "lang": "en"},
+    )
+    assert resp.status_code == 403
+    assert resp.json()["error"]["code"] == "FORBIDDEN"

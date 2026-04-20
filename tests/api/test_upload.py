@@ -206,9 +206,9 @@ def test_successful_upload_returns_202_with_document_id():
 
     assert resp.status_code == 202
     data = resp.json()
-    assert "document_id" in data
+    assert "doc_id" in data
     assert data["status"] == "processing"
-    uuid.UUID(data["document_id"])  # must be valid UUID
+    uuid.UUID(data["doc_id"])  # must be valid UUID
 
 
 def test_title_defaults_to_filename_stem():
@@ -257,7 +257,7 @@ def test_title_defaults_to_filename_stem():
 
 
 def test_oidc_caller_returns_403():
-    """D04: OIDC user must get 403 on upload (write gate)."""
+    """D04: OIDC non-admin user must get 403 on upload (write gate)."""
     user = _make_user(auth_type="oidc")
     db = AsyncMock()
     app = _make_app(user, db)
@@ -270,6 +270,93 @@ def test_oidc_caller_returns_403():
         )
     assert resp.status_code == 403
     assert resp.json()["error"]["code"] == "FORBIDDEN"
+
+
+def test_oidc_admin_caller_is_allowed():
+    """G1/D04 extended: OIDC user with is_admin=True bypasses write gate → not 403."""
+    from backend.rag.parser.base import ParsedDocument
+
+    user = AuthenticatedUser(
+        user_id=uuid.uuid4(),
+        user_group_ids=[1],
+        auth_type="oidc",  # type: ignore[arg-type]
+        is_admin=True,
+    )
+    doc_id = uuid.uuid4()
+    db = AsyncMock()
+    db.add = MagicMock()
+    db.commit = AsyncMock()
+    db.refresh = AsyncMock(
+        side_effect=lambda d: setattr(d, "id", doc_id) or setattr(d, "status", "processing")
+    )
+
+    parsed_doc = ParsedDocument(text="Hello", lang="en")
+    mock_parser = MagicMock()
+
+    app = _make_app(user, db)
+    client = TestClient(app, raise_server_exceptions=False)
+
+    with (
+        patch("backend.api.routes.upload.SecurityGate.validate"),
+        patch("backend.api.routes.upload.ParserFactory.get_parser", return_value=mock_parser),
+        patch("backend.api.routes.upload.asyncio.wait_for", new_callable=AsyncMock, return_value=parsed_doc),
+        patch("backend.api.routes.upload._write_audit_log", new_callable=AsyncMock),
+        patch("backend.api.routes.upload.ingest_pipeline", new_callable=AsyncMock),
+    ):
+        resp = client.post(
+            "/v1/documents/upload",
+            files={"file": ("doc.txt", io.BytesIO(b"Hello"), "text/plain")},
+        )
+
+    assert resp.status_code == 202
+    assert resp.json()["doc_id"] is not None
+
+
+def test_upload_with_source_url_stores_and_returns_it():
+    """G4: source_url form field is saved to Document and returned in response."""
+    from backend.rag.parser.base import ParsedDocument
+
+    user = _make_user()
+    doc_id = uuid.uuid4()
+    captured_doc = {}
+
+    db = AsyncMock()
+
+    def _capture_add(obj):
+        captured_doc["source_url"] = obj.source_url
+
+    db.add = MagicMock(side_effect=_capture_add)
+    db.commit = AsyncMock()
+    db.refresh = AsyncMock(
+        side_effect=lambda d: (
+            setattr(d, "id", doc_id)
+            or setattr(d, "status", "processing")
+            or setattr(d, "source_url", d.source_url)
+        )
+    )
+
+    parsed_doc = ParsedDocument(text="content", lang="en")
+    mock_parser = MagicMock()
+
+    app = _make_app(user, db)
+    client = TestClient(app, raise_server_exceptions=False)
+
+    with (
+        patch("backend.api.routes.upload.SecurityGate.validate"),
+        patch("backend.api.routes.upload.ParserFactory.get_parser", return_value=mock_parser),
+        patch("backend.api.routes.upload.asyncio.wait_for", new_callable=AsyncMock, return_value=parsed_doc),
+        patch("backend.api.routes.upload._write_audit_log", new_callable=AsyncMock),
+        patch("backend.api.routes.upload.ingest_pipeline", new_callable=AsyncMock),
+    ):
+        resp = client.post(
+            "/v1/documents/upload",
+            files={"file": ("doc.txt", io.BytesIO(b"content"), "text/plain")},
+            data={"source_url": "https://example.com/doc"},
+        )
+
+    assert resp.status_code == 202
+    assert captured_doc.get("source_url") == "https://example.com/doc"
+    assert resp.json()["source_url"] == "https://example.com/doc"
 
 
 # ---------------------------------------------------------------------------
@@ -433,9 +520,9 @@ def test_integration_upload_valid_txt_returns_202(integration_client):
     )
     assert resp.status_code == 202
     data = resp.json()
-    assert "document_id" in data
+    assert "doc_id" in data
     assert data["status"] == "processing"
-    doc_id = uuid.UUID(data["document_id"])
+    doc_id = uuid.UUID(data["doc_id"])
 
     # Verify DB row via direct session
     import asyncio
