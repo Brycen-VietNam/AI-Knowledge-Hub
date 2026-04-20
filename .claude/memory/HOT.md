@@ -1,13 +1,13 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-20 | Session: #089 (admin-spa S002 — T004+T006 DONE+REVIEWED, warnings fixed, 45/45 pass)
+Updated: 2026-04-20 | Session: #092 (admin-spa S003 — /reviewcode CHANGES_REQUIRED → fixes applied → APPROVED)
 
 ---
 
-## Current Sprint (Session #089)
-Status: **admin-spa S002 REVIEWED ✅** | All 6 tasks DONE+REVIEWED | 45/45 S002 tests pass | warnings fixed
-Next: commit S002 → /specify S003 (User/Group CRUD)
+## Current Sprint (Session #092)
+Status: **admin-spa S003 REVIEWED+FIXED** | 48/48 tests pass | All warnings resolved
+Next: commit S003 → /tasks S004 OR /report admin-spa S003
 Branch: `feature/admin-spa`
 
 ## Completed Features (All Prior, Archived)
@@ -17,16 +17,15 @@ Branch: `feature/admin-spa`
 → All archived in `.claude/memory/COLD/`
 
 ## In Progress (max 3)
-- admin-spa — S000 DONE+REVIEWED ✅ | S001 DONE ✅ | **S002 DONE+REVIEWED ✅** | S003–S005 pending
+- admin-spa — S000 DONE+REVIEWED ✅ | S001 DONE ✅ | S002 DONE+REVIEWED ✅ | **S003 DONE+REVIEWED ✅ (48/48 tests)** | S004–S005 pending
   WARM: `.claude/memory/WARM/admin-spa.mem.md`
-  Tasks: `docs/admin-spa/tasks/S002.tasks.md`
-  T001–T006 ALL REVIEWED ✅ | 45/45 S002 frontend tests
-  Next: commit S002 → S003 (User/Group CRUD)
+  Review: `docs/admin-spa/reviews/S003.review.md`
+  Next: commit S003 → /tasks S004
 
-## Recent Decisions (Session #089)
-- 2026-04-20: S002 warning fixes — i18n keys upload_error_too_large/generic/loading/fetch_error added (4 locales); UploadModal uses t() for errors+loading; DocumentsPage shows fetchError banner; removed unused fileInputRef
-- 2026-04-20: S002 REVIEWED ✅ — 4 warnings (non-blocking): hardcoded error strings, unused ref, silent fetch fail → all fixed post-review
-- 2026-04-20: S002 T004 UploadModal + T006 DocumentsPage implemented — 45/45 tests pass
+## Recent Decisions (Session #092)
+- 2026-04-20: S003 review D-S003-R01 — UsersTab: separate initial listGroups effect from debounce-driven listUsers. Debounce effect handles initial users load (search=''). Prevents double fetch.
+- 2026-04-20: S003 review D-S003-R02 — Added `toggle_active_error` i18n key to all 4 locales. Was incorrectly using `col_active` (column header) as error message.
+- 2026-04-20: S003 review D-S003-R03 — Added `.catch()` to listGroups() on mount; shows toast on failure. Previously silent.
 
 ## Pending Commits (uncommitted fixes on feature/document-parser)
 - SecurityGate: skip magic check when file_bytes=b"" — security_gate.py:47

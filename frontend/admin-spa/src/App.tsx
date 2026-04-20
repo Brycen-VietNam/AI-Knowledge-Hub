@@ -8,6 +8,7 @@ import { setNavigate } from './api/client'
 import { LoginPage } from './pages/LoginPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { DocumentsPage } from './pages/DocumentsPage'
+import { UsersGroupsPage } from './pages/UsersGroupsPage'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { useAuthStore } from './store/authStore'
 import { LanguageSelector } from './components/LanguageSelector'
@@ -64,6 +65,14 @@ function App() {
           element={
             <ProtectedRoute>
               <DocumentsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users-groups"
+          element={
+            <ProtectedRoute>
+              <UsersGroupsPage />
             </ProtectedRoute>
           }
         />

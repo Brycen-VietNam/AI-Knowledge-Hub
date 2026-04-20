@@ -652,6 +652,18 @@ header.app-header {
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ─── S003 — USERS & GROUPS ─── */
+.users-groups-page { padding: 1.5rem; }
+.tab-bar { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+.tab-bar button { padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: transparent; cursor: pointer; }
+.tab-bar button.active { background: var(--primary); color: white; border-color: var(--primary); }
+.badge-admin { background: var(--danger-light); color: var(--danger); padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; }
+.badge-member { background: var(--border); color: var(--text-muted); padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; }
+.badge-active { background: var(--success-light); color: var(--success); padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; }
+.badge-inactive { background: var(--border); color: var(--text-muted); padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; }
+.search-input { width: 100%; max-width: 320px; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 1rem; }
+.toast-error { background: var(--danger); color: #fff; }
+
 /* ─── DASHBOARD PAGE ─── */
 .dashboard-page {
   max-width: 1280px;
