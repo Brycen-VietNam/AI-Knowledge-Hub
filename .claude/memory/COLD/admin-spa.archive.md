@@ -1,7 +1,7 @@
 ﻿# Feature Memory: admin-spa
 > Created by /specify. Updated after each SDD phase. Loaded only when working on this feature.
 
-Status: S005_COMPLETE
+Status: DONE ✅ — ARCHIVED 2026-04-20
 Updated: 2026-04-20
 
 ---

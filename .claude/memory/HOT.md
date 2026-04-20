@@ -1,34 +1,31 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-20 | Session: #094 (admin-spa S005 — /implement DONE)
+Updated: 2026-04-20 | Session: #096 (admin-spa — FINALIZED)
 
 ---
 
-## Current Sprint (Session #094)
-Status: **admin-spa S005 DONE ✅** | All 6 stories complete | Ready for /reviewcode S005 → /report admin-spa
+## Current Sprint (Session #096)
+Status: **SPRINT COMPLETE** | admin-spa DONE ✅ | Ready to merge feature/admin-spa → main
 Branch: `feature/admin-spa`
 
-## Completed Features (All Prior, Archived)
+## Completed Features (All, Archived)
 - auth-api-key-oidc, rbac-document-filter, cjk-tokenizer, llm-provider, document-ingestion
 - multilingual-rag-pipeline, query-endpoint, document-parser, answer-citation
 - confidence-scoring, citation-quality
+- **admin-spa** — DONE ✅ 2026-04-20 | 50/50 ACs | 151 frontend + 27 backend tests | Archive: `.claude/memory/COLD/admin-spa.archive.md`
 → All archived in `.claude/memory/COLD/`
 
 ## In Progress (max 3)
-- admin-spa — S000 ✅ | S001 ✅ | S002 ✅ | S003 ✅ | S004 ✅ | **S005 DONE ✅**
-  WARM: `.claude/memory/WARM/admin-spa.mem.md`
-  Next: /reviewcode S005 → commit → /report admin-spa → merge feature/admin-spa → main
+- (none — sprint complete)
 
-## Recent Decisions (Session #094)
-- 2026-04-20: D-S005-01 — admin-spa Docker port 8081:80 (D05 confirmed, no conflict with 8000/8080/3000)
-- 2026-04-20: D-S005-02 — VITE_API_BASE_URL passed as build ARG (not runtime env) — Vite build-time baking
-- 2026-04-20: D-S004-R01 — CSS health dots use undefined `--success`/`--danger`; fix to `--emerald`/`--red` DONE
+## Recent Decisions (Session #095)
+- 2026-04-20: D-QA-01 — sessionStorage persist for JWT (SS_KEY='kh_admin_auth') — survives F5, clears on tab close
+- 2026-04-20: D-QA-02 — SecurityGate: `application/octet-stream` + actual MIME in whitelist → pass (browser fallback)
+- 2026-04-20: D-QA-03 — btn-primary width: auto (default); login-form overrides to 100%
 
-## Pending Commits (uncommitted fixes on feature/document-parser)
-- SecurityGate: skip magic check when file_bytes=b"" — security_gate.py:47
-- SecurityGate: text/markdown ↔ text/plain compatible pair — security_gate.py:18
-- docker-compose.yml: RETRIEVAL_TIMEOUT_OVERRIDE=15.0
+## Pending Commits
+- (none — all committed in e05c429)
 
 ## Session #080 Summary ✅ COMPLETE
 **Task:** Finalize frontend-theme + frontend-spa reports; ghi nhận backend language preference issue
