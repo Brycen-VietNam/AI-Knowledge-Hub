@@ -1,8 +1,8 @@
 ﻿# Feature Memory: admin-spa
 > Created by /specify. Updated after each SDD phase. Loaded only when working on this feature.
 
-Status: S001_COMPLETE
-Updated: 2026-04-17
+Status: S005_COMPLETE
+Updated: 2026-04-20
 
 ---
 
@@ -45,7 +45,7 @@ Parallel group G3: S002 + S003 + S004 (after S001)
 | T001â€“T006 | S002 | DONE âœ… | frontend-agent | 45/45 tests pass |
 | T001â€“T007 | S003 | CHANGES_REQUIRED | frontend-agent | 48/48 tests pass. 3 warnings (double fetch on mount, wrong toast key, silent listGroups error). Review: docs/admin-spa/reviews/S003.review.md |
 | T001–T007 | S004 | REVIEWED ✅ | api-agent(T001)+frontend-agent | 151/151 frontend + 27/27 backend. APPROVED with 3 warnings. Review: docs/admin-spa/reviews/S004.review.md |
-| â€” | S005 | TODO | frontend-agent | Reuse frontend-spa S005 pattern |
+| T001–T005 | S005 | DONE ✅ | frontend-agent | Dockerfile, nginx.conf, .env.example, docker-compose.yml, smoke test |
 
 ## Parallel Groups (from /plan)
 - G1: S000 (sequential â€” all block on this)
@@ -54,7 +54,13 @@ Parallel group G3: S002 + S003 + S004 (after S001)
 - G4: S005 (after G3)
 
 ## Files Touched
-**S000 (Session #083):**
+**S005 (Session #094):**
+- `frontend/admin-spa/Dockerfile` — created (multi-stage node:20-alpine → nginx:alpine)
+- `frontend/admin-spa/nginx.conf` — created (SPA fallback + cache + security headers)
+- `frontend/admin-spa/.env.example` — created (VITE_API_BASE_URL)
+- `docker-compose.yml` — admin-spa service added (port 8081:80, depends_on: app)
+- `tests/admin-spa/S005.build.sh` — created (npm build + docker build smoke test)
+- `docs/admin-spa/tasks/S005.tasks.md` — created
 - `backend/db/migrations/009_add_admin_group_flag.sql` â€” created
 - `backend/db/models/models.py` â€” UserGroup.is_admin added
 - `backend/auth/types.py` â€” AuthenticatedUser.is_admin added

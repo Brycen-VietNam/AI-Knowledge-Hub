@@ -87,6 +87,20 @@ services:
     depends_on:
       - app
 
+  # Task: T004 (S005) — admin SPA container (D05: port 8081, D07: separate project)
+  # NOTE: VITE_* vars are baked at BUILD TIME — must use build.args, not environment:
+  admin-spa:
+    build:
+      context: ./frontend/admin-spa
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+    container_name: knowledge-hub-admin
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    depends_on:
+      - app
+
 volumes:
   postgres_data:
   valkey_data:
