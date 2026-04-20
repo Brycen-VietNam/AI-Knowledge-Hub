@@ -63,6 +63,7 @@ async def upload_file(
     title: str | None = Form(default=None, max_length=500),
     user_group_id: int | None = Form(default=None),
     lang: str | None = Form(default=None),
+    source_url: str | None = Form(default=None),
 ) -> JSONResponse:
     # Step 1: file required
     if file is None or not file.filename:
@@ -71,8 +72,8 @@ async def upload_file(
             content=_error(request, "ERR_NO_FILE", "No file provided"),
         )
 
-    # D04: api_key write gate
-    if user.auth_type != "api_key":
+    # D04: api_key write gate (D04 extended — admin JWT also allowed per admin-spa D04)
+    if user.auth_type != "api_key" and not user.is_admin:
         return JSONResponse(
             status_code=403,
             content=_error(request, "FORBIDDEN", "Write access requires API-key authentication"),
@@ -167,6 +168,7 @@ async def upload_file(
         lang=resolved_lang,
         user_group_id=user_group_id,
         status="processing",
+        source_url=source_url,
     )
     db.add(doc)
     await db.commit()
@@ -181,5 +183,5 @@ async def upload_file(
     # Step 11: 202 response
     return JSONResponse(
         status_code=202,
-        content={"document_id": str(doc.id), "status": "processing"},
+        content={"doc_id": str(doc.id), "status": "processing", "source_url": doc.source_url},
     )

@@ -78,8 +78,13 @@ async def admin_list_documents(
     db: Annotated[AsyncSession, Depends(get_db)],
     limit: int = 20,
     offset: int = 0,
+    status: str | None = None,
+    lang: str | None = None,
+    user_group_id: int | None = None,
 ) -> JSONResponse:
-    """AC4: List ALL documents (no RBAC filter), paginated. Admin only."""
+    """AC4: List ALL documents (no RBAC filter), paginated. Admin only.
+    Optional filters: status, lang, user_group_id.
+    """
     request_id = str(uuid.uuid4())
 
     if limit > 100:
@@ -88,16 +93,36 @@ async def admin_list_documents(
             content=_error(request_id, "INVALID_INPUT", "limit must not exceed 100"),
         )
 
-    # AC4: no RBAC WHERE clause — admin sees all documents regardless of user_group
-    stmt = text(
+    # Build dynamic WHERE conditions — S001: values always parameterized.
+    # where_clause is assembled from static string literals only (never user data).
+    conditions: list[str] = []
+    bind_params: dict = {"limit": limit, "offset": offset}
+
+    if status is not None:
+        conditions.append("d.status = :status")
+        bind_params["status"] = status
+    if lang is not None:
+        conditions.append("d.lang = :lang")
+        bind_params["lang"] = lang
+    if user_group_id is not None:
+        conditions.append("d.user_group_id = :user_group_id")
+        bind_params["user_group_id"] = user_group_id
+
+    # Static fragment list — no user input injected into SQL text
+    base_select = (
         "SELECT d.id, d.title, d.lang, d.user_group_id, d.status, d.created_at, "
         "(SELECT COUNT(*) FROM embeddings e WHERE e.doc_id = d.id) AS chunk_count "
-        "FROM documents d "
-        "ORDER BY d.created_at DESC "
-        "LIMIT :limit OFFSET :offset"
-    ).bindparams(limit=limit, offset=offset)
+        "FROM documents d"
+    )
+    base_count = "SELECT COUNT(*) FROM documents d"
+    filter_sql = (" WHERE " + " AND ".join(conditions)) if conditions else ""
+    filter_params = {k: v for k, v in bind_params.items() if k not in ("limit", "offset")}
 
-    count_stmt = text("SELECT COUNT(*) FROM documents")
+    stmt = text(
+        base_select + filter_sql + " ORDER BY d.created_at DESC LIMIT :limit OFFSET :offset"
+    ).bindparams(**bind_params)
+
+    count_stmt = text(base_count + filter_sql).bindparams(**filter_params)
 
     rows = (await db.execute(stmt)).mappings().all()
     total = (await db.execute(count_stmt)).scalar()

@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { setNavigate } from './api/client'
 import { LoginPage } from './pages/LoginPage'
 import { DashboardPage } from './pages/DashboardPage'
+import { DocumentsPage } from './pages/DocumentsPage'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { useAuthStore } from './store/authStore'
 import { LanguageSelector } from './components/LanguageSelector'
@@ -55,6 +56,14 @@ function App() {
           element={
             <ProtectedRoute>
               <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/documents"
+          element={
+            <ProtectedRoute>
+              <DocumentsPage />
             </ProtectedRoute>
           }
         />

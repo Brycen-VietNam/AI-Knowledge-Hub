@@ -124,6 +124,63 @@ class TestAdminDocuments:
         resp = client.get("/v1/admin/documents?limit=101")
         assert resp.status_code == 422
 
+    def test_list_documents_filter_by_status(self):
+        """G3: ?status=ready filters correctly — 200 with matching items."""
+        user = _admin_user()
+        db = AsyncMock()
+        doc_id = uuid.uuid4()
+        row = {
+            "id": doc_id, "title": "Ready Doc", "lang": "en",
+            "user_group_id": 1, "status": "ready",
+            "created_at": MagicMock(isoformat=lambda: "2026-04-17T00:00:00"),
+            "chunk_count": 3,
+        }
+        db.execute = AsyncMock(side_effect=[_mappings_mock([row]), _scalar_mock(1)])
+
+        app = _make_app(user, db)
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.get("/v1/admin/documents?status=ready")
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["total"] == 1
+        assert data["items"][0]["status"] == "ready"
+
+    def test_list_documents_filter_by_lang(self):
+        """G3: ?lang=ja filters correctly — 200 with matching items."""
+        user = _admin_user()
+        db = AsyncMock()
+        doc_id = uuid.uuid4()
+        row = {
+            "id": doc_id, "title": "Japanese Doc", "lang": "ja",
+            "user_group_id": 2, "status": "processing",
+            "created_at": MagicMock(isoformat=lambda: "2026-04-17T00:00:00"),
+            "chunk_count": 0,
+        }
+        db.execute = AsyncMock(side_effect=[_mappings_mock([row]), _scalar_mock(1)])
+
+        app = _make_app(user, db)
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.get("/v1/admin/documents?lang=ja")
+
+        assert resp.status_code == 200
+        assert resp.json()["items"][0]["lang"] == "ja"
+
+    def test_list_documents_filter_multiple_params(self):
+        """G3: ?status=ready&lang=ja&user_group_id=1 — all three filters accepted, 200."""
+        user = _admin_user()
+        db = AsyncMock()
+        db.execute = AsyncMock(side_effect=[_mappings_mock([]), _scalar_mock(0)])
+
+        app = _make_app(user, db)
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.get("/v1/admin/documents?status=ready&lang=ja&user_group_id=1")
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["total"] == 0
+        assert data["items"] == []
+
     def test_delete_document_admin_ok(self):
         """AC5: admin can delete any document."""
         user = _admin_user()

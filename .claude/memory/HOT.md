@@ -1,13 +1,13 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-17 | Session: #085 (admin-spa S001 — /implement complete, 35/35 tests pass)
+Updated: 2026-04-20 | Session: #089 (admin-spa S002 — T004+T006 DONE+REVIEWED, warnings fixed, 45/45 pass)
 
 ---
 
-## Current Sprint (Session #086)
-Status: **admin-spa S001 DONE** ✅ | 35/35 tests pass | **3 backend BLOCKERs identified pre-S002**
-Next: Fix G1+G2+G3 (backend patches) → /analyze T001 (admin-spa S002 — documentsApi.ts)
+## Current Sprint (Session #089)
+Status: **admin-spa S002 REVIEWED ✅** | All 6 tasks DONE+REVIEWED | 45/45 S002 tests pass | warnings fixed
+Next: commit S002 → /specify S003 (User/Group CRUD)
 Branch: `feature/admin-spa`
 
 ## Completed Features (All Prior, Archived)
@@ -17,16 +17,16 @@ Branch: `feature/admin-spa`
 → All archived in `.claude/memory/COLD/`
 
 ## In Progress (max 3)
-- admin-spa — S000 DONE+REVIEWED ✅ | **S001 DONE ✅** | S002–S005 pending (frontend-agent)
+- admin-spa — S000 DONE+REVIEWED ✅ | S001 DONE ✅ | **S002 DONE+REVIEWED ✅** | S003–S005 pending
   WARM: `.claude/memory/WARM/admin-spa.mem.md`
-  Plan: `docs/admin-spa/plan/admin-spa.plan.md`
-  Tasks: `docs/admin-spa/tasks/S001.tasks.md` ✅ ALL DONE (T001–T008)
-  Next: /analyze T001 (admin-spa S002 — documentsApi.ts)
+  Tasks: `docs/admin-spa/tasks/S002.tasks.md`
+  T001–T006 ALL REVIEWED ✅ | 45/45 S002 frontend tests
+  Next: commit S002 → S003 (User/Group CRUD)
 
-## Recent Decisions (Session #086)
-- 2026-04-17: admin-spa S002 — D11: chuẩn hóa upload response key về `doc_id` (fix upload.py:184, bỏ `document_id`) [gap]
-- 2026-04-17: admin-spa S002 — G4 source_url: đã có migration 007 + Document model, chỉ cần expose qua upload.py form + frontend T001/T004 [gap]
-- 2026-04-17: admin-spa S001 — 401 interceptor skips `/v1/auth/token` URL to avoid false session-expired on login fail [impl]
+## Recent Decisions (Session #089)
+- 2026-04-20: S002 warning fixes — i18n keys upload_error_too_large/generic/loading/fetch_error added (4 locales); UploadModal uses t() for errors+loading; DocumentsPage shows fetchError banner; removed unused fileInputRef
+- 2026-04-20: S002 REVIEWED ✅ — 4 warnings (non-blocking): hardcoded error strings, unused ref, silent fetch fail → all fixed post-review
+- 2026-04-20: S002 T004 UploadModal + T006 DocumentsPage implemented — 45/45 tests pass
 
 ## Pending Commits (uncommitted fixes on feature/document-parser)
 - SecurityGate: skip magic check when file_bytes=b"" — security_gate.py:47

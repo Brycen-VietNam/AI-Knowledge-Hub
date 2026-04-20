@@ -186,6 +186,78 @@ New blockers: none
 
 ---
 
+## Sync: 2026-04-20 (Session #089 — S002 T004+T006 DONE+REVIEWED, warnings fixed)
+Decisions added: none new (D01–D11 locked)
+Tasks changed:
+  - S002 T004 TODO → REVIEWED ✅ (UploadModal.tsx — 10 tests)
+  - S002 T006 TODO → REVIEWED ✅ (DocumentsPage.tsx — 8 tests)
+  - S002 overall: DONE+REVIEWED ✅ (45/45 tests)
+Files touched:
+  - frontend/admin-spa/src/components/UploadModal.tsx (CREATE — file input D06, source_url G4, i18n errors)
+  - frontend/admin-spa/tests/components/UploadModal.test.tsx (CREATE — 10 tests)
+  - frontend/admin-spa/src/pages/DocumentsPage.tsx (REPLACE stub — full orchestration)
+  - frontend/admin-spa/tests/pages/DocumentsPage.test.tsx (CREATE — 8 tests)
+  - frontend/admin-spa/src/i18n/locales/en.json (+upload_error_too_large, upload_error_generic, upload_loading, fetch_error)
+  - frontend/admin-spa/src/i18n/locales/ja.json (same 4 keys)
+  - frontend/admin-spa/src/i18n/locales/vi.json (same 4 keys)
+  - frontend/admin-spa/src/i18n/locales/ko.json (same 4 keys)
+  - docs/admin-spa/reviews/S002.review.md (CREATE — APPROVED, 4 warnings all fixed)
+Test results: 45/45 S002 frontend pass
+New blockers: none
+Next: commit S002 → /specify or /tasks S003 (User/Group CRUD)
+
+## Sync: 2026-04-20 (Session #088 — T003 patch: source_url column)
+Decisions added: none new
+Tasks changed: T003 — patched post-DONE: added Source URL column + i18n key + 2 new tests (8→10)
+Files touched:
+  - frontend/admin-spa/src/components/DocumentTable.tsx (+col_source_url th + td with link/dash)
+  - frontend/admin-spa/tests/components/DocumentTable.test.tsx (+2 tests: source_url link, null dash)
+  - frontend/admin-spa/src/i18n/locales/en.json (+col_source_url: "Source URL")
+  - frontend/admin-spa/src/i18n/locales/ja.json (+col_source_url: "ソースURL")
+  - frontend/admin-spa/src/i18n/locales/vi.json (+col_source_url: "URL nguồn")
+  - frontend/admin-spa/src/i18n/locales/ko.json (+col_source_url: "소스 URL")
+Test results: 10/10 pass (DocumentTable)
+New blockers: none
+Remaining S002: T004 UploadModal.tsx → T006 DocumentsPage.tsx
+
+## Sync: 2026-04-17 (Session #087 — Backend G1–G4 patched + S002 T001–T005 DONE)
+Decisions added:
+  - G1 fixed: upload.py:76 `and not user.is_admin` (mirrors documents.py fix from S000)
+  - G2 fixed: upload.py:186 `doc_id` (D11 confirmed), + `source_url` in response
+  - G3 fixed: admin.py GET /v1/admin/documents — added status/lang/user_group_id params + dynamic parameterized WHERE
+  - G4 fixed: upload.py — source_url Form param wired, saved to Document, returned in response
+  - Stub DocumentsPage.tsx created at T005 to unblock App.tsx import; will be fully replaced at T006
+Tasks changed:
+  - S002 T001 TODO → DONE ✅ (11 tests)
+  - S002 T002 TODO → DONE ✅ (6 tests)
+  - S002 T003 TODO → DONE ✅ (8 tests)
+  - S002 T005 TODO → DONE ✅ (i18n 31 keys × 4 locales + App.tsx route + index.css S002 classes)
+Files touched:
+  Backend patches:
+  - backend/api/routes/upload.py (G1 auth gate, G2 doc_id key, G4 source_url form+INSERT+response)
+  - backend/api/routes/admin.py (G3 filter params + dynamic WHERE)
+  Test updates:
+  - tests/api/test_upload.py (document_id→doc_id ×2, +test_oidc_admin_caller_is_allowed, +test_upload_with_source_url)
+  - tests/api/test_admin.py (+test_list_documents_filter_by_status/lang/multiple_params)
+  Frontend new files:
+  - frontend/admin-spa/src/api/documentsApi.ts (CREATE)
+  - frontend/admin-spa/tests/api/documentsApi.test.ts (CREATE — 11 tests)
+  - frontend/admin-spa/src/components/DeleteConfirmDialog.tsx (CREATE)
+  - frontend/admin-spa/tests/components/DeleteConfirmDialog.test.tsx (CREATE — 6 tests)
+  - frontend/admin-spa/src/components/DocumentTable.tsx (CREATE)
+  - frontend/admin-spa/tests/components/DocumentTable.test.tsx (CREATE — 8 tests)
+  - frontend/admin-spa/src/pages/DocumentsPage.tsx (CREATE — stub, replace at T006)
+  Frontend modified:
+  - frontend/admin-spa/src/i18n/locales/en.json (+documents block 31 keys)
+  - frontend/admin-spa/src/i18n/locales/ja.json (+documents block 31 keys)
+  - frontend/admin-spa/src/i18n/locales/vi.json (+documents block 31 keys)
+  - frontend/admin-spa/src/i18n/locales/ko.json (+documents block 31 keys)
+  - frontend/admin-spa/src/App.tsx (+DocumentsPage import + /documents ProtectedRoute)
+  - frontend/admin-spa/src/index.css (+S002 CSS classes: table, badges, buttons, dialog, modal, pagination, toast)
+Test results: backend 52/52 pass | frontend 60/60 pass
+New blockers: none
+Remaining S002: T004 UploadModal.tsx → T006 DocumentsPage.tsx (full)
+
 ## Sync: 2026-04-17 (Session #085 — S001 /implement complete)
 Decisions added:
   - 401 interceptor bỏ qua `/v1/auth/token` URL → tránh false session-expired khi login fail
