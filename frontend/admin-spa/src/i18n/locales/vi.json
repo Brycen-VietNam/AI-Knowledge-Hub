@@ -86,6 +86,7 @@
     "upload_success": "Tải lên tài liệu thành công",
     "upload_loading": "Đang tải lên...",
     "upload_error_too_large": "Tệp quá lớn",
+    "upload_error_unsupported": "Định dạng tệp không hỗ trợ. Cho phép: PDF, DOCX, HTML, TXT, MD",
     "upload_error_generic": "Tải lên thất bại. Vui lòng thử lại.",
     "fetch_error": "Không thể tải tài liệu. Vui lòng làm mới trang.",
     "no_group": "Không có nhóm",

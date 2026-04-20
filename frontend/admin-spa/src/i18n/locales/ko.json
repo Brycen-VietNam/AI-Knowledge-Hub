@@ -86,6 +86,7 @@
     "upload_success": "문서가 성공적으로 업로드되었습니다",
     "upload_loading": "업로드 중...",
     "upload_error_too_large": "파일이 너무 큽니다",
+    "upload_error_unsupported": "지원하지 않는 파일 형식입니다. 허용 형식: PDF, DOCX, HTML, TXT, MD",
     "upload_error_generic": "업로드에 실패했습니다. 다시 시도해 주세요.",
     "fetch_error": "문서를 불러오지 못했습니다. 페이지를 새로 고침해 주세요.",
     "no_group": "그룹 없음",

@@ -2,7 +2,7 @@
 // Task: T008 — App.tsx — router + header + /login + /dashboard routes (AC5, AC6, AC7, AC8)
 // Decision: setNavigate wired in useEffect; ProtectedRoute wraps /dashboard
 import { useEffect } from 'react'
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useNavigate, NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { setNavigate } from './api/client'
 import { LoginPage } from './pages/LoginPage'
@@ -32,6 +32,14 @@ function App() {
             <span className="logo-sub">BRYSEN GROUP</span>
           </div>
         </div>
+        <div className="header-sep" />
+        {token !== null && (
+          <nav className="app-nav">
+            <NavLink to="/dashboard" className={({ isActive }) => isActive ? 'nav-link nav-link--active' : 'nav-link'}>{t('nav.dashboard')}</NavLink>
+            <NavLink to="/documents" className={({ isActive }) => isActive ? 'nav-link nav-link--active' : 'nav-link'}>{t('nav.documents')}</NavLink>
+            <NavLink to="/users-groups" className={({ isActive }) => isActive ? 'nav-link nav-link--active' : 'nav-link'}>{t('nav.users_groups')}</NavLink>
+          </nav>
+        )}
         <div className="header-sep" />
         <LanguageSelector />
         {token !== null && (

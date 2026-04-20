@@ -11,6 +11,15 @@ from .base import SecurityError
 
 logger = logging.getLogger(__name__)
 
+# MIME types that our parsers support — used to allow octet-stream declared uploads
+_SUPPORTED_MIMES: frozenset[str] = frozenset({
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "text/html",
+    "text/plain",
+    "text/markdown",
+})
+
 
 class SecurityGate:
     # Compatible MIME pairs — either direction is allowed
@@ -52,6 +61,12 @@ class SecurityGate:
             return
 
         actual_mime = magic.from_buffer(file_bytes[:2048], mime=True)
+
+        # application/octet-stream is a generic browser/tool fallback — accept if actual MIME
+        # is one of the supported formats (ParserFactory handles extension-based dispatch).
+        if declared_mime == "application/octet-stream" and actual_mime in _SUPPORTED_MIMES:
+            return
+
         if not self._compatible(declared_mime, actual_mime):
             logger.warning(
                 "Rejected %s: MIME mismatch declared=%s actual=%s",

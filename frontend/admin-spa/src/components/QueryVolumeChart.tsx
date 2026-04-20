@@ -24,7 +24,7 @@ export function QueryVolumeChart({ data }: Props) {
           <XAxis dataKey="name" />
           <YAxis label={{ value: t('dashboard.chart_y_label'), angle: -90, position: 'insideLeft' }} />
           <Tooltip />
-          <Bar dataKey="value" />
+          <Bar dataKey="value" fill="var(--indigo)" />
         </BarChart>
       </ResponsiveContainer>
     </div>
