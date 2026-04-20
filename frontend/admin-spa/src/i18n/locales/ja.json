@@ -86,6 +86,7 @@
     "upload_success": "ドキュメントをアップロードしました",
     "upload_loading": "アップロード中...",
     "upload_error_too_large": "ファイルが大きすぎます",
+    "upload_error_unsupported": "サポートされていないファイル形式です。対応形式: PDF, DOCX, HTML, TXT, MD",
     "upload_error_generic": "アップロードに失敗しました。もう一度お試しください。",
     "fetch_error": "ドキュメントの読み込みに失敗しました。ページを更新してください。",
     "no_group": "グループなし",

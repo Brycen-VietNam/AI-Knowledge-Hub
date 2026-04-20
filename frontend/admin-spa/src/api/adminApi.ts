@@ -18,7 +18,12 @@ export interface UserItem {
 
 export async function listGroups(): Promise<GroupItem[]> {
   const response = await apiClient.get('/v1/admin/groups')
-  return response.data
+  const items = response.data?.items ?? response.data ?? []
+  // backend returns user_count; map to member_count for UI
+  return items.map((g: GroupItem & { user_count?: number }) => ({
+    ...g,
+    member_count: g.member_count ?? g.user_count ?? 0,
+  }))
 }
 
 export async function createGroup(name: string, is_admin: boolean): Promise<GroupItem> {
@@ -39,7 +44,7 @@ export async function listUsers(search?: string): Promise<UserItem[]> {
   const response = await apiClient.get('/v1/admin/users', {
     params: search ? { search } : undefined,
   })
-  return response.data
+  return response.data?.items ?? response.data ?? []
 }
 
 export async function assignGroups(userId: string, groupIds: number[]): Promise<void> {

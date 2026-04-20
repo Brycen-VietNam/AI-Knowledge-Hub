@@ -1,7 +1,7 @@
 ﻿# Feature Memory: admin-spa
 > Created by /specify. Updated after each SDD phase. Loaded only when working on this feature.
 
-Status: S005_COMPLETE
+Status: DONE ✅ — ARCHIVED 2026-04-20
 Updated: 2026-04-20
 
 ---
@@ -384,4 +384,22 @@ Warnings (recommend fix before merge):
   2. No logging in `get_metrics()` endpoint
   3. N+1 insert loop in `admin_assign_user_groups` (P004 tech debt)
 New blockers: none
+
+## Sync: 2026-04-20 (Session #095 — QA live testing bug fixes)
+Decisions added:
+  - D-QA-01: sessionStorage persist for JWT (SS_KEY='kh_admin_auth') — survives F5, clears on tab close
+  - D-QA-02: SecurityGate octet-stream bypass — actual MIME in _SUPPORTED_MIMES whitelist → pass
+  - D-QA-03: btn-primary width:auto default; login-form scoped override width:100%
+Tasks changed: none (QA fixes, not task-level)
+Files modified:
+  - frontend/admin-spa/src/store/authStore.ts — sessionStorage persist layer
+  - frontend/admin-spa/src/api/adminApi.ts — unwrap {items:[]}; map user_count→member_count
+  - frontend/admin-spa/src/components/UploadModal.tsx — className="upload-form"; 415 error handling
+  - frontend/admin-spa/src/components/GroupFormModal.tsx — className="upload-form"; upload-modal-actions fix
+  - frontend/admin-spa/src/index.css — documents-filters alias, upload-field CSS, btn-primary width, users-groups CSS, checkbox style
+  - backend/rag/parser/security_gate.py — _SUPPORTED_MIMES; octet-stream bypass
+  - frontend/admin-spa/src/i18n/locales/{en,vi,ja,ko}.json — upload_error_unsupported key
+Bugs fixed: token loss on F5, t.map crash, member_count undefined, upload MIME 415, upload modal unstyled, GroupFormModal buttons, btn-primary banner, Users&Groups unstyled
+New blockers: none
+Status: QA ongoing — pending commit + /report admin-spa
 Next: fix CSS warning → commit S004 → /tasks S005 (Docker)

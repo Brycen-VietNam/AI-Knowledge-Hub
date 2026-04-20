@@ -86,6 +86,7 @@
     "upload_success": "Document uploaded successfully",
     "upload_loading": "Uploading...",
     "upload_error_too_large": "File too large",
+    "upload_error_unsupported": "Unsupported file type. Allowed: PDF, DOCX, HTML, TXT, MD",
     "upload_error_generic": "Upload failed. Please try again.",
     "fetch_error": "Failed to load documents. Please refresh.",
     "no_group": "No Group",

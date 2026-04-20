@@ -45,6 +45,14 @@
 
   /* Layout */
   --header-h:      60px;
+
+  /* Semantic aliases — used by S003/S004 components */
+  --primary:       var(--indigo);
+  --text-muted:    var(--text-2);
+  --success:       var(--emerald);
+  --success-light: var(--emerald-light);
+  --danger:        var(--red);
+  --danger-light:  var(--red-light);
 }
 
 /* Global reset */
@@ -128,6 +136,32 @@ header.app-header {
   flex: 1;
 }
 
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nav-link {
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  color: rgba(255, 255, 255, .75);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background .15s, color .15s;
+}
+
+.nav-link:hover {
+  background: rgba(255, 255, 255, .1);
+  color: #fff;
+}
+
+.nav-link--active {
+  background: rgba(255, 255, 255, .18);
+  color: #fff;
+}
+
 .header-divider {
   width: 1px;
   height: 22px;
@@ -171,7 +205,7 @@ header.app-header {
 .logout-btn {
   background: rgba(255, 255, 255, .08);
   border: 1px solid rgba(255, 255, 255, .18);
-  color: #c7d2fe;
+  color: #ffffff;
   border-radius: 7px;
   padding: 5px 12px;
   font-family: inherit;
@@ -195,7 +229,7 @@ header.app-header {
   border-radius: 7px;
   padding: 4px 8px;
   font-size: 12px;
-  color: #c7d2fe;
+  color: #ffffff;
   font-weight: 500;
   background: rgba(255, 255, 255, .06);
 }
@@ -318,7 +352,7 @@ header.app-header {
 }
 
 .btn-primary {
-  width: 100%;
+  width: auto;
   padding: 10px 16px;
   background: linear-gradient(135deg, var(--indigo), var(--indigo-dark));
   color: #fff;
@@ -330,6 +364,16 @@ header.app-header {
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(99, 102, 241, .35);
   transition: all .2s;
+}
+
+/* Login form needs full-width submit button */
+.login-form .btn-primary {
+  width: 100%;
+}
+
+/* Upload modal submit button — full-width inside actions row */
+.confirm-dialog-actions .btn-primary {
+  width: auto;
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -372,6 +416,20 @@ header.app-header {
   padding: 32px 24px;
 }
 
+.documents-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.documents-header h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+}
+
 .documents-page h1 {
   font-family: 'Playfair Display', serif;
   font-size: 22px;
@@ -381,7 +439,8 @@ header.app-header {
 }
 
 /* ─── FILTER BAR ─── */
-.filter-bar {
+.filter-bar,
+.documents-filters {
   display: flex;
   gap: 12px;
   align-items: center;
@@ -389,7 +448,8 @@ header.app-header {
   margin-bottom: 16px;
 }
 
-.filter-bar select {
+.filter-bar select,
+.documents-filters select {
   padding: 7px 10px;
   font-family: inherit;
   font-size: 13px;
@@ -401,7 +461,8 @@ header.app-header {
   outline: none;
 }
 
-.filter-bar select:focus {
+.filter-bar select:focus,
+.documents-filters select:focus {
   border-color: var(--indigo);
   box-shadow: 0 0 0 3px var(--indigo-light);
 }
@@ -592,6 +653,74 @@ header.app-header {
   gap: 14px;
 }
 
+/* upload-field: label + input/select stacked */
+.upload-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.upload-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+  letter-spacing: .01em;
+}
+
+.upload-field input[type="text"],
+.upload-field input[type="url"],
+.upload-field select {
+  width: 100%;
+  padding: 9px 12px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color .18s, box-shadow .18s;
+}
+
+.upload-field input[type="text"]:focus,
+.upload-field input[type="url"]:focus,
+.upload-field select:focus {
+  border-color: var(--indigo);
+  box-shadow: 0 0 0 3px var(--indigo-light);
+}
+
+.upload-field input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--indigo);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.upload-field label:has(input[type="checkbox"]) {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.upload-field input[type="file"] {
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text-2);
+  cursor: pointer;
+}
+
+.upload-file-hint {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+
 .upload-hint {
   font-size: 11px;
   color: var(--text-3);
@@ -653,15 +782,127 @@ header.app-header {
 }
 
 /* ─── S003 — USERS & GROUPS ─── */
-.users-groups-page { padding: 1.5rem; }
-.tab-bar { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
-.tab-bar button { padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: transparent; cursor: pointer; }
-.tab-bar button.active { background: var(--primary); color: white; border-color: var(--primary); }
-.badge-admin { background: var(--danger-light); color: var(--danger); padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; }
-.badge-member { background: var(--border); color: var(--text-muted); padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; }
-.badge-active { background: var(--success-light); color: var(--success); padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; }
-.badge-inactive { background: var(--border); color: var(--text-muted); padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; }
-.search-input { width: 100%; max-width: 320px; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 1rem; }
+.users-groups-page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.users-groups-page h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+.tab-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.tab-bar button {
+  padding: 7px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-2);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+
+.tab-bar button:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.tab-bar button.active {
+  background: var(--indigo);
+  color: #fff;
+  border-color: var(--indigo);
+}
+
+.tab-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+/* ─── ADMIN TABLE (Groups + Users) ─── */
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-table th {
+  background: var(--surface-2);
+  font-weight: 600;
+  color: var(--text-2);
+  font-size: 12px;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+
+.admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-table tbody tr:hover {
+  background: var(--surface-2);
+}
+
+.search-input {
+  width: 100%;
+  max-width: 320px;
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  margin-bottom: 16px;
+  transition: border-color .18s, box-shadow .18s;
+}
+
+.search-input:focus {
+  border-color: var(--indigo);
+  box-shadow: 0 0 0 3px var(--indigo-light);
+}
+
+.loading-state {
+  height: 60px;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-3);
+  padding: 48px 24px;
+  font-size: 14px;
+}
+
+.badge-admin { background: var(--danger-light); color: var(--danger); padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+.badge-member { background: var(--border); color: var(--text-2); padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+.badge-active { background: var(--emerald-light); color: var(--emerald); padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+.badge-inactive { background: var(--border); color: var(--text-2); padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
 .toast-error { background: var(--danger); color: #fff; }
 
 /* ─── DASHBOARD PAGE ─── */

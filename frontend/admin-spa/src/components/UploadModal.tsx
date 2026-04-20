@@ -56,6 +56,8 @@ export function UploadModal({ open, groups, onClose, onSuccess }: UploadModalPro
       const status = (err as { response?: { status?: number } })?.response?.status
       if (status === 413) {
         setError(t('documents.upload_error_too_large'))
+      } else if (status === 415) {
+        setError(t('documents.upload_error_unsupported'))
       } else {
         setError(t('documents.upload_error_generic'))
       }
@@ -72,7 +74,7 @@ export function UploadModal({ open, groups, onClose, onSuccess }: UploadModalPro
     <div className="confirm-dialog-overlay" onClick={handleOverlayClick}>
       <div className="upload-modal" onClick={(e) => e.stopPropagation()}>
         <h2>{t('documents.upload_modal_title')}</h2>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="upload-form">
           <div className="upload-field">
             <label>{t('documents.upload_file_label')}</label>
             <input

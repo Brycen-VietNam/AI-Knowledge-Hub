@@ -163,6 +163,8 @@ async def admin_delete_document(
     # R006: write audit log before delete
     await _write_audit_log(user.user_id, doc_id)
 
+    # Remove existing audit_log rows referencing this doc (FK constraint, no CASCADE)
+    await db.execute(text("DELETE FROM audit_logs WHERE doc_id = :doc_id").bindparams(doc_id=doc_id))
     await db.execute(text("DELETE FROM documents WHERE id = :doc_id").bindparams(doc_id=doc_id))
     await db.commit()
 
@@ -453,9 +455,9 @@ async def get_metrics(
 
     # 4. 7-day daily query volume
     query_rows = (await db.execute(text(
-        "SELECT DATE(timestamp) AS day, COUNT(*) AS cnt "
+        "SELECT DATE(accessed_at) AS day, COUNT(*) AS cnt "
         "FROM audit_logs "
-        "WHERE timestamp >= NOW() - INTERVAL '7 days' "
+        "WHERE accessed_at >= NOW() - INTERVAL '7 days' "
         "GROUP BY day ORDER BY day ASC"
     ))).mappings().all()
 

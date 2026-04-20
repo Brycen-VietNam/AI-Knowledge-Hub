@@ -51,7 +51,7 @@ export function GroupFormModal({ mode, initial, onSave, onClose }: Props) {
     <div className="confirm-dialog-overlay" onClick={() => { if (!loading) onClose() }}>
       <div className="upload-modal" onClick={(e) => e.stopPropagation()}>
         <h2>{mode === 'create' ? t('btn_create_group') : t('btn_edit')}</h2>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="upload-form">
           <div className="upload-field">
             <label>{t('col_name')}</label>
             <input
@@ -74,7 +74,7 @@ export function GroupFormModal({ mode, initial, onSave, onClose }: Props) {
             </label>
           </div>
           {error && <div className="upload-error">{error}</div>}
-          <div className="upload-actions">
+          <div className="upload-modal-actions">
             <button type="button" className="btn-secondary" onClick={onClose} disabled={loading}>
               {t('btn_cancel')}
             </button>
