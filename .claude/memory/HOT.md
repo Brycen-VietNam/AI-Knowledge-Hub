@@ -1,13 +1,13 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-20 | Session: #092 (admin-spa S003 — /reviewcode CHANGES_REQUIRED → fixes applied → APPROVED)
+Updated: 2026-04-20 | Session: #093 (admin-spa S004 — /reviewcode APPROVED with 3 warnings)
 
 ---
 
-## Current Sprint (Session #092)
-Status: **admin-spa S003 REVIEWED+FIXED** | 48/48 tests pass | All warnings resolved
-Next: commit S003 → /tasks S004 OR /report admin-spa S003
+## Current Sprint (Session #093)
+Status: **admin-spa S004 REVIEWED ✅** | APPROVED with 3 warnings | 1 CSS bug (W1) recommended fix before merge
+Next: fix CSS `--success`/`--danger` → `--emerald`/`--red` in index.css → commit S004 → /tasks S005
 Branch: `feature/admin-spa`
 
 ## Completed Features (All Prior, Archived)
@@ -17,15 +17,15 @@ Branch: `feature/admin-spa`
 → All archived in `.claude/memory/COLD/`
 
 ## In Progress (max 3)
-- admin-spa — S000 DONE+REVIEWED ✅ | S001 DONE ✅ | S002 DONE+REVIEWED ✅ | **S003 DONE+REVIEWED ✅ (48/48 tests)** | S004–S005 pending
+- admin-spa — S000 ✅ | S001 ✅ | S002 ✅ | S003 ✅ | **S004 REVIEWED ✅** | S005 pending
   WARM: `.claude/memory/WARM/admin-spa.mem.md`
-  Review: `docs/admin-spa/reviews/S003.review.md`
-  Next: commit S003 → /tasks S004
+  Review: `docs/admin-spa/reviews/S004.review.md`
+  Next: fix W1 CSS bug → commit → /tasks S005
 
-## Recent Decisions (Session #092)
-- 2026-04-20: S003 review D-S003-R01 — UsersTab: separate initial listGroups effect from debounce-driven listUsers. Debounce effect handles initial users load (search=''). Prevents double fetch.
-- 2026-04-20: S003 review D-S003-R02 — Added `toggle_active_error` i18n key to all 4 locales. Was incorrectly using `col_active` (column header) as error message.
-- 2026-04-20: S003 review D-S003-R03 — Added `.catch()` to listGroups() on mount; shows toast on failure. Previously silent.
+## Recent Decisions (Session #093)
+- 2026-04-20: D-S004-R01 — CSS health dots use undefined `--success`/`--danger`; fix to `--emerald`/`--red` before merge
+- 2026-04-20: D-S004-R02 — `/v1/metrics` has no request logging; observability gap (non-blocker)
+- 2026-04-20: D-S004-R03 — `admin_assign_user_groups` N+1 insert loop; P004 tech debt (non-blocker)
 
 ## Pending Commits (uncommitted fixes on feature/document-parser)
 - SecurityGate: skip magic check when file_bytes=b"" — security_gate.py:47

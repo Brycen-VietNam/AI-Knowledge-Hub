@@ -92,5 +92,21 @@
     "empty": "ドキュメントが見つかりません。",
     "prev": "前へ",
     "next": "次へ"
+  },
+  "dashboard": {
+    "total_docs": "総ドキュメント数",
+    "active_docs": "有効ドキュメント数",
+    "total_users": "総ユーザー数",
+    "total_groups": "総グループ数",
+    "chart_title": "クエリ件数（直近7日間）",
+    "chart_y_label": "件数",
+    "health_title": "システム状態",
+    "health_db": "データベース",
+    "health_api": "バックエンドAPI",
+    "health_ok": "オンライン",
+    "health_error": "オフライン",
+    "metrics_unavailable": "メトリクスを取得できません",
+    "auto_refresh_note": "60秒ごとに自動更新",
+    "loading": "読み込み中..."
   }
 }

@@ -78,6 +78,14 @@ def _fetchone_mock(value) -> MagicMock:
     return m
 
 
+def _mappings_one_mock(row: dict) -> MagicMock:
+    m = MagicMock()
+    r = MagicMock()
+    r.__getitem__ = lambda self, k, _row=row: _row[k]
+    m.mappings.return_value.one.return_value = r
+    return m
+
+
 # ---------------------------------------------------------------------------
 # T011: Admin document endpoints (AC4, AC5, AC15)
 # ---------------------------------------------------------------------------
@@ -455,13 +463,14 @@ class TestAdminUsers:
 
 class TestMetrics:
     def test_get_metrics_admin(self):
-        """D09: admin gets system metrics."""
+        """D09/AC5: admin gets system metrics — nested response shape."""
         user = _admin_user()
         db = AsyncMock()
         db.execute = AsyncMock(side_effect=[
-            _scalar_mock(42),   # document_count
-            _scalar_mock(10),   # active_users_count
-            _scalar_mock(150),  # query_count_24h
+            _mappings_mock([{"status": "ready", "cnt": 30}, {"status": "error", "cnt": 2}]),  # doc_rows
+            _mappings_one_mock({"total": 15, "active": 10}),  # user_row
+            _scalar_mock(5),  # group_total
+            _mappings_mock([{"day": "2026-04-14", "cnt": 12}, {"day": "2026-04-15", "cnt": 8}]),  # query_rows
         ])
 
         app = _make_app(user, db)
@@ -469,10 +478,16 @@ class TestMetrics:
         resp = client.get("/v1/metrics")
         assert resp.status_code == 200
         data = resp.json()
-        assert data["document_count"] == 42
-        assert data["active_users_count"] == 10
-        assert data["query_count_24h"] == 150
-        assert data["health"] == "ok"
+        assert data["documents"]["total"] == 32
+        assert data["documents"]["ready"] == 30
+        assert data["documents"]["error"] == 2
+        assert data["documents"]["processing"] == 0
+        assert data["users"]["total"] == 15
+        assert data["users"]["active"] == 10
+        assert data["groups"]["total"] == 5
+        assert len(data["queries"]["last_7_days"]) == 2
+        assert data["queries"]["last_7_days"][0] == {"date": "2026-04-14", "count": 12}
+        assert data["health"] == {"database": "ok", "api": "ok"}
 
     def test_get_metrics_non_admin_returns_403(self):
         """D09/AC15: non-admin cannot access /v1/metrics."""

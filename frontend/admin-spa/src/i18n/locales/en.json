@@ -92,5 +92,21 @@
     "empty": "No documents found.",
     "prev": "Previous",
     "next": "Next"
+  },
+  "dashboard": {
+    "total_docs": "Total Documents",
+    "active_docs": "Active Documents",
+    "total_users": "Total Users",
+    "total_groups": "Total Groups",
+    "chart_title": "Query Volume (Last 7 Days)",
+    "chart_y_label": "Queries",
+    "health_title": "System Health",
+    "health_db": "Database",
+    "health_api": "Backend API",
+    "health_ok": "Online",
+    "health_error": "Offline",
+    "metrics_unavailable": "Metrics unavailable",
+    "auto_refresh_note": "Auto-refreshes every 60s",
+    "loading": "Loading..."
   }
 }

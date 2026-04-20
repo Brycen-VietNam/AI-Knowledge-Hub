@@ -92,5 +92,21 @@
     "empty": "문서를 찾을 수 없습니다.",
     "prev": "이전",
     "next": "다음"
+  },
+  "dashboard": {
+    "total_docs": "총 문서 수",
+    "active_docs": "활성 문서 수",
+    "total_users": "총 사용자 수",
+    "total_groups": "총 그룹 수",
+    "chart_title": "쿼리 볼륨 (최근 7일)",
+    "chart_y_label": "쿼리",
+    "health_title": "시스템 상태",
+    "health_db": "데이터베이스",
+    "health_api": "백엔드 API",
+    "health_ok": "온라인",
+    "health_error": "오프라인",
+    "metrics_unavailable": "메트릭을 사용할 수 없습니다",
+    "auto_refresh_note": "60초마다 자동 새로 고침",
+    "loading": "로딩 중..."
   }
 }

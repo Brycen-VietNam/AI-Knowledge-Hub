@@ -44,7 +44,7 @@ Parallel group G3: S002 + S003 + S004 (after S001)
 | T001â€“T008 | S001 | DONE âœ… | frontend-agent | 35/35 tests pass â€” Login + admin gate complete |
 | T001â€“T006 | S002 | DONE âœ… | frontend-agent | 45/45 tests pass |
 | T001â€“T007 | S003 | CHANGES_REQUIRED | frontend-agent | 48/48 tests pass. 3 warnings (double fetch on mount, wrong toast key, silent listGroups error). Review: docs/admin-spa/reviews/S003.review.md |
-| â€” | S004 | TODO | frontend-agent | Depends /v1/metrics existence |
+| T001–T007 | S004 | REVIEWED ✅ | api-agent(T001)+frontend-agent | 151/151 frontend + 27/27 backend. APPROVED with 3 warnings. Review: docs/admin-spa/reviews/S004.review.md |
 | â€” | S005 | TODO | frontend-agent | Reuse frontend-spa S005 pattern |
 
 ## Parallel Groups (from /plan)
@@ -363,3 +363,19 @@ Files created:
 Test results: 48/48 pass after fixes
 New blockers: none
 Next: commit S003 → /tasks S004 (Metrics Dashboard)
+
+## Sync: 2026-04-20 (Session #093 — S004 /reviewcode → APPROVED with warnings)
+Decisions added:
+  - D-S004-R01: `--success`/`--danger` CSS vars not defined in `:root` — health dots will be invisible. Fix: use `--emerald`/`--red`.
+  - D-S004-R02: `/v1/metrics` has no request logging — observability gap.
+  - D-S004-R03: `admin_assign_user_groups` has small N+1 loop — P004 tech debt.
+Tasks changed:
+  - S004 status: DONE → REVIEWED ✅ (APPROVED, 3 warnings, none are blockers)
+Files created:
+  - docs/admin-spa/reviews/S004.review.md
+Warnings (recommend fix before merge):
+  1. CSS: `.health-badge--ok/--error .health-dot` uses undefined `--success`/`--danger` → health dots invisible
+  2. No logging in `get_metrics()` endpoint
+  3. N+1 insert loop in `admin_assign_user_groups` (P004 tech debt)
+New blockers: none
+Next: fix CSS warning → commit S004 → /tasks S005 (Docker)

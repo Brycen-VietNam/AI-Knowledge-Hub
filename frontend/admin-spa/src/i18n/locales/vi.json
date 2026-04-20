@@ -92,5 +92,21 @@
     "empty": "Không tìm thấy tài liệu.",
     "prev": "Trước",
     "next": "Tiếp"
+  },
+  "dashboard": {
+    "total_docs": "Tổng tài liệu",
+    "active_docs": "Tài liệu hoạt động",
+    "total_users": "Tổng người dùng",
+    "total_groups": "Tổng nhóm",
+    "chart_title": "Lượng truy vấn (7 ngày gần nhất)",
+    "chart_y_label": "Truy vấn",
+    "health_title": "Trạng thái hệ thống",
+    "health_db": "Cơ sở dữ liệu",
+    "health_api": "Backend API",
+    "health_ok": "Trực tuyến",
+    "health_error": "Ngoại tuyến",
+    "metrics_unavailable": "Không thể tải metrics",
+    "auto_refresh_note": "Tự động cập nhật mỗi 60 giây",
+    "loading": "Đang tải..."
   }
 }

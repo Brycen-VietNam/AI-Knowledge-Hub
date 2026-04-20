@@ -434,18 +434,47 @@ async def get_metrics(
     user: Annotated[AuthenticatedUser, Depends(require_admin)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> JSONResponse:
-    """D09: System metrics endpoint — admin only (R003)."""
-    doc_count = (await db.execute(text("SELECT COUNT(*) FROM documents"))).scalar()
-    active_users = (await db.execute(
-        text("SELECT COUNT(*) FROM users WHERE is_active = TRUE")
-    )).scalar()
-    query_count = (await db.execute(
-        text("SELECT COUNT(*) FROM audit_logs WHERE timestamp >= NOW() - INTERVAL '24 hours'")
-    )).scalar()
+    """D09: System metrics endpoint — admin only (R003). AC5: nested response shape."""
+    # 1. Documents breakdown by status
+    doc_rows = (await db.execute(text(
+        "SELECT status, COUNT(*) AS cnt FROM documents GROUP BY status"
+    ))).mappings().all()
+    doc_counts: dict = {r["status"]: r["cnt"] for r in doc_rows}
+
+    # 2. Users total + active
+    user_row = (await db.execute(text(
+        "SELECT COUNT(*) AS total, "
+        "SUM(CASE WHEN is_active THEN 1 ELSE 0 END) AS active "
+        "FROM users"
+    ))).mappings().one()
+
+    # 3. Groups total
+    group_total = (await db.execute(text("SELECT COUNT(*) FROM user_groups"))).scalar()
+
+    # 4. 7-day daily query volume
+    query_rows = (await db.execute(text(
+        "SELECT DATE(timestamp) AS day, COUNT(*) AS cnt "
+        "FROM audit_logs "
+        "WHERE timestamp >= NOW() - INTERVAL '7 days' "
+        "GROUP BY day ORDER BY day ASC"
+    ))).mappings().all()
 
     return JSONResponse(content={
-        "document_count": doc_count,
-        "query_count_24h": query_count,
-        "active_users_count": active_users,
-        "health": "ok",
+        "documents": {
+            "total": sum(doc_counts.values()),
+            "ready": doc_counts.get("ready", 0),
+            "processing": doc_counts.get("processing", 0),
+            "error": doc_counts.get("error", 0),
+        },
+        "users": {
+            "total": user_row["total"],
+            "active": user_row["active"] or 0,
+        },
+        "groups": {"total": group_total},
+        "queries": {
+            "last_7_days": [
+                {"date": str(r["day"]), "count": r["cnt"]} for r in query_rows
+            ]
+        },
+        "health": {"database": "ok", "api": "ok"},
     })
