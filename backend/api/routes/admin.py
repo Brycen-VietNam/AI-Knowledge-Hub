@@ -462,6 +462,65 @@ async def admin_create_user(
     )
 
 
+# ---------------------------------------------------------------------------
+# S002/T001+T002: DELETE /v1/admin/users/{user_id} — cascade delete
+# Spec: docs/user-management/spec/user-management.spec.md#S002
+# Rule: R003 — require_admin dependency
+# Rule: R004 — /v1/admin/ prefix
+# Rule: S001 — text().bindparams() only; no f-string injection
+# Rule: A005 — 404/500 error shape
+# Delete order: api_keys → user_group_memberships → users (FK safety)
+# audit_logs.user_id — NOT deleted; FK is ON DELETE SET NULL (migration 011)
+# ---------------------------------------------------------------------------
+
+@router.delete("/v1/admin/users/{user_id}", dependencies=[Depends(require_admin)])
+async def admin_delete_user(
+    user_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> JSONResponse:
+    """S002: Delete user + cascade api_keys and group memberships.
+
+    audit_logs rows are preserved with user_id set to NULL (migration 011).
+    Returns 200 {"deleted": "<uuid>"}.
+    404 NOT_FOUND if user does not exist.
+    """
+    request_id = str(uuid.uuid4())
+
+    # Existence check — 404 before any DELETE (A005 shape)
+    exists = (await db.execute(
+        text("SELECT id FROM users WHERE id = :user_id").bindparams(user_id=user_id)
+    )).fetchone()
+    if exists is None:
+        return JSONResponse(
+            status_code=404,
+            content=_error(request_id, "NOT_FOUND", "User not found"),
+        )
+
+    # T001+T002: cascade deletes in a single transaction — S001 parameterized
+    try:
+        # 1. api_keys (references users.id)
+        await db.execute(
+            text("DELETE FROM api_keys WHERE user_id = :user_id").bindparams(user_id=user_id)
+        )
+        # 2. user_group_memberships (references users.id)
+        await db.execute(
+            text("DELETE FROM user_group_memberships WHERE user_id = :user_id").bindparams(user_id=user_id)
+        )
+        # 3. users row (audit_logs.user_id → SET NULL by DB — no explicit DELETE needed)
+        await db.execute(
+            text("DELETE FROM users WHERE id = :user_id").bindparams(user_id=user_id)
+        )
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        return JSONResponse(
+            status_code=500,
+            content=_error(request_id, "INTERNAL_ERROR", "Failed to delete user"),
+        )
+
+    return JSONResponse(content={"deleted": str(user_id)})
+
+
 @router.get("/v1/admin/users")
 async def admin_list_users(
     user: Annotated[AuthenticatedUser, Depends(require_admin)],

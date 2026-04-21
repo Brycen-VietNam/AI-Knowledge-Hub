@@ -1,7 +1,9 @@
 # Spec: docs/user-management/spec/user-management.spec.md#S001
+# Spec: docs/user-management/spec/user-management.spec.md#S002
 # Task: S001/T004 — Tests: create_user happy path + error cases (AC1–AC10)
+# Task: S002/T003 — Tests: delete_user happy path + error cases (AC1–AC7)
 # Rule: R003 — all admin endpoints tested with admin AND non-admin (403 gate)
-# Rule: A005 — 409 response body matches {"error": {"code", "message", "request_id"}}
+# Rule: A005 — 404/409 response body matches {"error": {"code", "message", "request_id"}}
 import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -306,3 +308,182 @@ class TestCreateUserNonAdmin:
 
         assert resp.status_code == 403
         assert resp.json()["detail"]["error"]["code"] == "FORBIDDEN"
+
+
+# ---------------------------------------------------------------------------
+# S002/T003: DELETE /v1/admin/users/{user_id} tests
+# Spec: docs/user-management/spec/user-management.spec.md#S002
+# ---------------------------------------------------------------------------
+
+class TestDeleteUserSuccess:
+    """S002/T003: Happy path — 200 with {"deleted": user_id}."""
+
+    def test_delete_user_success(self):
+        """AC1: 200 {"deleted": "<uuid>"} on successful delete."""
+        user = _admin_user()
+        db = AsyncMock()
+        target_id = uuid.uuid4()
+
+        # execute calls: 1) existence check → row, 2-4) three DELETEs
+        db.execute = AsyncMock(side_effect=[
+            _fetchone_mock(("row",)),  # existence check
+            MagicMock(),               # DELETE api_keys
+            MagicMock(),               # DELETE user_group_memberships
+            MagicMock(),               # DELETE users
+        ])
+        db.commit = AsyncMock()
+
+        app = _make_app(user, db)
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.delete(f"/v1/admin/users/{target_id}")
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["deleted"] == str(target_id)
+
+    def test_delete_user_cascades_api_keys(self):
+        """AC3: DELETE api_keys called before DELETE users (cascade, FK safety)."""
+        user = _admin_user()
+        db = AsyncMock()
+        target_id = uuid.uuid4()
+        call_log: list[str] = []
+
+        async def _execute_side_effect(stmt, *args, **kwargs):
+            sql_text = str(stmt)
+            call_log.append(sql_text)
+            m = MagicMock()
+            m.fetchone.return_value = ("row",)
+            return m
+
+        db.execute = _execute_side_effect
+        db.commit = AsyncMock()
+
+        app = _make_app(user, db)
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.delete(f"/v1/admin/users/{target_id}")
+
+        assert resp.status_code == 200
+        # Verify api_keys delete comes before DELETE FROM users
+        api_keys_idx = next(i for i, s in enumerate(call_log) if "api_keys" in s)
+        users_idx = next(i for i, s in enumerate(call_log) if "DELETE FROM users" in s)
+        assert api_keys_idx < users_idx
+
+    def test_delete_user_cascades_memberships(self):
+        """AC3: DELETE user_group_memberships called before DELETE users."""
+        user = _admin_user()
+        db = AsyncMock()
+        target_id = uuid.uuid4()
+        call_log: list[str] = []
+
+        async def _execute_side_effect(stmt, *args, **kwargs):
+            sql_text = str(stmt)
+            call_log.append(sql_text)
+            m = MagicMock()
+            m.fetchone.return_value = ("row",)
+            return m
+
+        db.execute = _execute_side_effect
+        db.commit = AsyncMock()
+
+        app = _make_app(user, db)
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.delete(f"/v1/admin/users/{target_id}")
+
+        assert resp.status_code == 200
+        memberships_idx = next(i for i, s in enumerate(call_log) if "user_group_memberships" in s)
+        users_idx = next(i for i, s in enumerate(call_log) if "DELETE FROM users" in s)
+        assert memberships_idx < users_idx
+
+    def test_delete_user_preserves_audit_logs(self):
+        """AC7: audit_logs rows NOT deleted — user_id set to NULL by DB (migration 011)."""
+        user = _admin_user()
+        db = AsyncMock()
+        target_id = uuid.uuid4()
+        call_log: list[str] = []
+
+        async def _execute_side_effect(stmt, *args, **kwargs):
+            call_log.append(str(stmt))
+            m = MagicMock()
+            m.fetchone.return_value = ("row",)
+            return m
+
+        db.execute = _execute_side_effect
+        db.commit = AsyncMock()
+
+        app = _make_app(user, db)
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.delete(f"/v1/admin/users/{target_id}")
+
+        assert resp.status_code == 200
+        # audit_logs must NOT appear in any DELETE statement
+        assert not any("audit_logs" in s for s in call_log), (
+            "audit_logs rows must not be explicitly deleted — FK ON DELETE SET NULL handles it"
+        )
+
+
+class TestDeleteUserNotFound:
+    """S002/T003: AC2 — 404 NOT_FOUND in A005 shape when user missing."""
+
+    def test_delete_user_not_found(self):
+        """404 A005 when user_id does not exist."""
+        user = _admin_user()
+        db = AsyncMock()
+        db.execute = AsyncMock(return_value=_fetchone_mock(None))
+
+        app = _make_app(user, db)
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.delete(f"/v1/admin/users/{uuid.uuid4()}")
+
+        assert resp.status_code == 404
+        data = resp.json()
+        assert "error" in data
+        assert data["error"]["code"] == "NOT_FOUND"
+        assert "message" in data["error"]
+        assert "request_id" in data["error"]
+
+
+class TestDeleteUserNonAdmin:
+    """S002/T003: AC6 — non-admin gets 403 FORBIDDEN (R003)."""
+
+    def test_delete_user_non_admin(self):
+        """403 when caller is not an admin."""
+        user = _non_admin_user()
+        db = AsyncMock()
+
+        app = _make_app(user, db)
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.delete(f"/v1/admin/users/{uuid.uuid4()}")
+
+        assert resp.status_code == 403
+        assert resp.json()["detail"]["error"]["code"] == "FORBIDDEN"
+
+
+class TestDeleteUserDbError:
+    """S002/T003: 500 INTERNAL_ERROR with rollback on DB exception."""
+
+    def test_delete_user_db_error(self):
+        """500 A005 shape when DB raises during delete; rollback called."""
+        user = _admin_user()
+        db = AsyncMock()
+
+        async def _execute_side_effect(stmt, *args, **kwargs):
+            sql = str(stmt)
+            if "FROM users WHERE id" in sql:
+                # existence check passes
+                m = MagicMock()
+                m.fetchone.return_value = ("row",)
+                return m
+            raise RuntimeError("DB failure")
+
+        db.execute = _execute_side_effect
+        db.rollback = AsyncMock()
+
+        app = _make_app(user, db)
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.delete(f"/v1/admin/users/{uuid.uuid4()}")
+
+        assert resp.status_code == 500
+        data = resp.json()
+        assert data["error"]["code"] == "INTERNAL_ERROR"
+        db.rollback.assert_called_once()
+
