@@ -2,18 +2,24 @@
 # Task: T005 — scaffold + require_admin + document endpoints (AC4, AC5, AC15)
 # Task: T006 — group CRUD (AC6–AC9)
 # Task: T007 — user endpoints (AC10–AC12, D10) + GET /v1/metrics (D09)
+# Spec: docs/user-management/spec/user-management.spec.md#S001
+# Task: S001/T001 — UserCreate Pydantic model
+# Task: S001/T002 — POST /v1/admin/users handler (duplicate check + bcrypt + INSERT)
+# Task: S001/T003 — Group membership insert in same transaction
 # Rule: R003 — all /v1/admin/* use require_admin (wraps verify_token); /v1/metrics same
 # Rule: R004 — /v1/ prefix on all routes
 # Rule: R006 — audit log on document delete (admin action)
 # Rule: S001 — parameterized SQL only: text().bindparams(); no f-string user-value injection
 # Rule: A005 — error shape: {"error": {"code", "message", "request_id"}}
 # Rule: P004 — no N+1 queries (subquery/JOIN for user_count, group lists)
+import re
 import uuid
-from typing import Annotated, Any
+from typing import Annotated, Any, List, Optional
 
+import bcrypt as _bcrypt_lib
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -327,6 +333,133 @@ class UserGroupAssign(BaseModel):
 
 class UserActiveUpdate(BaseModel):
     is_active: bool
+
+
+# ---------------------------------------------------------------------------
+# S001/T001: UserCreate Pydantic model
+# Spec: docs/user-management/spec/user-management.spec.md#S001
+# Rule: S003 — validated at entry; sub pattern enforced by Pydantic
+# ---------------------------------------------------------------------------
+
+_CONTROL_CHAR_RE = re.compile(r"[\x00-\x1f\x7f]")
+
+
+class UserCreate(BaseModel):
+    sub: str = Field(..., min_length=3, max_length=200, pattern=r"^[a-zA-Z0-9_.@-]+$")
+    email: Optional[EmailStr] = None
+    display_name: Optional[str] = Field(default=None, max_length=200)
+    password: str = Field(..., min_length=12)
+    group_ids: List[int] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# S001/T002 + T003: POST /v1/admin/users — create user + group memberships
+# Spec: docs/user-management/spec/user-management.spec.md#S001
+# Rule: R003 — require_admin dependency
+# Rule: R004 — /v1/admin/ prefix
+# Rule: S001 — text().bindparams() only; no f-string injection
+# Rule: S003 — strip control chars from string fields
+# Rule: A005 — error shape {"error": {"code", "message", "request_id"}}
+# Rule: P004 — single SELECT IN for group fetch (not N+1)
+# Decision: D5 — bcrypt rounds=12 via direct bcrypt library (not passlib)
+# ---------------------------------------------------------------------------
+
+@router.post("/v1/admin/users", dependencies=[Depends(require_admin)], status_code=201)
+async def admin_create_user(
+    body: UserCreate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> JSONResponse:
+    """S001: Create a new user with bcrypt-hashed password and optional group memberships.
+
+    Returns 201 {id, sub, email, display_name, is_active, groups}.
+    409 SUB_CONFLICT if sub already exists.
+    """
+    request_id = str(uuid.uuid4())
+
+    # S003: strip leading/trailing whitespace and control chars from string fields
+    sub = _CONTROL_CHAR_RE.sub("", body.sub.strip())
+    display_name = (
+        _CONTROL_CHAR_RE.sub("", body.display_name.strip())
+        if body.display_name is not None
+        else None
+    )
+
+    # Duplicate sub check — 409 SUB_CONFLICT (A005 shape)
+    existing = (await db.execute(
+        text("SELECT id FROM users WHERE sub = :sub").bindparams(sub=sub)
+    )).fetchone()
+    if existing is not None:
+        return JSONResponse(
+            status_code=409,
+            content=_error(request_id, "SUB_CONFLICT", f"User with sub '{sub}' already exists"),
+        )
+
+    # bcrypt hash — rounds=12; plaintext never stored or logged (S005)
+    password_hash: str = _bcrypt_lib.hashpw(
+        body.password.encode(), _bcrypt_lib.gensalt(rounds=12)
+    ).decode()
+
+    # T002: INSERT user — S001 parameterized
+    try:
+        user_row = (await db.execute(
+            text(
+                "INSERT INTO users (sub, email, display_name, password_hash, is_active) "
+                "VALUES (:sub, :email, :display_name, :password_hash, TRUE) "
+                "RETURNING id, sub, email, display_name, is_active"
+            ).bindparams(
+                sub=sub,
+                email=str(body.email) if body.email is not None else None,
+                display_name=display_name,
+                password_hash=password_hash,
+            )
+        )).mappings().first()
+
+        new_user_id: uuid.UUID = user_row["id"]
+
+        # T003: group memberships in the same transaction — ON CONFLICT DO NOTHING
+        if body.group_ids:
+            for gid in body.group_ids:
+                await db.execute(
+                    text(
+                        "INSERT INTO user_group_memberships (user_id, group_id) "
+                        "VALUES (:user_id, :group_id) ON CONFLICT DO NOTHING"
+                    ).bindparams(user_id=new_user_id, group_id=gid)
+                )
+
+        await db.commit()
+
+    except Exception:
+        await db.rollback()
+        return JSONResponse(
+            status_code=500,
+            content=_error(request_id, "INTERNAL_ERROR", "Failed to create user"),
+        )
+
+    # T003: fetch groups with single IN query — P004 (no N+1)
+    groups: list[dict] = []
+    if body.group_ids:
+        group_rows = (await db.execute(
+            text(
+                "SELECT id, name, is_admin FROM user_groups "
+                "WHERE id = ANY(:group_ids)"
+            ).bindparams(group_ids=list(body.group_ids))
+        )).mappings().all()
+        groups = [
+            {"id": r["id"], "name": r["name"], "is_admin": r["is_admin"]}
+            for r in group_rows
+        ]
+
+    return JSONResponse(
+        status_code=201,
+        content={
+            "id": str(new_user_id),
+            "sub": user_row["sub"],
+            "email": user_row["email"],
+            "display_name": user_row["display_name"],
+            "is_active": user_row["is_active"],
+            "groups": groups,
+        },
+    )
 
 
 @router.get("/v1/admin/users")

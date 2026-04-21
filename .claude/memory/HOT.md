@@ -1,13 +1,13 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-20 | Session: #096 (admin-spa — FINALIZED)
+Updated: 2026-04-21 | Session: #100 (user-management — /implement S001 COMPLETE) | /sync
 
 ---
 
-## Current Sprint (Session #096)
-Status: **SPRINT COMPLETE** | admin-spa DONE ✅ | Ready to merge feature/admin-spa → main
-Branch: `feature/admin-spa`
+## Current Sprint (Session #097)
+Status: **IN PROGRESS** | user-management — /checklist PASS ✅ (25/25), deferred items logged
+Branch: `feature/user-management` (cut from `feature/admin-spa`)
 
 ## Completed Features (All, Archived)
 - auth-api-key-oidc, rbac-document-filter, cjk-tokenizer, llm-provider, document-ingestion
@@ -17,12 +17,17 @@ Branch: `feature/admin-spa`
 → All archived in `.claude/memory/COLD/`
 
 ## In Progress (max 3)
-- (none — sprint complete)
+- **user-management** — /implement S001 DONE ✅ (2026-04-21) | 12/12 tests pass
+  WARM: `.claude/memory/WARM/user-management.mem.md`
+  Tasks: `docs/user-management/tasks/S00[1-8].tasks.md`
+  Next: /implement S002
 
-## Recent Decisions (Session #095)
-- 2026-04-20: D-QA-01 — sessionStorage persist for JWT (SS_KEY='kh_admin_auth') — survives F5, clears on tab close
-- 2026-04-20: D-QA-02 — SecurityGate: `application/octet-stream` + actual MIME in whitelist → pass (browser fallback)
-- 2026-04-20: D-QA-03 — btn-primary width: auto (default); login-form overrides to 100%
+## Recent Decisions (Session #100)
+- 2026-04-21: D-UM-06 — /implement S001 DONE; bcrypt via direct `import bcrypt` (not passlib); `_CONTROL_CHAR_RE` for S003; group fetch single IN query (P004). 12/12 tests PASS.
+- 2026-04-21: D-UM-05 — /tasks generated (27 tasks, 8 stories). TDD enforced: test file in TOUCH for every task. S001 ready for /implement.
+- 2026-04-21: D-UM-04 — /plan generated; S001+S002 serialize in G1 (same file); S006+S007 parallel in G5 (separate files)
+- 2026-04-21: D-UM-03 — /checklist PASS 25/25; no email on create (F1 deferred); no force-change-password (F2 deferred)
+- 2026-04-21: D-UM-02 — Q3 self-resolved: `password_hash TEXT` already in migration 008
 
 ## Pending Commits
 - (none — all committed in e05c429)
@@ -50,7 +55,7 @@ Branch: `feature/admin-spa`
 - Ready: Await PO approval (lb_mui) → merge to main
 
 ## Active Blockers
-- (none)
+- (none — user-management Q1/Q2/Q3 resolved by migration 011 on 2026-04-21)
 
 ## Session #079 — What was done
 **frontend-theme S002–S005 implemented (this session):**
