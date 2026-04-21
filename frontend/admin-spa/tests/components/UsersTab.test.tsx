@@ -137,4 +137,126 @@ describe('UsersTab', () => {
       expect(listUsersSpy.mock.calls.length).toBeGreaterThan(callsBeforeAssign)
     })
   })
+
+  // ── S008: Create User ─────────────────────────────────────────────────────
+
+  it('create button opens UserFormModal', async () => {
+    vi.spyOn(adminApi, 'listGroups').mockResolvedValue(ALL_GROUPS)
+    vi.spyOn(adminApi, 'listUsers').mockResolvedValue(USERS)
+    render(<UsersTab />)
+    await waitFor(() => screen.getByText('alice@example.com'))
+    fireEvent.click(screen.getByText('Create User'))
+    await waitFor(() => {
+      expect(document.querySelector('.upload-modal')).toBeTruthy()
+    })
+  })
+
+  it('onSave closes modal and prepends new user to list', async () => {
+    vi.spyOn(adminApi, 'listGroups').mockResolvedValue(ALL_GROUPS)
+    vi.spyOn(adminApi, 'listUsers').mockResolvedValue(USERS)
+    const newUser: adminApi.UserItem = { id: 'u99', email: 'new@example.com', is_active: true, groups: [] }
+    vi.spyOn(adminApi, 'createUser').mockResolvedValue(newUser)
+    render(<UsersTab />)
+    await waitFor(() => screen.getByText('alice@example.com'))
+    fireEvent.click(screen.getByText('Create User'))
+    await waitFor(() => expect(document.querySelector('.upload-modal')).toBeTruthy())
+    // Fill required fields in UserFormModal
+    const subInput = document.querySelector('input[pattern]') as HTMLInputElement
+    fireEvent.change(subInput, { target: { value: 'newuser' } })
+    const pwInput = document.querySelector('input[type="password"]') as HTMLInputElement
+    fireEvent.change(pwInput, { target: { value: 'StrongPass1234' } })
+    fireEvent.submit(document.querySelector('form')!)
+    await waitFor(() => {
+      expect(document.querySelector('.upload-modal')).toBeNull()
+      expect(screen.getByText('new@example.com')).toBeTruthy()
+    })
+  })
+
+  // ── S008: Delete User ─────────────────────────────────────────────────────
+
+  it('delete button opens DeleteConfirmDialog', async () => {
+    vi.spyOn(adminApi, 'listGroups').mockResolvedValue(ALL_GROUPS)
+    vi.spyOn(adminApi, 'listUsers').mockResolvedValue(USERS)
+    render(<UsersTab />)
+    await waitFor(() => screen.getByText('alice@example.com'))
+    const deleteButtons = screen.getAllByText('Delete')
+    fireEvent.click(deleteButtons[0])
+    await waitFor(() => {
+      expect(document.querySelector('.confirm-dialog')).toBeTruthy()
+    })
+  })
+
+  it('confirm delete removes user from list', async () => {
+    vi.spyOn(adminApi, 'listGroups').mockResolvedValue(ALL_GROUPS)
+    vi.spyOn(adminApi, 'listUsers').mockResolvedValue(USERS)
+    vi.spyOn(adminApi, 'deleteUser').mockResolvedValue()
+    render(<UsersTab />)
+    await waitFor(() => screen.getByText('alice@example.com'))
+    const deleteButtons = screen.getAllByText('Delete')
+    fireEvent.click(deleteButtons[0])
+    await waitFor(() => expect(document.querySelector('.confirm-dialog')).toBeTruthy())
+    fireEvent.click(document.querySelector('.confirm-dialog .btn-danger')!)
+    await waitFor(() => {
+      expect(screen.queryByText('alice@example.com')).toBeNull()
+      expect(screen.getByText('bob@example.com')).toBeTruthy()
+    })
+  })
+
+  it('delete error shows toast and row stays in list', async () => {
+    vi.spyOn(adminApi, 'listGroups').mockResolvedValue(ALL_GROUPS)
+    vi.spyOn(adminApi, 'listUsers').mockResolvedValue(USERS)
+    vi.spyOn(adminApi, 'deleteUser').mockRejectedValue(new Error('404'))
+    render(<UsersTab />)
+    await waitFor(() => screen.getByText('alice@example.com'))
+    const deleteButtons = screen.getAllByText('Delete')
+    fireEvent.click(deleteButtons[0])
+    await waitFor(() => expect(document.querySelector('.confirm-dialog')).toBeTruthy())
+    fireEvent.click(document.querySelector('.confirm-dialog .btn-danger')!)
+    await waitFor(() => {
+      expect(document.querySelector('.toast-error')).toBeTruthy()
+      expect(screen.getByText('alice@example.com')).toBeTruthy()
+    })
+  })
+
+  // ── S008: ApiKeyPanel expand/collapse ─────────────────────────────────────
+
+  it('clicking email cell expands ApiKeyPanel for that user', async () => {
+    vi.spyOn(adminApi, 'listGroups').mockResolvedValue(ALL_GROUPS)
+    vi.spyOn(adminApi, 'listUsers').mockResolvedValue(USERS)
+    vi.spyOn(adminApi, 'listApiKeys').mockResolvedValue([])
+    render(<UsersTab />)
+    await waitFor(() => screen.getByText('alice@example.com'))
+    fireEvent.click(screen.getByText('alice@example.com'))
+    await waitFor(() => {
+      expect(document.querySelector('.api-key-panel')).toBeTruthy()
+    })
+    expect(adminApi.listApiKeys).toHaveBeenCalledWith('u1')
+  })
+
+  it('clicking same email again collapses ApiKeyPanel', async () => {
+    vi.spyOn(adminApi, 'listGroups').mockResolvedValue(ALL_GROUPS)
+    vi.spyOn(adminApi, 'listUsers').mockResolvedValue(USERS)
+    vi.spyOn(adminApi, 'listApiKeys').mockResolvedValue([])
+    render(<UsersTab />)
+    await waitFor(() => screen.getByText('alice@example.com'))
+    fireEvent.click(screen.getByText('alice@example.com'))
+    await waitFor(() => expect(document.querySelector('.api-key-panel')).toBeTruthy())
+    fireEvent.click(screen.getByText('alice@example.com'))
+    await waitFor(() => {
+      expect(document.querySelector('.api-key-panel')).toBeNull()
+    })
+  })
+
+  it('toggle-active regression — still works after S008 wiring', async () => {
+    vi.spyOn(adminApi, 'listGroups').mockResolvedValue(ALL_GROUPS)
+    vi.spyOn(adminApi, 'listUsers').mockResolvedValue(USERS)
+    const toggleSpy = vi.spyOn(adminApi, 'toggleUserActive').mockResolvedValue(undefined)
+    render(<UsersTab />)
+    await waitFor(() => screen.getByText('alice@example.com'))
+    const toggleButtons = screen.getAllByRole('button', { name: /toggle/i })
+    fireEvent.click(toggleButtons[0])
+    await waitFor(() => {
+      expect(toggleSpy).toHaveBeenCalledWith('u1', false)
+    })
+  })
 })

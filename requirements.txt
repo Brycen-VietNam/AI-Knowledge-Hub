@@ -2,6 +2,7 @@
 # Web framework
 fastapi>=0.115.0
 uvicorn[standard]>=0.30.0
+email-validator>=2.0.0
 
 # DB layer
 sqlalchemy==2.0.48

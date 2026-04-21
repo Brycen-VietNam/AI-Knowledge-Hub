@@ -2,18 +2,26 @@
 # Task: T005 — scaffold + require_admin + document endpoints (AC4, AC5, AC15)
 # Task: T006 — group CRUD (AC6–AC9)
 # Task: T007 — user endpoints (AC10–AC12, D10) + GET /v1/metrics (D09)
+# Spec: docs/user-management/spec/user-management.spec.md#S001
+# Task: S001/T001 — UserCreate Pydantic model
+# Task: S001/T002 — POST /v1/admin/users handler (duplicate check + bcrypt + INSERT)
+# Task: S001/T003 — Group membership insert in same transaction
 # Rule: R003 — all /v1/admin/* use require_admin (wraps verify_token); /v1/metrics same
 # Rule: R004 — /v1/ prefix on all routes
 # Rule: R006 — audit log on document delete (admin action)
 # Rule: S001 — parameterized SQL only: text().bindparams(); no f-string user-value injection
 # Rule: A005 — error shape: {"error": {"code", "message", "request_id"}}
 # Rule: P004 — no N+1 queries (subquery/JOIN for user_count, group lists)
+import hashlib
+import re
+import secrets
 import uuid
-from typing import Annotated, Any
+from typing import Annotated, Any, List, Optional
 
+import bcrypt as _bcrypt_lib
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -327,6 +335,415 @@ class UserGroupAssign(BaseModel):
 
 class UserActiveUpdate(BaseModel):
     is_active: bool
+
+
+# ---------------------------------------------------------------------------
+# S001/T001: UserCreate Pydantic model
+# Spec: docs/user-management/spec/user-management.spec.md#S001
+# Rule: S003 — validated at entry; sub pattern enforced by Pydantic
+# ---------------------------------------------------------------------------
+
+_CONTROL_CHAR_RE = re.compile(r"[\x00-\x1f\x7f]")
+
+
+class UserCreate(BaseModel):
+    sub: str = Field(..., min_length=3, max_length=200, pattern=r"^[a-zA-Z0-9_.@-]+$")
+    email: Optional[EmailStr] = None
+    display_name: Optional[str] = Field(default=None, max_length=200)
+    password: str = Field(..., min_length=12)
+    group_ids: List[int] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# S003/T001: ApiKeyCreate model + key generation helper
+# Spec: docs/user-management/spec/user-management.spec.md#S003
+# Decision: D5 — key format kh_<secrets.token_hex(16)>; SHA-256 hash stored
+# Rule: S005 — plaintext key never stored; only SHA-256 hash in DB
+# ---------------------------------------------------------------------------
+
+class ApiKeyCreate(BaseModel):
+    name: Optional[str] = Field(default=None, max_length=100)
+
+
+def _generate_api_key() -> tuple[str, str, str]:
+    """Generate a new API key. Returns (plaintext, key_hash, key_prefix).
+
+    plaintext  : kh_ + 32 hex chars (35 chars total) — returned once, never stored.
+    key_hash   : SHA-256 hex digest of plaintext — stored in DB.
+    key_prefix : first 8 chars of plaintext — stored for identification.
+    """
+    plaintext = "kh_" + secrets.token_hex(16)
+    key_hash = hashlib.sha256(plaintext.encode()).hexdigest()
+    key_prefix = plaintext[:8]
+    return plaintext, key_hash, key_prefix
+
+
+# ---------------------------------------------------------------------------
+# S001/T002 + T003: POST /v1/admin/users — create user + group memberships
+# Spec: docs/user-management/spec/user-management.spec.md#S001
+# Rule: R003 — require_admin dependency
+# Rule: R004 — /v1/admin/ prefix
+# Rule: S001 — text().bindparams() only; no f-string injection
+# Rule: S003 — strip control chars from string fields
+# Rule: A005 — error shape {"error": {"code", "message", "request_id"}}
+# Rule: P004 — single SELECT IN for group fetch (not N+1)
+# Decision: D5 — bcrypt rounds=12 via direct bcrypt library (not passlib)
+# ---------------------------------------------------------------------------
+
+@router.post("/v1/admin/users", dependencies=[Depends(require_admin)], status_code=201)
+async def admin_create_user(
+    body: UserCreate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> JSONResponse:
+    """S001: Create a new user with bcrypt-hashed password and optional group memberships.
+
+    Returns 201 {id, sub, email, display_name, is_active, groups}.
+    409 SUB_CONFLICT if sub already exists.
+    """
+    request_id = str(uuid.uuid4())
+
+    # S003: strip leading/trailing whitespace and control chars from string fields
+    sub = _CONTROL_CHAR_RE.sub("", body.sub.strip())
+    display_name = (
+        _CONTROL_CHAR_RE.sub("", body.display_name.strip())
+        if body.display_name is not None
+        else None
+    )
+
+    # Duplicate sub check — 409 SUB_CONFLICT (A005 shape)
+    existing = (await db.execute(
+        text("SELECT id FROM users WHERE sub = :sub").bindparams(sub=sub)
+    )).fetchone()
+    if existing is not None:
+        return JSONResponse(
+            status_code=409,
+            content=_error(request_id, "SUB_CONFLICT", f"User with sub '{sub}' already exists"),
+        )
+
+    # bcrypt hash — rounds=12; plaintext never stored or logged (S005)
+    password_hash: str = _bcrypt_lib.hashpw(
+        body.password.encode(), _bcrypt_lib.gensalt(rounds=12)
+    ).decode()
+
+    # T002: INSERT user — S001 parameterized
+    try:
+        user_row = (await db.execute(
+            text(
+                "INSERT INTO users (sub, email, display_name, password_hash, is_active) "
+                "VALUES (:sub, :email, :display_name, :password_hash, TRUE) "
+                "RETURNING id, sub, email, display_name, is_active"
+            ).bindparams(
+                sub=sub,
+                email=str(body.email) if body.email is not None else None,
+                display_name=display_name,
+                password_hash=password_hash,
+            )
+        )).mappings().first()
+
+        new_user_id: uuid.UUID = user_row["id"]
+
+        # T003: group memberships in the same transaction — ON CONFLICT DO NOTHING
+        if body.group_ids:
+            for gid in body.group_ids:
+                await db.execute(
+                    text(
+                        "INSERT INTO user_group_memberships (user_id, group_id) "
+                        "VALUES (:user_id, :group_id) ON CONFLICT DO NOTHING"
+                    ).bindparams(user_id=new_user_id, group_id=gid)
+                )
+
+        await db.commit()
+
+    except Exception:
+        await db.rollback()
+        return JSONResponse(
+            status_code=500,
+            content=_error(request_id, "INTERNAL_ERROR", "Failed to create user"),
+        )
+
+    # T003: fetch groups with single IN query — P004 (no N+1)
+    groups: list[dict] = []
+    if body.group_ids:
+        group_rows = (await db.execute(
+            text(
+                "SELECT id, name, is_admin FROM user_groups "
+                "WHERE id = ANY(:group_ids)"
+            ).bindparams(group_ids=list(body.group_ids))
+        )).mappings().all()
+        groups = [
+            {"id": r["id"], "name": r["name"], "is_admin": r["is_admin"]}
+            for r in group_rows
+        ]
+
+    return JSONResponse(
+        status_code=201,
+        content={
+            "id": str(new_user_id),
+            "sub": user_row["sub"],
+            "email": user_row["email"],
+            "display_name": user_row["display_name"],
+            "is_active": user_row["is_active"],
+            "groups": groups,
+        },
+    )
+
+
+# ---------------------------------------------------------------------------
+# S002/T001+T002: DELETE /v1/admin/users/{user_id} — cascade delete
+# Spec: docs/user-management/spec/user-management.spec.md#S002
+# Rule: R003 — require_admin dependency
+# Rule: R004 — /v1/admin/ prefix
+# Rule: S001 — text().bindparams() only; no f-string injection
+# Rule: A005 — 404/500 error shape
+# Delete order: api_keys → user_group_memberships → users (FK safety)
+# audit_logs.user_id — NOT deleted; FK is ON DELETE SET NULL (migration 011)
+# ---------------------------------------------------------------------------
+
+@router.delete("/v1/admin/users/{user_id}", dependencies=[Depends(require_admin)])
+async def admin_delete_user(
+    user_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> JSONResponse:
+    """S002: Delete user + cascade api_keys and group memberships.
+
+    audit_logs rows are preserved with user_id set to NULL (migration 011).
+    Returns 200 {"deleted": "<uuid>"}.
+    404 NOT_FOUND if user does not exist.
+    """
+    request_id = str(uuid.uuid4())
+
+    # Existence check — 404 before any DELETE (A005 shape)
+    exists = (await db.execute(
+        text("SELECT id FROM users WHERE id = :user_id").bindparams(user_id=user_id)
+    )).fetchone()
+    if exists is None:
+        return JSONResponse(
+            status_code=404,
+            content=_error(request_id, "NOT_FOUND", "User not found"),
+        )
+
+    # T001+T002: cascade deletes in a single transaction — S001 parameterized
+    try:
+        # 1. api_keys (references users.id)
+        await db.execute(
+            text("DELETE FROM api_keys WHERE user_id = :user_id").bindparams(user_id=user_id)
+        )
+        # 2. user_group_memberships (references users.id)
+        await db.execute(
+            text("DELETE FROM user_group_memberships WHERE user_id = :user_id").bindparams(user_id=user_id)
+        )
+        # 3. users row (audit_logs.user_id → SET NULL by DB — no explicit DELETE needed)
+        await db.execute(
+            text("DELETE FROM users WHERE id = :user_id").bindparams(user_id=user_id)
+        )
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        return JSONResponse(
+            status_code=500,
+            content=_error(request_id, "INTERNAL_ERROR", "Failed to delete user"),
+        )
+
+    return JSONResponse(content={"deleted": str(user_id)})
+
+
+# ---------------------------------------------------------------------------
+# S003/T002: POST /v1/admin/users/{user_id}/api-keys — generate API key
+# Spec: docs/user-management/spec/user-management.spec.md#S003
+# Rule: R003 — require_admin dependency
+# Rule: R004 — /v1/admin/ prefix
+# Rule: S001 — text().bindparams() only; no f-string injection
+# Rule: S003 — strip whitespace from name field
+# Rule: S005 — plaintext key NEVER stored; only SHA-256 hash in DB
+# Decision: D5 — key format kh_<secrets.token_hex(16)>; returned once
+# ---------------------------------------------------------------------------
+
+@router.post(
+    "/v1/admin/users/{user_id}/api-keys",
+    dependencies=[Depends(require_admin)],
+    status_code=201,
+)
+async def admin_generate_api_key(
+    user_id: uuid.UUID,
+    body: ApiKeyCreate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> JSONResponse:
+    """S003: Generate a new API key for a user.
+
+    Returns 201 {key_id, key (plaintext — shown once), key_prefix, name, created_at}.
+    404 NOT_FOUND if user does not exist.
+    Only the SHA-256 hash is stored — plaintext is never persisted (S005).
+    """
+    request_id = str(uuid.uuid4())
+
+    # Existence check — 404 before any INSERT (A005 shape)
+    exists = (await db.execute(
+        text("SELECT id FROM users WHERE id = :user_id").bindparams(user_id=user_id)
+    )).fetchone()
+    if exists is None:
+        return JSONResponse(
+            status_code=404,
+            content=_error(request_id, "NOT_FOUND", "User not found"),
+        )
+
+    # S003: strip whitespace from name
+    name: str | None = (
+        _CONTROL_CHAR_RE.sub("", body.name.strip()) if body.name is not None else None
+    )
+
+    # Generate key — plaintext returned once, hash stored (S005)
+    plaintext, key_hash, key_prefix = _generate_api_key()
+    key_id = uuid.uuid4()
+
+    # INSERT api_key — S001 parameterized
+    try:
+        row = (await db.execute(
+            text(
+                "INSERT INTO api_keys (id, user_id, key_hash, key_prefix, name) "
+                "VALUES (:id, :user_id, :key_hash, :key_prefix, :name) "
+                "RETURNING id, key_prefix, name, created_at"
+            ).bindparams(
+                id=key_id,
+                user_id=user_id,
+                key_hash=key_hash,
+                key_prefix=key_prefix,
+                name=name,
+            )
+        )).mappings().first()
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        return JSONResponse(
+            status_code=500,
+            content=_error(request_id, "INTERNAL_ERROR", "Failed to create API key"),
+        )
+
+    return JSONResponse(
+        status_code=201,
+        content={
+            "key_id": str(row["id"]),
+            "key": plaintext,
+            "key_prefix": row["key_prefix"],
+            "name": row["name"],
+            "created_at": (
+                row["created_at"].isoformat()
+                if hasattr(row["created_at"], "isoformat")
+                else str(row["created_at"])
+            ),
+        },
+    )
+
+
+# ---------------------------------------------------------------------------
+# S004/T001: GET /v1/admin/users/{user_id}/api-keys — list keys (no hash)
+# Spec: docs/user-management/spec/user-management.spec.md#S004
+# Rule: R003 — require_admin; R004 — /v1/admin/
+# Rule: S001 — text().bindparams(); S005 — key_hash NEVER selected or returned
+# ---------------------------------------------------------------------------
+
+@router.get(
+    "/v1/admin/users/{user_id}/api-keys",
+    dependencies=[Depends(require_admin)],
+)
+async def admin_list_api_keys(
+    user_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> JSONResponse:
+    """S004: List all API keys for a user (no hash, no plaintext).
+
+    Returns 200 {"items": [{key_id, key_prefix, name, created_at}, ...]}.
+    404 NOT_FOUND if user does not exist.
+    """
+    request_id = str(uuid.uuid4())
+
+    exists = (await db.execute(
+        text("SELECT id FROM users WHERE id = :user_id").bindparams(user_id=user_id)
+    )).fetchone()
+    if exists is None:
+        return JSONResponse(
+            status_code=404,
+            content=_error(request_id, "NOT_FOUND", "User not found"),
+        )
+
+    # S005: SELECT only id, key_prefix, name, created_at — never key_hash
+    rows = (await db.execute(
+        text(
+            "SELECT id AS key_id, key_prefix, name, created_at "
+            "FROM api_keys WHERE user_id = :user_id ORDER BY created_at DESC"
+        ).bindparams(user_id=user_id)
+    )).mappings().all()
+
+    return JSONResponse(content={"items": [
+        {
+            "key_id": str(r["key_id"]),
+            "key_prefix": r["key_prefix"],
+            "name": r["name"],
+            "created_at": (
+                r["created_at"].isoformat()
+                if hasattr(r["created_at"], "isoformat")
+                else str(r["created_at"])
+            ),
+        }
+        for r in rows
+    ]})
+
+
+# ---------------------------------------------------------------------------
+# S004/T002: DELETE /v1/admin/users/{user_id}/api-keys/{key_id} — revoke key
+# Spec: docs/user-management/spec/user-management.spec.md#S004
+# Rule: R003 — require_admin; R004 — /v1/admin/
+# Rule: S001 — text().bindparams()
+# Security: WHERE includes both key_id AND user_id — prevents cross-user key enumeration
+# ---------------------------------------------------------------------------
+
+@router.delete(
+    "/v1/admin/users/{user_id}/api-keys/{key_id}",
+    dependencies=[Depends(require_admin)],
+)
+async def admin_revoke_api_key(
+    user_id: uuid.UUID,
+    key_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> JSONResponse:
+    """S004: Revoke (delete) a specific API key belonging to a user.
+
+    Returns 200 {"revoked": "<key_id>"}.
+    404 NOT_FOUND if user or key does not exist / key does not belong to user.
+    """
+    request_id = str(uuid.uuid4())
+
+    # User existence check
+    user_exists = (await db.execute(
+        text("SELECT id FROM users WHERE id = :user_id").bindparams(user_id=user_id)
+    )).fetchone()
+    if user_exists is None:
+        return JSONResponse(
+            status_code=404,
+            content=_error(request_id, "NOT_FOUND", "User not found"),
+        )
+
+    # DELETE with both key_id AND user_id — prevents cross-user key access
+    try:
+        result = await db.execute(
+            text(
+                "DELETE FROM api_keys WHERE id = :key_id AND user_id = :user_id "
+                "RETURNING id"
+            ).bindparams(key_id=key_id, user_id=user_id)
+        )
+        if result.fetchone() is None:
+            return JSONResponse(
+                status_code=404,
+                content=_error(request_id, "NOT_FOUND", "API key not found"),
+            )
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        return JSONResponse(
+            status_code=500,
+            content=_error(request_id, "INTERNAL_ERROR", "Failed to revoke API key"),
+        )
+
+    return JSONResponse(content={"revoked": str(key_id)})
 
 
 @router.get("/v1/admin/users")

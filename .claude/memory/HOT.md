@@ -1,31 +1,29 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-20 | Session: #096 (admin-spa — FINALIZED)
+Updated: 2026-04-21 | Session: #105 (user-management — /implement S005–S008 DONE) | /sync
 
 ---
 
-## Current Sprint (Session #096)
-Status: **SPRINT COMPLETE** | admin-spa DONE ✅ | Ready to merge feature/admin-spa → main
-Branch: `feature/admin-spa`
+## Current Sprint (Session #105)
+Status: **COMPLETE** | user-management — all 8 stories DONE ✅, 80 tests pass
+Branch: `feature/user-management` (cut from `feature/admin-spa`)
 
 ## Completed Features (All, Archived)
 - auth-api-key-oidc, rbac-document-filter, cjk-tokenizer, llm-provider, document-ingestion
 - multilingual-rag-pipeline, query-endpoint, document-parser, answer-citation
 - confidence-scoring, citation-quality
 - **admin-spa** — DONE ✅ 2026-04-20 | 50/50 ACs | 151 frontend + 27 backend tests | Archive: `.claude/memory/COLD/admin-spa.archive.md`
+- **user-management** — DONE ✅ 2026-04-21 | 80/80 ACs | 91/91 tests PASS | Archive: `.claude/memory/COLD/user-management.archive.md`
 → All archived in `.claude/memory/COLD/`
 
 ## In Progress (max 3)
-- (none — sprint complete)
+(none — user-management archived 2026-04-21)
 
-## Recent Decisions (Session #095)
-- 2026-04-20: D-QA-01 — sessionStorage persist for JWT (SS_KEY='kh_admin_auth') — survives F5, clears on tab close
-- 2026-04-20: D-QA-02 — SecurityGate: `application/octet-stream` + actual MIME in whitelist → pass (browser fallback)
-- 2026-04-20: D-QA-03 — btn-primary width: auto (default); login-form overrides to 100%
-
-## Pending Commits
-- (none — all committed in e05c429)
+## Recent Decisions (Session #106)
+- 2026-04-21: D-UM-15 — /reviewcode S005–S008 warnings all fixed; review upgraded to APPROVED ✅
+- 2026-04-21: D-UM-14 — /reviewcode S005–S008: 0 blockers, 3 warnings (W1 try/except, W3 i18n, CSS 9 missing classes)
+- 2026-04-21: D-UM-13 — S008 DONE: UsersTab wired with create/delete/expand-ApiKeyPanel; 15 tests pass
 
 ## Session #080 Summary ✅ COMPLETE
 **Task:** Finalize frontend-theme + frontend-spa reports; ghi nhận backend language preference issue
@@ -50,7 +48,7 @@ Branch: `feature/admin-spa`
 - Ready: Await PO approval (lb_mui) → merge to main
 
 ## Active Blockers
-- (none)
+- (none — user-management Q1/Q2/Q3 resolved by migration 011 on 2026-04-21)
 
 ## Session #079 — What was done
 **frontend-theme S002–S005 implemented (this session):**

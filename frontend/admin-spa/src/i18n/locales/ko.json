@@ -32,6 +32,9 @@
   "groups_empty": "그룹을 찾을 수 없습니다",
   "assign_groups_error": "그룹 할당에 실패했습니다",
   "toggle_active_error": "사용자 상태 업데이트에 실패했습니다",
+  "user_delete_error": "사용자 삭제에 실패했습니다",
+  "user_delete_title": "사용자 삭제",
+  "user_delete_message": "사용자를 삭제하시겠습니까? 되돌릴 수 없습니다.",
   "badge_admin": "관리자",
   "badge_member": "멤버",
   "badge_active": "활성",
@@ -44,6 +47,7 @@
   "col_groups": "그룹",
   "col_active": "상태",
   "col_actions": "작업",
+  "btn_create_user": "사용자 생성",
   "btn_create_group": "그룹 생성",
   "btn_edit": "편집",
   "btn_delete": "삭제",
@@ -51,6 +55,50 @@
   "btn_toggle_active": "활성 전환",
   "btn_save": "저장",
   "btn_cancel": "취소",
+  "user": {
+    "create": {
+      "title": "사용자 생성",
+      "error": {
+        "duplicate_sub": "이미 사용 중인 사용자 이름입니다"
+      }
+    },
+    "form": {
+      "sub_label": "사용자 이름",
+      "email_label": "이메일",
+      "display_name_label": "표시 이름",
+      "password_label": "비밀번호",
+      "groups_label": "그룹",
+      "generate_password": "생성",
+      "show_password": "표시",
+      "hide_password": "숨기기"
+    }
+  },
+  "common": {
+    "error": {
+      "unexpected": "예상치 못한 오류가 발생했습니다"
+    }
+  },
+  "api_key": {
+    "panel_title": "API 키",
+    "col_prefix": "접두어",
+    "col_name": "이름",
+    "col_created_at": "생성일",
+    "col_actions": "작업",
+    "btn_generate": "키 생성",
+    "btn_revoke": "취소",
+    "btn_copy": "복사",
+    "btn_dismiss": "복사했습니다",
+    "name_placeholder": "키 이름 (선택사항)",
+    "one_time_warning": "지금 키를 복사하세요 — 다시 표시되지 않습니다",
+    "one_time_title": "새 API 키",
+    "revoke_title": "API 키 취소",
+    "revoke_message": "'키 {{prefix}}'를 취소하시겠습니까? 되돌릴 수 없습니다.",
+    "revoke_error": "키 취소에 실패했습니다",
+    "load_error": "API 키를 불러오지 못했습니다",
+    "generate_error": "키 생성에 실패했습니다",
+    "empty": "API 키가 없습니다",
+    "loading": "키를 불러오는 중..."
+  },
   "documents": {
     "page_title": "문서",
     "upload_btn": "문서 업로드",

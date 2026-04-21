@@ -35,7 +35,7 @@ Level selection (auto if not specified):
 ```
 1. /rules --task <id> --phase post   — run rule check (auto)
 2. Load: task file review_criteria only (not full task file)
-3. Load: diff of changed files (not full files, develop branch is main branch)
+3. Load: diff of changed files (not full files, diff with develop branch)
 4. Run checks at selected level
 5. Output review report
 6. Set verdict: APPROVED | CHANGES_REQUIRED | BLOCKED
