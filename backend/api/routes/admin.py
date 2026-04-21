@@ -12,7 +12,9 @@
 # Rule: S001 — parameterized SQL only: text().bindparams(); no f-string user-value injection
 # Rule: A005 — error shape: {"error": {"code", "message", "request_id"}}
 # Rule: P004 — no N+1 queries (subquery/JOIN for user_count, group lists)
+import hashlib
 import re
+import secrets
 import uuid
 from typing import Annotated, Any, List, Optional
 
@@ -353,6 +355,30 @@ class UserCreate(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# S003/T001: ApiKeyCreate model + key generation helper
+# Spec: docs/user-management/spec/user-management.spec.md#S003
+# Decision: D5 — key format kh_<secrets.token_hex(16)>; SHA-256 hash stored
+# Rule: S005 — plaintext key never stored; only SHA-256 hash in DB
+# ---------------------------------------------------------------------------
+
+class ApiKeyCreate(BaseModel):
+    name: Optional[str] = Field(default=None, max_length=100)
+
+
+def _generate_api_key() -> tuple[str, str, str]:
+    """Generate a new API key. Returns (plaintext, key_hash, key_prefix).
+
+    plaintext  : kh_ + 32 hex chars (35 chars total) — returned once, never stored.
+    key_hash   : SHA-256 hex digest of plaintext — stored in DB.
+    key_prefix : first 8 chars of plaintext — stored for identification.
+    """
+    plaintext = "kh_" + secrets.token_hex(16)
+    key_hash = hashlib.sha256(plaintext.encode()).hexdigest()
+    key_prefix = plaintext[:8]
+    return plaintext, key_hash, key_prefix
+
+
+# ---------------------------------------------------------------------------
 # S001/T002 + T003: POST /v1/admin/users — create user + group memberships
 # Spec: docs/user-management/spec/user-management.spec.md#S001
 # Rule: R003 — require_admin dependency
@@ -519,6 +545,191 @@ async def admin_delete_user(
         )
 
     return JSONResponse(content={"deleted": str(user_id)})
+
+
+# ---------------------------------------------------------------------------
+# S003/T002: POST /v1/admin/users/{user_id}/api-keys — generate API key
+# Spec: docs/user-management/spec/user-management.spec.md#S003
+# Rule: R003 — require_admin dependency
+# Rule: R004 — /v1/admin/ prefix
+# Rule: S001 — text().bindparams() only; no f-string injection
+# Rule: S003 — strip whitespace from name field
+# Rule: S005 — plaintext key NEVER stored; only SHA-256 hash in DB
+# Decision: D5 — key format kh_<secrets.token_hex(16)>; returned once
+# ---------------------------------------------------------------------------
+
+@router.post(
+    "/v1/admin/users/{user_id}/api-keys",
+    dependencies=[Depends(require_admin)],
+    status_code=201,
+)
+async def admin_generate_api_key(
+    user_id: uuid.UUID,
+    body: ApiKeyCreate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> JSONResponse:
+    """S003: Generate a new API key for a user.
+
+    Returns 201 {key_id, key (plaintext — shown once), key_prefix, name, created_at}.
+    404 NOT_FOUND if user does not exist.
+    Only the SHA-256 hash is stored — plaintext is never persisted (S005).
+    """
+    request_id = str(uuid.uuid4())
+
+    # Existence check — 404 before any INSERT (A005 shape)
+    exists = (await db.execute(
+        text("SELECT id FROM users WHERE id = :user_id").bindparams(user_id=user_id)
+    )).fetchone()
+    if exists is None:
+        return JSONResponse(
+            status_code=404,
+            content=_error(request_id, "NOT_FOUND", "User not found"),
+        )
+
+    # S003: strip whitespace from name
+    name: str | None = (
+        _CONTROL_CHAR_RE.sub("", body.name.strip()) if body.name is not None else None
+    )
+
+    # Generate key — plaintext returned once, hash stored (S005)
+    plaintext, key_hash, key_prefix = _generate_api_key()
+    key_id = uuid.uuid4()
+
+    # INSERT api_key — S001 parameterized
+    row = (await db.execute(
+        text(
+            "INSERT INTO api_keys (id, user_id, key_hash, key_prefix, name) "
+            "VALUES (:id, :user_id, :key_hash, :key_prefix, :name) "
+            "RETURNING id, key_prefix, name, created_at"
+        ).bindparams(
+            id=key_id,
+            user_id=user_id,
+            key_hash=key_hash,
+            key_prefix=key_prefix,
+            name=name,
+        )
+    )).mappings().first()
+    await db.commit()
+
+    return JSONResponse(
+        status_code=201,
+        content={
+            "key_id": str(row["id"]),
+            "key": plaintext,
+            "key_prefix": row["key_prefix"],
+            "name": row["name"],
+            "created_at": (
+                row["created_at"].isoformat()
+                if hasattr(row["created_at"], "isoformat")
+                else str(row["created_at"])
+            ),
+        },
+    )
+
+
+# ---------------------------------------------------------------------------
+# S004/T001: GET /v1/admin/users/{user_id}/api-keys — list keys (no hash)
+# Spec: docs/user-management/spec/user-management.spec.md#S004
+# Rule: R003 — require_admin; R004 — /v1/admin/
+# Rule: S001 — text().bindparams(); S005 — key_hash NEVER selected or returned
+# ---------------------------------------------------------------------------
+
+@router.get(
+    "/v1/admin/users/{user_id}/api-keys",
+    dependencies=[Depends(require_admin)],
+)
+async def admin_list_api_keys(
+    user_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> JSONResponse:
+    """S004: List all API keys for a user (no hash, no plaintext).
+
+    Returns 200 {"items": [{key_id, key_prefix, name, created_at}, ...]}.
+    404 NOT_FOUND if user does not exist.
+    """
+    request_id = str(uuid.uuid4())
+
+    exists = (await db.execute(
+        text("SELECT id FROM users WHERE id = :user_id").bindparams(user_id=user_id)
+    )).fetchone()
+    if exists is None:
+        return JSONResponse(
+            status_code=404,
+            content=_error(request_id, "NOT_FOUND", "User not found"),
+        )
+
+    # S005: SELECT only id, key_prefix, name, created_at — never key_hash
+    rows = (await db.execute(
+        text(
+            "SELECT id AS key_id, key_prefix, name, created_at "
+            "FROM api_keys WHERE user_id = :user_id ORDER BY created_at DESC"
+        ).bindparams(user_id=user_id)
+    )).mappings().all()
+
+    return JSONResponse(content={"items": [
+        {
+            "key_id": str(r["key_id"]),
+            "key_prefix": r["key_prefix"],
+            "name": r["name"],
+            "created_at": (
+                r["created_at"].isoformat()
+                if hasattr(r["created_at"], "isoformat")
+                else str(r["created_at"])
+            ),
+        }
+        for r in rows
+    ]})
+
+
+# ---------------------------------------------------------------------------
+# S004/T002: DELETE /v1/admin/users/{user_id}/api-keys/{key_id} — revoke key
+# Spec: docs/user-management/spec/user-management.spec.md#S004
+# Rule: R003 — require_admin; R004 — /v1/admin/
+# Rule: S001 — text().bindparams()
+# Security: WHERE includes both key_id AND user_id — prevents cross-user key enumeration
+# ---------------------------------------------------------------------------
+
+@router.delete(
+    "/v1/admin/users/{user_id}/api-keys/{key_id}",
+    dependencies=[Depends(require_admin)],
+)
+async def admin_revoke_api_key(
+    user_id: uuid.UUID,
+    key_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> JSONResponse:
+    """S004: Revoke (delete) a specific API key belonging to a user.
+
+    Returns 200 {"revoked": "<key_id>"}.
+    404 NOT_FOUND if user or key does not exist / key does not belong to user.
+    """
+    request_id = str(uuid.uuid4())
+
+    # User existence check
+    user_exists = (await db.execute(
+        text("SELECT id FROM users WHERE id = :user_id").bindparams(user_id=user_id)
+    )).fetchone()
+    if user_exists is None:
+        return JSONResponse(
+            status_code=404,
+            content=_error(request_id, "NOT_FOUND", "User not found"),
+        )
+
+    # DELETE with both key_id AND user_id — prevents cross-user key access
+    result = await db.execute(
+        text(
+            "DELETE FROM api_keys WHERE id = :key_id AND user_id = :user_id "
+            "RETURNING id"
+        ).bindparams(key_id=key_id, user_id=user_id)
+    )
+    if result.fetchone() is None:
+        return JSONResponse(
+            status_code=404,
+            content=_error(request_id, "NOT_FOUND", "API key not found"),
+        )
+
+    await db.commit()
+    return JSONResponse(content={"revoked": str(key_id)})
 
 
 @router.get("/v1/admin/users")

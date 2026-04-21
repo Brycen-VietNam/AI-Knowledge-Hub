@@ -1,7 +1,7 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-21 | Session: #101 (user-management — /implement S002 COMPLETE) | /sync
+Updated: 2026-04-21 | Session: #103 (user-management — /implement S004 COMPLETE) | /sync
 
 ---
 
@@ -17,14 +17,14 @@ Branch: `feature/user-management` (cut from `feature/admin-spa`)
 → All archived in `.claude/memory/COLD/`
 
 ## In Progress (max 3)
-- **user-management** — /implement S001+S002 DONE ✅ (2026-04-21) | 19/19 tests pass
+- **user-management** — /implement S001–S004 DONE ✅ (2026-04-21) | 41/41 tests pass
   WARM: `.claude/memory/WARM/user-management.mem.md`
   Tasks: `docs/user-management/tasks/S00[1-8].tasks.md`
-  Next: /implement S003
+  Next: /implement S005 (frontend)
 
-## Recent Decisions (Session #101)
-- 2026-04-21: D-UM-07 — /implement S002 DONE; cascade order api_keys→memberships→users; audit_logs NOT deleted (FK SET NULL migration 011). 19/19 tests PASS.
-- 2026-04-21: D-UM-06 — /implement S001 DONE; bcrypt via direct `import bcrypt` (not passlib); `_CONTROL_CHAR_RE` for S003; group fetch single IN query (P004). 12/12 tests PASS.
+## Recent Decisions (Session #103)
+- 2026-04-21: D-UM-09 — /implement S004 DONE; GET never selects key_hash (S005); DELETE WHERE includes user_id+key_id (cross-user isolation); 22/22 tests PASS.
+- 2026-04-21: D-UM-08 — /implement S003 DONE; key format kh_+token_hex(16), SHA-256 hash stored, prefix=plaintext[:8].
 - 2026-04-21: D-UM-04 — /plan generated; S001+S002 serialize in G1 (same file); S006+S007 parallel in G5 (separate files)
 - 2026-04-21: D-UM-03 — /checklist PASS 25/25; no email on create (F1 deferred); no force-change-password (F2 deferred)
 - 2026-04-21: D-UM-02 — Q3 self-resolved: `password_hash TEXT` already in migration 008
