@@ -723,19 +723,26 @@ async def admin_revoke_api_key(
         )
 
     # DELETE with both key_id AND user_id — prevents cross-user key access
-    result = await db.execute(
-        text(
-            "DELETE FROM api_keys WHERE id = :key_id AND user_id = :user_id "
-            "RETURNING id"
-        ).bindparams(key_id=key_id, user_id=user_id)
-    )
-    if result.fetchone() is None:
+    try:
+        result = await db.execute(
+            text(
+                "DELETE FROM api_keys WHERE id = :key_id AND user_id = :user_id "
+                "RETURNING id"
+            ).bindparams(key_id=key_id, user_id=user_id)
+        )
+        if result.fetchone() is None:
+            return JSONResponse(
+                status_code=404,
+                content=_error(request_id, "NOT_FOUND", "API key not found"),
+            )
+        await db.commit()
+    except Exception:
+        await db.rollback()
         return JSONResponse(
-            status_code=404,
-            content=_error(request_id, "NOT_FOUND", "API key not found"),
+            status_code=500,
+            content=_error(request_id, "INTERNAL_ERROR", "Failed to revoke API key"),
         )
 
-    await db.commit()
     return JSONResponse(content={"revoked": str(key_id)})
 
 

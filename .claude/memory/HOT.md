@@ -1,12 +1,12 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-21 | Session: #104 (user-management — security review S001–S003 + W2 fix) | /sync
+Updated: 2026-04-21 | Session: #105 (user-management — /implement S005–S008 DONE) | /sync
 
 ---
 
-## Current Sprint (Session #097)
-Status: **IN PROGRESS** | user-management — /checklist PASS ✅ (25/25), deferred items logged
+## Current Sprint (Session #105)
+Status: **COMPLETE** | user-management — all 8 stories DONE ✅, 80 tests pass
 Branch: `feature/user-management` (cut from `feature/admin-spa`)
 
 ## Completed Features (All, Archived)
@@ -17,20 +17,15 @@ Branch: `feature/user-management` (cut from `feature/admin-spa`)
 → All archived in `.claude/memory/COLD/`
 
 ## In Progress (max 3)
-- **user-management** — /implement S001–S004 DONE ✅ (2026-04-21) | 41/41 tests pass
+- **user-management** — /implement S001–S008 ALL DONE ✅ (2026-04-21)
   WARM: `.claude/memory/WARM/user-management.mem.md`
-  Tasks: `docs/user-management/tasks/S00[1-8].tasks.md`
-  Next: /implement S005 (frontend)
+  Backend: S001–S004 (41 tests) | Frontend: S005–S008 (39 tests)
+  Next: /report user-management ← READY (all stories DONE + REVIEWED ✅)
 
-## Recent Decisions (Session #104)
-- 2026-04-21: D-SEC-01 — Plain SHA-256 approved for API key hashing at 128-bit entropy; HMAC deferred; AUTH_SECRET_KEY correctly scoped to JWT only
-- 2026-04-21: D-SEC-03 — bcrypt.gensalt(rounds=12) confirmed correct for password hashing; W2 fix applied (try/except on API key INSERT)
-- 2026-04-21: D-UM-09 — /implement S004 DONE; GET never selects key_hash (S005); DELETE WHERE includes user_id+key_id (cross-user isolation)
-- 2026-04-21: D-UM-03 — /checklist PASS 25/25; no email on create (F1 deferred); no force-change-password (F2 deferred)
-- 2026-04-21: D-UM-02 — Q3 self-resolved: `password_hash TEXT` already in migration 008
-
-## Pending Commits
-- (none — all committed in e05c429)
+## Recent Decisions (Session #106)
+- 2026-04-21: D-UM-15 — /reviewcode S005–S008 warnings all fixed; review upgraded to APPROVED ✅
+- 2026-04-21: D-UM-14 — /reviewcode S005–S008: 0 blockers, 3 warnings (W1 try/except, W3 i18n, CSS 9 missing classes)
+- 2026-04-21: D-UM-13 — S008 DONE: UsersTab wired with create/delete/expand-ApiKeyPanel; 15 tests pass
 
 ## Session #080 Summary ✅ COMPLETE
 **Task:** Finalize frontend-theme + frontend-spa reports; ghi nhận backend language preference issue

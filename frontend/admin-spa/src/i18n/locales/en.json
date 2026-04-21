@@ -32,6 +32,9 @@
   "groups_empty": "No groups found",
   "assign_groups_error": "Failed to assign groups",
   "toggle_active_error": "Failed to update user status",
+  "user_delete_error": "Failed to delete user",
+  "user_delete_title": "Delete User",
+  "user_delete_message": "Delete user? This cannot be undone.",
   "badge_admin": "Admin",
   "badge_member": "Member",
   "badge_active": "Active",
@@ -44,6 +47,7 @@
   "col_groups": "Groups",
   "col_active": "Active",
   "col_actions": "Actions",
+  "btn_create_user": "Create User",
   "btn_create_group": "Create Group",
   "btn_edit": "Edit",
   "btn_delete": "Delete",
@@ -51,6 +55,50 @@
   "btn_toggle_active": "Toggle Active",
   "btn_save": "Save",
   "btn_cancel": "Cancel",
+  "user": {
+    "create": {
+      "title": "Create User",
+      "error": {
+        "duplicate_sub": "Username already taken"
+      }
+    },
+    "form": {
+      "sub_label": "Username",
+      "email_label": "Email",
+      "display_name_label": "Display Name",
+      "password_label": "Password",
+      "groups_label": "Groups",
+      "generate_password": "Generate",
+      "show_password": "Show",
+      "hide_password": "Hide"
+    }
+  },
+  "common": {
+    "error": {
+      "unexpected": "An unexpected error occurred"
+    }
+  },
+  "api_key": {
+    "panel_title": "API Keys",
+    "col_prefix": "Prefix",
+    "col_name": "Name",
+    "col_created_at": "Created",
+    "col_actions": "Actions",
+    "btn_generate": "Generate Key",
+    "btn_revoke": "Revoke",
+    "btn_copy": "Copy",
+    "btn_dismiss": "I've copied it",
+    "name_placeholder": "Key name (optional)",
+    "one_time_warning": "Copy this key now — it won't be shown again",
+    "one_time_title": "Your new API key",
+    "revoke_title": "Revoke API Key",
+    "revoke_message": "Revoke key '{{prefix}}'? This cannot be undone.",
+    "revoke_error": "Failed to revoke key",
+    "load_error": "Failed to load API keys",
+    "generate_error": "Failed to generate key",
+    "empty": "No API keys yet",
+    "loading": "Loading keys..."
+  },
   "documents": {
     "page_title": "Documents",
     "upload_btn": "Upload Document",

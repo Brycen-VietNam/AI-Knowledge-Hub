@@ -2,6 +2,5 @@ load claude.md, rules
 load hot, warm
 
 trước hết hãy load command /implement để biết chi tiết cách thực hiện
-sau đó thực hiện /implement S004
+sau đó thực hiện /implement S008
 
-Chú ý vấn đề muối cho password, có set AUTH_SECRET_KEY trong file env, cần review lại create user và create api key

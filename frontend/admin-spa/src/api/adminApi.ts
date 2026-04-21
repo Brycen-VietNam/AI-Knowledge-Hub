@@ -54,3 +54,49 @@ export async function assignGroups(userId: string, groupIds: number[]): Promise<
 export async function toggleUserActive(userId: string, is_active: boolean): Promise<void> {
   await apiClient.put(`/v1/admin/users/${userId}`, { is_active })
 }
+
+export interface UserCreatePayload {
+  sub: string
+  email?: string
+  display_name?: string
+  password: string
+  group_ids?: number[]
+}
+
+export interface ApiKeyCreated {
+  key_id: string
+  key: string          // plaintext — present only on create
+  key_prefix: string
+  name: string
+  created_at: string
+}
+
+export interface ApiKeyItem {
+  key_id: string
+  key_prefix: string
+  name: string
+  created_at: string   // no `key` field
+}
+
+export async function createUser(payload: UserCreatePayload): Promise<UserItem> {
+  const response = await apiClient.post('/v1/admin/users', payload)
+  return response.data
+}
+
+export async function deleteUser(userId: string): Promise<void> {
+  await apiClient.delete(`/v1/admin/users/${userId}`)
+}
+
+export async function generateApiKey(userId: string, name?: string): Promise<ApiKeyCreated> {
+  const response = await apiClient.post(`/v1/admin/users/${userId}/api-keys`, name ? { name } : {})
+  return response.data
+}
+
+export async function listApiKeys(userId: string): Promise<ApiKeyItem[]> {
+  const response = await apiClient.get(`/v1/admin/users/${userId}/api-keys`)
+  return response.data?.items ?? response.data ?? []
+}
+
+export async function revokeApiKey(userId: string, keyId: string): Promise<void> {
+  await apiClient.delete(`/v1/admin/users/${userId}/api-keys/${keyId}`)
+}

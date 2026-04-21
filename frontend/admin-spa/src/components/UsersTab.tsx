@@ -1,10 +1,14 @@
 // Spec: docs/admin-spa/spec/admin-spa.spec.md#S003
 // Task: T005 — UsersTab — users table + search (debounced 300ms) + assign groups + toggle active
-import { useState, useEffect, useCallback } from 'react'
+// Task: S008 T001–T004 — create user, delete user, ApiKeyPanel expand/collapse
+import { useState, useEffect, useCallback, Fragment } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { GroupItem, UserItem } from '../api/adminApi'
-import { listGroups, listUsers, toggleUserActive } from '../api/adminApi'
+import { listGroups, listUsers, toggleUserActive, deleteUser } from '../api/adminApi'
 import { AssignGroupModal } from './AssignGroupModal'
+import { DeleteConfirmDialog } from './DeleteConfirmDialog'
+import { UserFormModal } from './UserFormModal'
+import { ApiKeyPanel } from './ApiKeyPanel'
 
 interface ToastState {
   msg: string
@@ -20,6 +24,11 @@ export function UsersTab() {
   const [loading, setLoading] = useState(true)
   const [assignTarget, setAssignTarget] = useState<UserItem | null>(null)
   const [toast, setToast] = useState<ToastState | null>(null)
+
+  // S008: new state — create modal, expand, delete confirm
+  const [modalMode, setModalMode] = useState<null | 'create'>(null)
+  const [expandedUserId, setExpandedUserId] = useState<string | null>(null)
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null)
 
   const loadUsers = useCallback(async (q: string) => {
     setLoading(true)
@@ -68,8 +77,30 @@ export function UsersTab() {
     await loadUsers(search)
   }
 
+  async function handleDeleteConfirm() {
+    if (!deletingUserId) return
+    try {
+      await deleteUser(deletingUserId)
+      setUsers((prev) => prev.filter((u) => u.id !== deletingUserId))
+      setDeletingUserId(null)
+    } catch {
+      setToast({ msg: t('user_delete_error'), type: 'error' })
+      setDeletingUserId(null)
+    }
+  }
+
+  function handleExpandToggle(userId: string) {
+    setExpandedUserId((prev) => (prev === userId ? null : userId))
+  }
+
   return (
     <div className="users-tab">
+      <div className="tab-toolbar">
+        <button className="btn-primary" onClick={() => setModalMode('create')}>
+          {t('btn_create_user')}
+        </button>
+      </div>
+
       <input
         type="text"
         className="search-input"
@@ -92,41 +123,67 @@ export function UsersTab() {
           </thead>
           <tbody>
             {users.map((user) => (
-              <tr key={user.id}>
-                <td>{user.email}</td>
-                <td>
-                  {user.groups.map((g) => (
-                    <span key={g.id} className="badge-member" style={{ marginRight: '0.25rem' }}>
-                      {g.name}
-                    </span>
-                  ))}
-                </td>
-                <td>
-                  {user.is_active ? (
-                    <span className="badge-active">{t('badge_active')}</span>
-                  ) : (
-                    <span className="badge-inactive">{t('badge_inactive')}</span>
-                  )}
-                </td>
-                <td>
-                  <button
-                    className="btn-secondary"
-                    onClick={() => setAssignTarget(user)}
-                  >
-                    {t('btn_assign_groups')}
-                  </button>
-                  {' '}
-                  <button
-                    className="btn-secondary"
-                    onClick={() => handleToggleActive(user)}
-                  >
-                    {t('btn_toggle_active')}
-                  </button>
-                </td>
-              </tr>
+              <Fragment key={user.id}>
+                <tr>
+                  <td style={{ cursor: 'pointer' }} onClick={() => handleExpandToggle(user.id)}>
+                    {user.email}
+                  </td>
+                  <td>
+                    {user.groups.map((g) => (
+                      <span key={g.id} className="badge-member" style={{ marginRight: '0.25rem' }}>
+                        {g.name}
+                      </span>
+                    ))}
+                  </td>
+                  <td>
+                    {user.is_active ? (
+                      <span className="badge-active">{t('badge_active')}</span>
+                    ) : (
+                      <span className="badge-inactive">{t('badge_inactive')}</span>
+                    )}
+                  </td>
+                  <td>
+                    <button
+                      className="btn-secondary"
+                      onClick={() => setAssignTarget(user)}
+                    >
+                      {t('btn_assign_groups')}
+                    </button>
+                    {' '}
+                    <button
+                      className="btn-secondary"
+                      onClick={() => handleToggleActive(user)}
+                    >
+                      {t('btn_toggle_active')}
+                    </button>
+                    {' '}
+                    <button
+                      className="btn-danger"
+                      onClick={() => setDeletingUserId(user.id)}
+                    >
+                      {t('btn_delete')}
+                    </button>
+                  </td>
+                </tr>
+                {expandedUserId === user.id && (
+                  <tr>
+                    <td colSpan={4}>
+                      <ApiKeyPanel userId={user.id} />
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
             ))}
           </tbody>
         </table>
+      )}
+
+      {modalMode === 'create' && (
+        <UserFormModal
+          groups={allGroups}
+          onSave={(user) => { setUsers((prev) => [user, ...prev]); setModalMode(null) }}
+          onClose={() => setModalMode(null)}
+        />
       )}
 
       {assignTarget && (
@@ -137,6 +194,14 @@ export function UsersTab() {
           onClose={handleAssignClose}
         />
       )}
+
+      <DeleteConfirmDialog
+        open={deletingUserId !== null}
+        title={t('user_delete_title')}
+        message={t('user_delete_message')}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeletingUserId(null)}
+      />
 
       {toast && (
         <div className={`toast toast-${toast.type}`}>{toast.msg}</div>

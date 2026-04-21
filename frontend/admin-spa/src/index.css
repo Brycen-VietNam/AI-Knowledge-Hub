@@ -669,6 +669,8 @@ header.app-header {
 
 .upload-field input[type="text"],
 .upload-field input[type="url"],
+.upload-field input[type="email"],
+.upload-field input[type="password"],
 .upload-field select {
   width: 100%;
   padding: 9px 12px;
@@ -684,9 +686,20 @@ header.app-header {
 
 .upload-field input[type="text"]:focus,
 .upload-field input[type="url"]:focus,
+.upload-field input[type="email"]:focus,
+.upload-field input[type="password"]:focus,
 .upload-field select:focus {
   border-color: var(--indigo);
   box-shadow: 0 0 0 3px var(--indigo-light);
+}
+
+/* Remove browser autofill yellow background */
+.upload-field input:-webkit-autofill,
+.upload-field input:-webkit-autofill:hover,
+.upload-field input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--surface) inset !important;
+  -webkit-text-fill-color: var(--text) !important;
+  -webkit-transition: background-color 5000s ease-in-out 0s !important;
 }
 
 .upload-field input[type="checkbox"] {
@@ -904,6 +917,148 @@ header.app-header {
 .badge-active { background: var(--emerald-light); color: var(--emerald); padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
 .badge-inactive { background: var(--border); color: var(--text-2); padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
 .toast-error { background: var(--danger); color: #fff; }
+
+/* ─── USER FORM MODAL ─── */
+.password-field-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.password-field-row input {
+  flex: 1;
+  padding: 9px 12px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color .18s, box-shadow .18s;
+}
+
+.password-field-row input:focus {
+  border-color: var(--indigo);
+  box-shadow: 0 0 0 3px var(--indigo-light);
+}
+
+/* Remove browser autofill yellow background from password field */
+.password-field-row input:-webkit-autofill,
+.password-field-row input:-webkit-autofill:hover,
+.password-field-row input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--surface) inset !important;
+  -webkit-text-fill-color: var(--text) !important;
+  -webkit-transition: background-color 5000s ease-in-out 0s !important;
+}
+
+.form-error {
+  color: var(--danger);
+  font-size: 13px;
+  margin: 4px 0 0;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+/* ─── API KEY PANEL ─── */
+.api-key-panel {
+  background: var(--surface-2);
+  border-top: 1px solid var(--border);
+  padding: 16px 20px;
+}
+
+.api-key-panel h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  margin: 0 0 12px;
+}
+
+.api-key-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.api-key-table th,
+.api-key-table td {
+  padding: 7px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.api-key-table th {
+  font-weight: 600;
+  color: var(--text-2);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+
+.api-key-table tr:last-child td {
+  border-bottom: none;
+}
+
+.api-key-generate {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.api-key-generate input {
+  flex: 1;
+  max-width: 240px;
+  padding: 7px 10px;
+  font-family: inherit;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+}
+
+.api-key-generate input:focus {
+  border-color: var(--indigo);
+  box-shadow: 0 0 0 3px var(--indigo-light);
+}
+
+/* One-time key dialog (extends .confirm-dialog) */
+.api-key-dialog {
+  max-width: 480px;
+  text-align: center;
+}
+
+.one-time-warning {
+  color: var(--amber);
+  font-size: 13px;
+  font-weight: 500;
+  margin: 0 0 12px;
+}
+
+.api-key-value {
+  display: block;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  word-break: break-all;
+  color: var(--text);
+  margin-bottom: 16px;
+}
 
 /* ─── DASHBOARD PAGE ─── */
 .dashboard-page {

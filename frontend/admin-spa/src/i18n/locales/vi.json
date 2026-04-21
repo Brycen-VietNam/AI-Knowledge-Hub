@@ -32,6 +32,9 @@
   "groups_empty": "Không tìm thấy nhóm nào",
   "assign_groups_error": "Phân công nhóm thất bại",
   "toggle_active_error": "Cập nhật trạng thái người dùng thất bại",
+  "user_delete_error": "Xóa người dùng thất bại",
+  "user_delete_title": "Xóa người dùng",
+  "user_delete_message": "Xóa người dùng? Không thể hoàn tác.",
   "badge_admin": "Quản trị",
   "badge_member": "Thành viên",
   "badge_active": "Hoạt động",
@@ -44,6 +47,7 @@
   "col_groups": "Nhóm",
   "col_active": "Trạng thái",
   "col_actions": "Thao tác",
+  "btn_create_user": "Tạo người dùng",
   "btn_create_group": "Tạo nhóm",
   "btn_edit": "Chỉnh sửa",
   "btn_delete": "Xóa",
@@ -51,6 +55,50 @@
   "btn_toggle_active": "Bật/Tắt hoạt động",
   "btn_save": "Lưu",
   "btn_cancel": "Hủy",
+  "user": {
+    "create": {
+      "title": "Tạo người dùng",
+      "error": {
+        "duplicate_sub": "Tên đăng nhập đã được sử dụng"
+      }
+    },
+    "form": {
+      "sub_label": "Tên đăng nhập",
+      "email_label": "Email",
+      "display_name_label": "Tên hiển thị",
+      "password_label": "Mật khẩu",
+      "groups_label": "Nhóm",
+      "generate_password": "Tạo ngẫu nhiên",
+      "show_password": "Hiển thị",
+      "hide_password": "Ẩn"
+    }
+  },
+  "common": {
+    "error": {
+      "unexpected": "Đã xảy ra lỗi không mong muốn"
+    }
+  },
+  "api_key": {
+    "panel_title": "API Key",
+    "col_prefix": "Tiền tố",
+    "col_name": "Tên",
+    "col_created_at": "Ngày tạo",
+    "col_actions": "Thao tác",
+    "btn_generate": "Tạo key",
+    "btn_revoke": "Thu hồi",
+    "btn_copy": "Sao chép",
+    "btn_dismiss": "Tôi đã sao chép",
+    "name_placeholder": "Tên key (tùy chọn)",
+    "one_time_warning": "Sao chép key ngay bây giờ — sẽ không hiển thị lại",
+    "one_time_title": "API key mới của bạn",
+    "revoke_title": "Thu hồi API key",
+    "revoke_message": "Thu hồi key '{{prefix}}'? Không thể hoàn tác.",
+    "revoke_error": "Thu hồi key thất bại",
+    "load_error": "Tải API key thất bại",
+    "generate_error": "Tạo key thất bại",
+    "empty": "Chưa có API key nào",
+    "loading": "Đang tải key..."
+  },
   "documents": {
     "page_title": "Tài liệu",
     "upload_btn": "Tải lên tài liệu",

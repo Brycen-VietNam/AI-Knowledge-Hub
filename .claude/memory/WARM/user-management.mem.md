@@ -1,5 +1,5 @@
 # WARM: user-management
-Created: 2026-04-21 | Status: CLARIFY COMPLETE + BLOCKERS RESOLVED → ready for /checklist
+Created: 2026-04-21 | Status: ALL STORIES DONE ✅ → ready for /report
 
 ---
 
@@ -70,7 +70,8 @@ File: `docs/user-management/clarify/user-management.clarify.md`
 - [x] /tasks — DONE (2026-04-21) → `docs/user-management/tasks/S00[1-8].tasks.md`
 - [x] /implement S001–S004 — DONE ✅ (2026-04-21)
 - [x] /reviewcode S001–S003 — APPROVED ✅ (2026-04-21, 0 blockers)
-- [ ] /implement S005–S008 (frontend)
+- [x] /implement S005–S008 — DONE ✅ (2026-04-21)
+- [x] /reviewcode S005–S008 — APPROVED ✅ (2026-04-21, warnings fixed; see `docs/user-management/reviews/S005-S008-quick.review.md`)
 - [ ] /report
 
 ## Plan Summary
@@ -108,7 +109,45 @@ Questions resolved: user concern about "muoi" (salt) for password + API key — 
 
 ## Sync: 2026-04-21 (session #104 — W2 fix)
 Decisions: W2 resolved — try/except + rollback added to admin_generate_api_key
+
+## Sync: 2026-04-21 (session #105 — /implement S005–S008 DONE)
+Decisions added: D-UM-10 through D-UM-13 (S005–S008 each DONE)
+Tasks changed: S005→DONE, S006→DONE, S007→DONE, S008→DONE
+Files created:
+- `frontend/admin-spa/src/api/adminApi.test.ts` (11 tests)
+- `frontend/admin-spa/src/components/UserFormModal.tsx` + `tests/components/UserFormModal.test.tsx` (11 tests)
+- `frontend/admin-spa/src/components/ApiKeyPanel.tsx` + `tests/components/ApiKeyPanel.test.tsx` (13 tests)
+Files modified:
+- `frontend/admin-spa/src/api/adminApi.ts` (+3 interfaces, +5 functions)
+- `frontend/admin-spa/src/components/UsersTab.tsx` (+create/delete/expand wiring)
+- `frontend/admin-spa/tests/components/UsersTab.test.tsx` (+8 new tests → 15 total)
+- `src/i18n/locales/en/ja/vi/ko.json` (user.*, api_key.*, common.error.*, user_delete_* keys)
+Test totals: backend 41 + frontend 50 = 91 total | all pass ✅
+New blockers: none
+Questions resolved: (none)
+Phase: /report next
 Files touched: `backend/api/routes/admin.py` (L598–612, try/except wrap)
 Tasks changed: S003 W2 → FIXED ✅
 New blockers: none
 Next: /implement S005–S008 (frontend stories)
+
+## Sync: 2026-04-21 (session #106 — /reviewcode S005–S008 + warnings fixed)
+Decisions added:
+- D-UM-14: /reviewcode S005–S008 → CHANGES REQUIRED (3 warnings, 0 blockers)
+- D-UM-15: All 3 warnings fixed in same session → review upgraded to APPROVED
+Warnings fixed:
+- W1: `admin_revoke_api_key` — try/except/rollback added (`backend/api/routes/admin.py` L725-745)
+- W2: N+1 group inserts — deferred (acceptable for admin tool, ≤10 groups)
+- W3: `ApiKeyPanel` load error i18n — `api_key.load_error` key added to en/ja/vi/ko; component updated
+CSS: 9 missing classes added to `frontend/admin-spa/src/index.css` (L909-1024):
+  password-field-row, form-error, checkbox-label, api-key-panel, api-key-table,
+  api-key-generate, api-key-dialog, one-time-warning, api-key-value
+Files touched:
+- `backend/api/routes/admin.py`
+- `frontend/admin-spa/src/components/ApiKeyPanel.tsx`
+- `frontend/admin-spa/src/i18n/locales/en.json` + ja.json + vi.json + ko.json
+- `frontend/admin-spa/src/index.css`
+- `docs/user-management/reviews/S005-S008-quick.review.md` (created)
+Tasks changed: /reviewcode S005–S008 → APPROVED ✅
+New blockers: none
+Next: /report user-management

@@ -42,6 +42,7 @@
 | 14 | `slack-bot-query-handler` | bots | Slack bot → /v1/query |
 | 15 | `rate-limiting` | api | Valkey sliding window — 60/min query, 20/min docs (C013) |
 | 16 | `metrics-endpoint` | api | GET /v1/metrics — latency, throughput, error rates |
+| 12 | `change-password` | frontend | React/Vite SPA — Change password, require on first login |
 
 ---
 
