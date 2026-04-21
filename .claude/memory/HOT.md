@@ -14,13 +14,11 @@ Branch: `feature/user-management` (cut from `feature/admin-spa`)
 - multilingual-rag-pipeline, query-endpoint, document-parser, answer-citation
 - confidence-scoring, citation-quality
 - **admin-spa** — DONE ✅ 2026-04-20 | 50/50 ACs | 151 frontend + 27 backend tests | Archive: `.claude/memory/COLD/admin-spa.archive.md`
+- **user-management** — DONE ✅ 2026-04-21 | 80/80 ACs | 91/91 tests PASS | Archive: `.claude/memory/COLD/user-management.archive.md`
 → All archived in `.claude/memory/COLD/`
 
 ## In Progress (max 3)
-- **user-management** — /implement S001–S008 ALL DONE ✅ (2026-04-21)
-  WARM: `.claude/memory/WARM/user-management.mem.md`
-  Backend: S001–S004 (41 tests) | Frontend: S005–S008 (39 tests)
-  Next: /report user-management ← READY (all stories DONE + REVIEWED ✅)
+(none — user-management archived 2026-04-21)
 
 ## Recent Decisions (Session #106)
 - 2026-04-21: D-UM-15 — /reviewcode S005–S008 warnings all fixed; review upgraded to APPROVED ✅

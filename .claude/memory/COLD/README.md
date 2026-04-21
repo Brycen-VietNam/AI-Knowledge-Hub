@@ -27,3 +27,4 @@ Triggered automatically by `/report` when feature is APPROVED. Manual steps:
 | document-parser | 2026-04-13 | P0 + S001–S004 | 18/18 unit pass / 24 AC PASS / 3 integration defined | — | docs/document-parser/reports/document-parser.report.md |
 | answer-citation | 2026-04-15 | S001–S005 | 80/80 pass / 35 AC PASS / citation 100% / query 92% / generator 100% / retriever 91% | citation-quality, confidence-scoring | docs/answer-citation/reports/answer-citation.report.md |
 | admin-spa | 2026-04-20 | S000–S005 | 151/151 frontend + 27/27 backend / 50 AC PASS / 8 QA bugs fixed | — | docs/admin-spa/reports/admin-spa.report.md |
+| user-management | 2026-04-21 | S001–S008 | 41 backend + 50 frontend / 91/91 PASS / 80 AC PASS | — | docs/user-management/reports/user-management.report.md |
