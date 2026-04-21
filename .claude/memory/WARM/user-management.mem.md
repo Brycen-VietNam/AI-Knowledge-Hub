@@ -68,7 +68,9 @@ File: `docs/user-management/clarify/user-management.clarify.md`
 - [x] /checklist — PASS ✅ 25/25 (2026-04-21)
 - [x] /plan — DONE (2026-04-21) → `docs/user-management/plan/user-management.plan.md`
 - [x] /tasks — DONE (2026-04-21) → `docs/user-management/tasks/S00[1-8].tasks.md`
-- [ ] /implement
+- [x] /implement S001–S004 — DONE ✅ (2026-04-21)
+- [x] /reviewcode S001–S003 — APPROVED ✅ (2026-04-21, 0 blockers)
+- [ ] /implement S005–S008 (frontend)
 - [ ] /report
 
 ## Plan Summary
@@ -92,3 +94,21 @@ Files created: `docs/user-management/tasks/S001.tasks.md` through `S008.tasks.md
 Files touched: `WARM/user-management.mem.md` (phase + plan summary updated), `HOT.md` (session updated)
 Questions resolved: (none)
 New blockers: none (risk mitigations logged in plan)
+
+## Sync: 2026-04-21 (security review)
+Decisions added:
+- D-SEC-01: Plain SHA-256 approved for API key hashing at 128-bit entropy; HMAC-SHA-256 deferred as optional future improvement
+- D-SEC-02: AUTH_SECRET_KEY correctly scoped to JWT only; NOT used for password hashing (bcrypt) or API key hashing (SHA-256)
+- D-SEC-03: bcrypt.gensalt(rounds=12) confirmed correct — unique 16-byte salt per call, embedded in hash output
+Reviews completed: `docs/user-management/reviews/S001-S003-security.review.md` — APPROVED (0 blockers, 2 warnings)
+Warnings tracked:
+- W1: HMAC-SHA-256 for API keys (defense-in-depth, non-critical at 128-bit entropy) — future sprint
+- W2: Missing try/except on API key INSERT commit in S003 — **FIXED** (admin.py L598–612)
+Questions resolved: user concern about "muoi" (salt) for password + API key — fully addressed
+
+## Sync: 2026-04-21 (session #104 — W2 fix)
+Decisions: W2 resolved — try/except + rollback added to admin_generate_api_key
+Files touched: `backend/api/routes/admin.py` (L598–612, try/except wrap)
+Tasks changed: S003 W2 → FIXED ✅
+New blockers: none
+Next: /implement S005–S008 (frontend stories)

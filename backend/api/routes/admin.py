@@ -596,20 +596,27 @@ async def admin_generate_api_key(
     key_id = uuid.uuid4()
 
     # INSERT api_key — S001 parameterized
-    row = (await db.execute(
-        text(
-            "INSERT INTO api_keys (id, user_id, key_hash, key_prefix, name) "
-            "VALUES (:id, :user_id, :key_hash, :key_prefix, :name) "
-            "RETURNING id, key_prefix, name, created_at"
-        ).bindparams(
-            id=key_id,
-            user_id=user_id,
-            key_hash=key_hash,
-            key_prefix=key_prefix,
-            name=name,
+    try:
+        row = (await db.execute(
+            text(
+                "INSERT INTO api_keys (id, user_id, key_hash, key_prefix, name) "
+                "VALUES (:id, :user_id, :key_hash, :key_prefix, :name) "
+                "RETURNING id, key_prefix, name, created_at"
+            ).bindparams(
+                id=key_id,
+                user_id=user_id,
+                key_hash=key_hash,
+                key_prefix=key_prefix,
+                name=name,
+            )
+        )).mappings().first()
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        return JSONResponse(
+            status_code=500,
+            content=_error(request_id, "INTERNAL_ERROR", "Failed to create API key"),
         )
-    )).mappings().first()
-    await db.commit()
 
     return JSONResponse(
         status_code=201,
