@@ -30,5 +30,21 @@
   "history": {
     "title": "検索履歴",
     "clear": "履歴をクリア"
+  },
+  "auth": {
+    "change_password": {
+      "title": "パスワードを変更",
+      "current_password": "現在のパスワード",
+      "new_password": "新しいパスワード",
+      "confirm_password": "新しいパスワード（確認）",
+      "submit": "パスワードを更新",
+      "cancel": "キャンセル",
+      "success": "パスワードが正常に更新されました。",
+      "error": {
+        "wrong_password": "現在のパスワードが正しくありません。",
+        "mismatch": "新しいパスワードが一致しません。",
+        "too_short": "パスワードは8文字以上である必要があります。"
+      }
+    }
   }
 }

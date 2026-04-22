@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import App from '../src/App'
 import { useAuthStore } from '../src/store/authStore'
@@ -77,5 +77,32 @@ describe('App — /login route', () => {
     useAuthStore.setState({ token: null, username: null, password: null, _refreshTimer: null })
     renderApp('/login')
     expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
+  })
+})
+
+describe('App — user-pill dropdown (S003/T004)', () => {
+  it('shows dropdown menu when user pill is clicked', () => {
+    useAuthStore.setState({ token: 'tok', username: 'alice', password: 'pw', _refreshTimer: null })
+    useQueryStore.setState({ query: '', isLoading: false, error: null, result: null })
+    renderApp('/query')
+    const pill = screen.getByRole('button', { name: /alice/i })
+    fireEvent.click(pill)
+    expect(screen.getByRole('menu')).toBeInTheDocument()
+  })
+
+  it('shows "Change Password" menu item for password user (has_password=true)', () => {
+    useAuthStore.setState({ token: 'tok', username: 'alice', password: 'pw', _refreshTimer: null })
+    useQueryStore.setState({ query: '', isLoading: false, error: null, result: null })
+    renderApp('/query')
+    fireEvent.click(screen.getByRole('button', { name: /alice/i }))
+    expect(screen.getByRole('menuitem', { name: /change password/i })).toBeInTheDocument()
+  })
+
+  it('hides "Change Password" menu item for OIDC user (password=null)', () => {
+    useAuthStore.setState({ token: 'tok', username: 'oidc_user', password: null, _refreshTimer: null })
+    useQueryStore.setState({ query: '', isLoading: false, error: null, result: null })
+    renderApp('/query')
+    fireEvent.click(screen.getByRole('button', { name: /oidc_user/i }))
+    expect(screen.queryByRole('menuitem', { name: /change password/i })).not.toBeInTheDocument()
   })
 })

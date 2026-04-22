@@ -30,5 +30,21 @@
   "history": {
     "title": "Lịch sử tìm kiếm",
     "clear": "Xóa lịch sử"
+  },
+  "auth": {
+    "change_password": {
+      "title": "Đổi mật khẩu",
+      "current_password": "Mật khẩu hiện tại",
+      "new_password": "Mật khẩu mới",
+      "confirm_password": "Xác nhận mật khẩu mới",
+      "submit": "Cập nhật mật khẩu",
+      "cancel": "Hủy",
+      "success": "Mật khẩu đã được cập nhật thành công.",
+      "error": {
+        "wrong_password": "Mật khẩu hiện tại không đúng.",
+        "mismatch": "Mật khẩu mới không khớp.",
+        "too_short": "Mật khẩu phải có ít nhất 8 ký tự."
+      }
+    }
   }
 }

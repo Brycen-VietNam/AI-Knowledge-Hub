@@ -781,3 +781,116 @@ textarea.search-input::placeholder {
   margin-top: 2px;
   display: block;
 }
+
+
+/* ChangePasswordModal */
+.change-password-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.change-password-form {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 28px 32px;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.change-password-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.change-password-field label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.change-password-field input {
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color .15s;
+}
+
+.change-password-field input:focus {
+  border-color: var(--accent);
+}
+
+.change-password-error {
+  font-size: 12.5px;
+  color: #e05252;
+  margin-top: -8px;
+}
+
+.change-password-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+
+/* User-pill dropdown (S003/T004) */
+.user-pill-dropdown {
+  position: relative;
+}
+
+.user-pill-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: inherit;
+}
+
+.user-pill-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  min-width: 180px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.15);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.user-pill-menu-item {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 13.5px;
+  color: var(--text);
+  transition: background .12s;
+}
+
+.user-pill-menu-item:hover {
+  background: var(--surface-2, rgba(255,255,255,.06));
+}

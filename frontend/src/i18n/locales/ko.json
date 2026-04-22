@@ -30,5 +30,21 @@
   "history": {
     "title": "검색 기록",
     "clear": "기록 지우기"
+  },
+  "auth": {
+    "change_password": {
+      "title": "비밀번호 변경",
+      "current_password": "현재 비밀번호",
+      "new_password": "새 비밀번호",
+      "confirm_password": "새 비밀번호 확인",
+      "submit": "비밀번호 업데이트",
+      "cancel": "취소",
+      "success": "비밀번호가 성공적으로 업데이트되었습니다.",
+      "error": {
+        "wrong_password": "현재 비밀번호가 올바르지 않습니다.",
+        "mismatch": "새 비밀번호가 일치하지 않습니다.",
+        "too_short": "비밀번호는 8자 이상이어야 합니다."
+      }
+    }
   }
 }

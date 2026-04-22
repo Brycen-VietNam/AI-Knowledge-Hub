@@ -30,5 +30,21 @@
   "history": {
     "title": "Search History",
     "clear": "Clear History"
+  },
+  "auth": {
+    "change_password": {
+      "title": "Change Password",
+      "current_password": "Current Password",
+      "new_password": "New Password",
+      "confirm_password": "Confirm Password",
+      "submit": "Update Password",
+      "cancel": "Cancel",
+      "success": "Password updated successfully.",
+      "error": {
+        "wrong_password": "Current password is incorrect.",
+        "mismatch": "New passwords do not match.",
+        "too_short": "Password must be at least 8 characters."
+      }
+    }
   }
 }
