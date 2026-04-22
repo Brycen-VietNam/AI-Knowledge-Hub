@@ -13,6 +13,7 @@ export interface UserItem {
   id: string
   email: string
   is_active: boolean
+  has_password: boolean
   groups: { id: number; name: string }[]
 }
 

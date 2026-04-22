@@ -15,12 +15,14 @@ const USERS: adminApi.UserItem[] = [
     id: 'u1',
     email: 'alice@example.com',
     is_active: true,
+    has_password: true,
     groups: [{ id: 1, name: 'editors' }],
   },
   {
     id: 'u2',
     email: 'bob@example.com',
     is_active: false,
+    has_password: false,
     groups: [],
   },
 ]
@@ -154,7 +156,7 @@ describe('UsersTab', () => {
   it('onSave closes modal and prepends new user to list', async () => {
     vi.spyOn(adminApi, 'listGroups').mockResolvedValue(ALL_GROUPS)
     vi.spyOn(adminApi, 'listUsers').mockResolvedValue(USERS)
-    const newUser: adminApi.UserItem = { id: 'u99', email: 'new@example.com', is_active: true, groups: [] }
+    const newUser: adminApi.UserItem = { id: 'u99', email: 'new@example.com', is_active: true, has_password: true, groups: [] }
     vi.spyOn(adminApi, 'createUser').mockResolvedValue(newUser)
     render(<UsersTab />)
     await waitFor(() => screen.getByText('alice@example.com'))
@@ -244,6 +246,29 @@ describe('UsersTab', () => {
     fireEvent.click(screen.getByText('alice@example.com'))
     await waitFor(() => {
       expect(document.querySelector('.api-key-panel')).toBeNull()
+    })
+  })
+
+  // ── S004 change-password: Reset Password button ───────────────────────────
+
+  it('shows Reset Password button only for users with has_password=true', async () => {
+    vi.spyOn(adminApi, 'listGroups').mockResolvedValue(ALL_GROUPS)
+    vi.spyOn(adminApi, 'listUsers').mockResolvedValue(USERS)
+    render(<UsersTab />)
+    await waitFor(() => screen.getByText('alice@example.com'))
+    // alice has_password=true → button shown; bob has_password=false → button hidden
+    const resetButtons = screen.getAllByText('Reset Password')
+    expect(resetButtons).toHaveLength(1)
+  })
+
+  it('opens ResetPasswordModal when Reset Password button is clicked', async () => {
+    vi.spyOn(adminApi, 'listGroups').mockResolvedValue(ALL_GROUPS)
+    vi.spyOn(adminApi, 'listUsers').mockResolvedValue(USERS)
+    render(<UsersTab />)
+    await waitFor(() => screen.getByText('alice@example.com'))
+    fireEvent.click(screen.getByText('Reset Password'))
+    await waitFor(() => {
+      expect(document.querySelector('.reset-password-modal')).toBeTruthy()
     })
   })
 

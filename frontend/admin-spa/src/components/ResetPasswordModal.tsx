@@ -5,7 +5,7 @@
 // Decision: D3 — OIDC users (has_password=false) hidden at row level (UsersTab)
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { apiClient } from '../../api/client'
+import { apiClient } from '../api/client'
 
 interface Props {
   userId: string
@@ -44,8 +44,7 @@ export function ResetPasswordModal({ userId, onClose }: Props) {
       const res = await apiClient.post(`/v1/admin/users/${userId}/password-reset`, body)
 
       if (mode === 'generate') {
-        const data = res as { data?: { password?: string } }
-        setGeneratedPassword(data?.data?.password ?? (res as unknown as { password?: string }).password ?? '')
+        setGeneratedPassword(res.data?.password ?? '')
       }
       setSuccessMsg(t('auth.reset_password.success'))
       if (mode === 'manual') {

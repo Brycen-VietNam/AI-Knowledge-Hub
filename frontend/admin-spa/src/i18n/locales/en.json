@@ -53,6 +53,7 @@
   "btn_delete": "Delete",
   "btn_assign_groups": "Assign Groups",
   "btn_toggle_active": "Toggle Active",
+  "btn_reset_password": "Reset Password",
   "btn_save": "Save",
   "btn_cancel": "Cancel",
   "user": {

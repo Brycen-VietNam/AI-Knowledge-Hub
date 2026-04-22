@@ -1,6 +1,7 @@
 // Spec: docs/admin-spa/spec/admin-spa.spec.md#S003
 // Task: T005 — UsersTab — users table + search (debounced 300ms) + assign groups + toggle active
 // Task: S008 T001–T004 — create user, delete user, ApiKeyPanel expand/collapse
+// Task: change-password/S004 — Reset Password button per non-OIDC row
 import { useState, useEffect, useCallback, Fragment } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { GroupItem, UserItem } from '../api/adminApi'
@@ -9,6 +10,7 @@ import { AssignGroupModal } from './AssignGroupModal'
 import { DeleteConfirmDialog } from './DeleteConfirmDialog'
 import { UserFormModal } from './UserFormModal'
 import { ApiKeyPanel } from './ApiKeyPanel'
+import { ResetPasswordModal } from './ResetPasswordModal'
 
 interface ToastState {
   msg: string
@@ -29,6 +31,7 @@ export function UsersTab() {
   const [modalMode, setModalMode] = useState<null | 'create'>(null)
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null)
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null)
+  const [resetPasswordUserId, setResetPasswordUserId] = useState<string | null>(null)
 
   const loadUsers = useCallback(async (q: string) => {
     setLoading(true)
@@ -157,6 +160,18 @@ export function UsersTab() {
                       {t('btn_toggle_active')}
                     </button>
                     {' '}
+                    {user.has_password && (
+                      <>
+                        {' '}
+                        <button
+                          className="btn-secondary"
+                          onClick={() => setResetPasswordUserId(user.id)}
+                        >
+                          {t('btn_reset_password')}
+                        </button>
+                      </>
+                    )}
+                    {' '}
                     <button
                       className="btn-danger"
                       onClick={() => setDeletingUserId(user.id)}
@@ -202,6 +217,13 @@ export function UsersTab() {
         onConfirm={handleDeleteConfirm}
         onCancel={() => setDeletingUserId(null)}
       />
+
+      {resetPasswordUserId && (
+        <ResetPasswordModal
+          userId={resetPasswordUserId}
+          onClose={() => setResetPasswordUserId(null)}
+        />
+      )}
 
       {toast && (
         <div className={`toast toast-${toast.type}`}>{toast.msg}</div>

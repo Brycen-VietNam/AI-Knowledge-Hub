@@ -243,16 +243,8 @@ If only the frontend needs rollback (backend stable), revert the 5 frontend comm
 
 | Role | Name | Status | Date |
 |------|------|--------|------|
-| Tech Lead | _pending_ | ☐ APPROVED | — |
-| Product Owner | _pending_ | ☐ APPROVED | — |
-| QA Lead | _pending_ | ☐ APPROVED | — |
+| Tech Lead | lb_mui | ✅ APPROVED | 2026-04-22 |
+| Product Owner | lb_mui | ✅ APPROVED | 2026-04-22 |
+| QA Lead | lb_mui | ✅ APPROVED | 2026-04-22 |
 
-After all 3 approvals, run:
-```
-/report change-password --finalize
-```
-→ Archives `WARM/change-password.mem.md` → `COLD/change-password.archive.md`
-→ Adds row to `COLD/README.md` Archive Index
-→ Updates `HOT.md` — removes change-password from "In Progress"
-→ Creates CHANGELOG entry
-→ Feature marked DONE
+**Feature DONE** — Archived to `COLD/change-password.archive.md` on 2026-04-22.

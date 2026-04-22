@@ -53,6 +53,7 @@
   "btn_delete": "삭제",
   "btn_assign_groups": "그룹 할당",
   "btn_toggle_active": "활성 전환",
+  "btn_reset_password": "비밀번호 재설정",
   "btn_save": "저장",
   "btn_cancel": "취소",
   "user": {

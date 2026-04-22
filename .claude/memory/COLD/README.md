@@ -28,3 +28,4 @@ Triggered automatically by `/report` when feature is APPROVED. Manual steps:
 | answer-citation | 2026-04-15 | S001–S005 | 80/80 pass / 35 AC PASS / citation 100% / query 92% / generator 100% / retriever 91% | citation-quality, confidence-scoring | docs/answer-citation/reports/answer-citation.report.md |
 | admin-spa | 2026-04-20 | S000–S005 | 151/151 frontend + 27/27 backend / 50 AC PASS / 8 QA bugs fixed | — | docs/admin-spa/reports/admin-spa.report.md |
 | user-management | 2026-04-21 | S001–S008 | 41 backend + 50 frontend / 91/91 PASS / 80 AC PASS | — | docs/user-management/reports/user-management.report.md |
+| change-password | 2026-04-22 | S001–S005 | 318 frontend + 22 backend / 340/340 PASS / 43 AC PASS | — | docs/change-password/reports/change-password.report.md |
