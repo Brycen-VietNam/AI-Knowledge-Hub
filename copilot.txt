@@ -1,6 +1,6 @@
 load claude.md, rules
 load hot, warm
+load spec
+load command /implement
 
-trước hết hãy load command /implement để biết chi tiết cách thực hiện
-sau đó thực hiện /implement S008
 

@@ -112,15 +112,15 @@ Sessions est.: 2 | Token budget: ~14k
 
 ## Task Status Board (generated 2026-04-22)
 
-### S001 — Backend PATCH /v1/users/me/password
+### S001 — Backend PATCH /v1/users/me/password ✅ DONE
 | Task | Title | Status |
 |------|-------|--------|
-| T001 | DB migration: add must_change_password column | TODO |
-| T002 | Update User ORM model + UserResponse schema | TODO |
-| T003 | Extract generate_password() to auth/utils.py | TODO |
-| T004 | Create backend/api/routes/users.py with PATCH endpoint | TODO |
-| T005 | Extend login response with must_change_password field | TODO |
-| T006 | Register users router in main app | TODO |
+| T001 | DB migration: add must_change_password column | DONE |
+| T002 | Update User ORM model + UserResponse schema | DONE |
+| T003 | Extract generate_password() to auth/utils.py | DONE |
+| T004 | Create backend/api/routes/users.py with PATCH endpoint | DONE |
+| T005 | Extend login response with must_change_password field | DONE |
+| T006 | Register users router in main app | DONE |
 
 ### S002 — Backend POST /v1/admin/users/{id}/password-reset
 | Task | Title | Status |
@@ -194,3 +194,24 @@ Files touched:
   - .claude/memory/HOT.md (session #109, D-CP-06 added)
 Questions resolved: none new
 New blockers: none
+
+## Sync: 2026-04-22 (S001 DONE — /implement complete + migration applied)
+Decisions added: D-CP-07 (apply migrations via `docker exec knowledge-hub-postgres psql -c "..."` — file copy fails on Windows path)
+Tasks changed: S001 T001→DONE, T002→DONE, T003→DONE, T004→DONE, T005→DONE, T006→DONE
+Files created:
+  - backend/db/migrations/012_add_must_change_password.sql
+  - backend/auth/utils.py (generate_password helper)
+  - backend/api/routes/users.py (PATCH /v1/users/me/password)
+  - tests/auth/test_utils.py (4 tests)
+  - tests/api/test_users.py (7 tests — 204/401/400/403/422×2 + route smoke)
+Files modified:
+  - backend/db/models/user.py (must_change_password ORM field)
+  - backend/api/routes/auth.py (SELECT + return must_change_password; mock fixed)
+  - backend/api/app.py (users.router registered)
+  - backend/api/routes/__init__.py (users export)
+  - tests/api/test_auth.py (_mock_db_row updated for row[2])
+  - docs/change-password/tasks/S001.tasks.md (all tasks → DONE)
+Test results: 11/11 new PASS | 12/12 auth PASS | DB column confirmed live
+Questions resolved: none new
+New blockers: none
+Next: /implement S002

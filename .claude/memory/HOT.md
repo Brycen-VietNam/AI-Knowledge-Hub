@@ -1,12 +1,12 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-22 | Session: #109 (change-password — /tasks patched + /sync) | /sync
+Updated: 2026-04-22 | Session: #110 (change-password — S001 DONE, migration applied) | /sync
 
 ---
 
-## Current Sprint (Session #109)
-Status: **IN PROGRESS** | change-password — tasks complete, S001/T001 patched, ready for /analyze
+## Current Sprint (Session #110)
+Status: **IN PROGRESS** | change-password — S001 DONE ✅, next: /implement S002
 Branch: `develop` (change-password not yet branched)
 
 ## Completed Features (All, Archived)
@@ -18,16 +18,16 @@ Branch: `develop` (change-password not yet branched)
 → All archived in `.claude/memory/COLD/`
 
 ## In Progress (max 3)
-- change-password — TASKS DONE ✅ 2026-04-22 | 5 stories, 22 tasks total
+- change-password — S001 DONE ✅ 2026-04-22 | 11/11 tests PASS | migration 012 applied to DB
   WARM: `.claude/memory/WARM/change-password.mem.md`
   Plan: `docs/change-password/plan/change-password.plan.md`
   Tasks: `docs/change-password/tasks/S001–S005.tasks.md`
-  Next: /analyze S001 T001
+  Next: /implement S002
 
-## Recent Decisions (Session #109)
+## Recent Decisions (Session #110)
+- 2026-04-22: D-CP-07 — DB container is `knowledge-hub-postgres`; apply migrations via `docker exec ... psql -c "..."` (not file copy — Windows path issue)
 - 2026-04-22: D-CP-06 — S001/T001 migration must be applied to DB immediately after file is written; agent must ask user for DB connection info if DATABASE_URL not set
 - 2026-04-22: D-CP-05 — Checklist PASS 29/29; AGENTS.md + CONSTITUTION.md confirmed at .claude/ (not root)
-- 2026-04-22: D-CP-04 — Session invalidation deferred; 60-min JWT TTL accepted (DEFERRED-SEC-002)
 
 ## Session #080 Summary ✅ COMPLETE
 **Task:** Finalize frontend-theme + frontend-spa reports; ghi nhận backend language preference issue

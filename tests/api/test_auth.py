@@ -60,7 +60,8 @@ def _mock_db_row(username: str, password_hash: str | None, user_id: uuid.UUID):
       2. _compute_is_admin (scalar) — S000/T009
     """
     row = MagicMock()
-    row.__getitem__ = lambda self, i: [user_id, password_hash][i]
+    # T005: login SELECT now returns (id, password_hash, must_change_password)
+    row.__getitem__ = lambda self, i: [user_id, password_hash, False][i]
 
     user_result = MagicMock()
     user_result.fetchone = MagicMock(return_value=row)

@@ -18,7 +18,7 @@ from fastapi.responses import JSONResponse
 
 from backend.api.config import VALKEY_URL
 from backend.api.middleware.rate_limiter import RateLimiter
-from backend.api.routes import admin, auth, documents, query, upload
+from backend.api.routes import admin, auth, documents, query, upload, users
 from backend.rag.embedder import EmbedderError
 from backend.rag.llm import LLMError
 from backend.rag.retriever import QueryTimeoutError
@@ -107,7 +107,8 @@ def create_app() -> FastAPI:
     app.include_router(query.router)
     app.include_router(documents.router)
     app.include_router(upload.router)
-    app.include_router(auth.router)  # T005: public login endpoint (R003 exception)
+    app.include_router(auth.router)   # T005: public login endpoint (R003 exception)
+    app.include_router(users.router)  # S001/T006: self-service user endpoints
     app.include_router(admin.router)  # S000/T010: admin endpoints (require_admin guard)
     return app
 
