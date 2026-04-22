@@ -13,3 +13,4 @@ User: `dev@example.com` (sub: `dev-local`), `user_group_ids = [1]`
 **How to apply:** Always pass `X-API-Key: test-api-key-dev` when testing endpoints locally. If DB volume is wiped (`down -v`), need to re-insert user + api_key.
 
 apikey: kh_4eea3eb9fbd7b5d313a50f3c0d75e2ab
+demo: demo123456

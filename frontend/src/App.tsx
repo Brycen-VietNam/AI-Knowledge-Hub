@@ -19,7 +19,7 @@ import { LanguageSelector } from './components/query/LanguageSelector'
 
 function App() {
   const navigate = useNavigate()
-  const { token, username, password } = useAuthStore()
+  const { token, username, password, logout } = useAuthStore()
 
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [changePasswordOpen, setChangePasswordOpen] = useState(false)
@@ -75,6 +75,13 @@ function App() {
                       Change Password
                     </button>
                   )}
+                  <button
+                    className="user-pill-menu-item user-pill-menu-item--danger"
+                    role="menuitem"
+                    onClick={() => { setDropdownOpen(false); logout() }}
+                  >
+                    Logout
+                  </button>
                 </div>
               )}
             </div>

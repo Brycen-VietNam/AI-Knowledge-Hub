@@ -35,6 +35,21 @@ def _error_body(request: Request, code: str, message: str) -> dict:
 def create_app() -> FastAPI:
     app = FastAPI(title="Knowledge Hub API")
 
+    # Global catch-all: must be added BEFORE CORSMiddleware so CORS headers are
+    # present even when an unhandled exception escapes the route/dependency layer
+    # (e.g. DB connection failure in verify_token causes socket.gaierror which
+    # would otherwise bubble past CORS middleware and hide the real 500).
+    @app.middleware("http")
+    async def _catch_all(request: Request, call_next):
+        try:
+            return await call_next(request)
+        except Exception:
+            request_id = getattr(getattr(request, "state", None), "request_id", None) or str(uuid.uuid4())
+            return JSONResponse(
+                status_code=500,
+                content={"error": {"code": "INTERNAL_ERROR", "message": "An unexpected error occurred", "request_id": request_id}},
+            )
+
     # CORS: Allow frontend origins (dev: localhost:8080/8081, localhost:5173)
     app.add_middleware(
         CORSMiddleware,
