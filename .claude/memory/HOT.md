@@ -1,29 +1,33 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-21 | Session: #105 (user-management — /implement S005–S008 DONE) | /sync
+Updated: 2026-04-22 | Session: #109 (change-password — /tasks patched + /sync) | /sync
 
 ---
 
-## Current Sprint (Session #105)
-Status: **COMPLETE** | user-management — all 8 stories DONE ✅, 80 tests pass
-Branch: `feature/user-management` (cut from `feature/admin-spa`)
+## Current Sprint (Session #109)
+Status: **IN PROGRESS** | change-password — tasks complete, S001/T001 patched, ready for /analyze
+Branch: `develop` (change-password not yet branched)
 
 ## Completed Features (All, Archived)
 - auth-api-key-oidc, rbac-document-filter, cjk-tokenizer, llm-provider, document-ingestion
 - multilingual-rag-pipeline, query-endpoint, document-parser, answer-citation
 - confidence-scoring, citation-quality
-- **admin-spa** — DONE ✅ 2026-04-20 | 50/50 ACs | 151 frontend + 27 backend tests | Archive: `.claude/memory/COLD/admin-spa.archive.md`
+- **admin-spa** — DONE ✅ 2026-04-20 | Archive: `.claude/memory/COLD/admin-spa.archive.md`
 - **user-management** — DONE ✅ 2026-04-21 | 80/80 ACs | 91/91 tests PASS | Archive: `.claude/memory/COLD/user-management.archive.md`
 → All archived in `.claude/memory/COLD/`
 
 ## In Progress (max 3)
-(none — user-management archived 2026-04-21)
+- change-password — TASKS DONE ✅ 2026-04-22 | 5 stories, 22 tasks total
+  WARM: `.claude/memory/WARM/change-password.mem.md`
+  Plan: `docs/change-password/plan/change-password.plan.md`
+  Tasks: `docs/change-password/tasks/S001–S005.tasks.md`
+  Next: /analyze S001 T001
 
-## Recent Decisions (Session #106)
-- 2026-04-21: D-UM-15 — /reviewcode S005–S008 warnings all fixed; review upgraded to APPROVED ✅
-- 2026-04-21: D-UM-14 — /reviewcode S005–S008: 0 blockers, 3 warnings (W1 try/except, W3 i18n, CSS 9 missing classes)
-- 2026-04-21: D-UM-13 — S008 DONE: UsersTab wired with create/delete/expand-ApiKeyPanel; 15 tests pass
+## Recent Decisions (Session #109)
+- 2026-04-22: D-CP-06 — S001/T001 migration must be applied to DB immediately after file is written; agent must ask user for DB connection info if DATABASE_URL not set
+- 2026-04-22: D-CP-05 — Checklist PASS 29/29; AGENTS.md + CONSTITUTION.md confirmed at .claude/ (not root)
+- 2026-04-22: D-CP-04 — Session invalidation deferred; 60-min JWT TTL accepted (DEFERRED-SEC-002)
 
 ## Session #080 Summary ✅ COMPLETE
 **Task:** Finalize frontend-theme + frontend-spa reports; ghi nhận backend language preference issue
