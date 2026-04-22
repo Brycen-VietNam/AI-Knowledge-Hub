@@ -11,6 +11,7 @@ import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { setNavigate } from './api/client'
 import { LoginPage } from './pages/LoginPage'
 import { QueryPage } from './pages/QueryPage'
+import { ChangePasswordPage } from './pages/ChangePasswordPage'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { ChangePasswordModal } from './components/auth/ChangePasswordModal'
 import { useAuthStore } from './store/authStore'
@@ -87,6 +88,14 @@ function App() {
           element={
             <ProtectedRoute>
               <QueryPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/change-password"
+          element={
+            <ProtectedRoute>
+              <ChangePasswordPage />
             </ProtectedRoute>
           }
         />

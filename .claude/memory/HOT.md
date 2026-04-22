@@ -1,12 +1,12 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-22 | Session: #111 (change-password — S004 DONE, 229 tests) | /sync
+Updated: 2026-04-22 | Session: #113 (change-password — /report generated, awaiting sign-off) | /sync
 
 ---
 
 ## Current Sprint (Session #110)
-Status: **IN PROGRESS** | change-password — S001 ✅ S002 ✅ S003 ✅ S004 ✅, next: /implement S005
+Status: **AWAITING SIGN-OFF** | change-password — S001 ✅ S002 ✅ S003 ✅ S004 ✅ S005 ✅ /report ✅
 Branch: `develop` (change-password not yet branched)
 
 ## Completed Features (All, Archived)
@@ -18,11 +18,10 @@ Branch: `develop` (change-password not yet branched)
 → All archived in `.claude/memory/COLD/`
 
 ## In Progress (max 3)
-- change-password — S001 ✅ S002 ✅ S003 ✅ S004 ✅ 2026-04-22 | 229/229 main SPA tests PASS (+12 new)
+- change-password — ALL DONE ✅ 2026-04-22 | 43/43 ACs | 340/340 tests PASS | Report: `docs/change-password/reports/change-password.report.md`
   WARM: `.claude/memory/WARM/change-password.mem.md`
-  Plan: `docs/change-password/plan/change-password.plan.md`
-  Tasks: `docs/change-password/tasks/S001.tasks.md … S005.tasks.md`
-  Next: /implement S005
+  Status: AWAITING SIGN-OFF (Tech Lead + Product Owner + QA Lead)
+  Next: `/report change-password --finalize` after all 3 approvals
 
 ## Recent Decisions (Session #110)
 - 2026-04-22: D-CP-07 — DB container is `knowledge-hub-postgres`; apply migrations via `docker exec ... psql -c "..."` (not file copy — Windows path issue)

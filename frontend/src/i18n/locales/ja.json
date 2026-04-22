@@ -48,6 +48,18 @@
         "oidc_not_applicable": "このユーザーはSSOで認証しており、パスワードがありません。"
       }
     },
+    "force_change": {
+      "title": "パスワードを変更する必要があります",
+      "notice": "管理者が初期パスワードを設定しました。セキュリティのため、続行する前に新しいパスワードを設定してください。",
+      "new_password": "新しいパスワード",
+      "confirm_password": "新しいパスワード（確認）",
+      "submit": "新しいパスワードを設定",
+      "success": "パスワードが更新されました。ようこそ！",
+      "error": {
+        "mismatch": "パスワードが一致しません。",
+        "too_short": "パスワードは8文字以上である必要があります。"
+      }
+    },
     "change_password": {
       "title": "パスワードを変更",
       "current_password": "現在のパスワード",

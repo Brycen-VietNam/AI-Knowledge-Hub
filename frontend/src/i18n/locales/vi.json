@@ -48,6 +48,18 @@
         "oidc_not_applicable": "Người dùng này xác thực qua SSO và không có mật khẩu."
       }
     },
+    "force_change": {
+      "title": "Bạn phải thay đổi mật khẩu",
+      "notice": "Quản trị viên đã đặt mật khẩu ban đầu cho bạn. Vì lý do bảo mật, bạn phải tạo mật khẩu mới trước khi tiếp tục.",
+      "new_password": "Mật khẩu mới",
+      "confirm_password": "Xác nhận mật khẩu mới",
+      "submit": "Đặt mật khẩu mới",
+      "success": "Mật khẩu đã được cập nhật. Chào mừng bạn!",
+      "error": {
+        "mismatch": "Mật khẩu không khớp.",
+        "too_short": "Mật khẩu phải có ít nhất 8 ký tự."
+      }
+    },
     "change_password": {
       "title": "Đổi mật khẩu",
       "current_password": "Mật khẩu hiện tại",

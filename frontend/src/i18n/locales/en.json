@@ -48,6 +48,18 @@
         "oidc_not_applicable": "This user authenticates via SSO and does not have a password."
       }
     },
+    "force_change": {
+      "title": "You Must Change Your Password",
+      "notice": "An administrator set your initial password. For your security, you must create a new password before continuing.",
+      "new_password": "New Password",
+      "confirm_password": "Confirm New Password",
+      "submit": "Set New Password",
+      "success": "Password updated. Welcome!",
+      "error": {
+        "mismatch": "Passwords do not match.",
+        "too_short": "Password must be at least 8 characters."
+      }
+    },
     "change_password": {
       "title": "Change Password",
       "current_password": "Current Password",

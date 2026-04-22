@@ -145,17 +145,17 @@ Sessions est.: 2 | Token budget: ~14k
 | T003 | Create ResetPasswordModal.tsx component | DONE |
 | T004 | Add Reset Password button to UsersTab.tsx rows | DONE |
 
-### S005 — Frontend Force-Change Gate
+### S005 — Frontend Force-Change Gate ✅ DONE
 | Task | Title | Status |
 |------|-------|--------|
-| T001 | Add CSS classes for force-change page to index.css | TODO |
-| T002 | Add i18n keys (force-change) to 4 lang files | TODO |
-| T003 | Extend authStore to store mustChangePassword from login | TODO |
-| T004 | Create ChangePasswordPage.tsx (force-change form) | TODO |
-| T005 | Add /change-password route + ProtectedRoute gate | TODO |
+| T001 | Add CSS classes for force-change page to index.css | DONE |
+| T002 | Add i18n keys (force-change) to 4 lang files | DONE |
+| T003 | Extend authStore to store mustChangePassword from login | DONE |
+| T004 | Create ChangePasswordPage.tsx (force-change form) | DONE |
+| T005 | Add /change-password route + ProtectedRoute gate | DONE |
 
 ## Next Step
-/analyze S001 T001
+/report change-password
 
 ## Key Convention: Migration Execution
 - D-CP-06: After writing any migration SQL file, agent must apply it to DB immediately via `psql`
@@ -239,4 +239,27 @@ Test results: 229/229 main SPA PASS (+12 new S004 tests) | admin-spa failures pr
 Key note: frontend/src/components/admin/UsersTab.tsx is a new minimal component; admin-spa/src/components/UsersTab.tsx is the full feature-complete admin SPA component (separate codebase)
 Questions resolved: none new
 New blockers: none
-Next: /implement S005
+Next: /report change-password
+
+## Sync: 2026-04-22 (S005 DONE — /implement complete)
+Decisions added: none new
+Tasks changed: S005 T001→DONE, T002→DONE, T003→DONE, T004→DONE, T005→DONE
+Files created:
+  - frontend/src/pages/ChangePasswordPage.tsx (S005 — force-change gate)
+  - frontend/tests/pages/ChangePasswordPage.test.tsx (S005 — 6 tests)
+Files modified:
+  - frontend/src/index.css (appended .force-change-* classes)
+  - frontend/src/i18n/locales/en.json (auth.force_change.* keys)
+  - frontend/src/i18n/locales/ja.json (same)
+  - frontend/src/i18n/locales/vi.json (same)
+  - frontend/src/i18n/locales/ko.json (same)
+  - frontend/src/store/authStore.ts (mustChangePassword field + clearMustChangePassword + login updated)
+  - frontend/src/components/auth/LoginForm.tsx (must_change_password read from token response, passed to login())
+  - frontend/src/components/auth/ProtectedRoute.tsx (mustChangePassword gate → /change-password redirect)
+  - frontend/tests/components/auth/ProtectedRoute.test.tsx (3 new gate tests added, beforeEach updated)
+  - frontend/src/App.tsx (ChangePasswordPage import + /change-password route)
+  - docs/change-password/tasks/S005.tasks.md (all tasks → DONE)
+Test results: 318/318 main SPA PASS (+16 new S005 tests) | admin-spa failures pre-existing
+Questions resolved: none new
+New blockers: none
+Next: /report change-password
