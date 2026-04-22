@@ -6,7 +6,7 @@ Updated: 2026-04-22 | Session: #110 (change-password — S001 DONE, migration ap
 ---
 
 ## Current Sprint (Session #110)
-Status: **IN PROGRESS** | change-password — S001 DONE ✅, next: /implement S002
+Status: **IN PROGRESS** | change-password — S001 ✅ S002 ✅, next: /implement S003
 Branch: `develop` (change-password not yet branched)
 
 ## Completed Features (All, Archived)
@@ -18,11 +18,11 @@ Branch: `develop` (change-password not yet branched)
 → All archived in `.claude/memory/COLD/`
 
 ## In Progress (max 3)
-- change-password — S001 DONE ✅ 2026-04-22 | 11/11 tests PASS | migration 012 applied to DB
+- change-password — S001 ✅ S002 ✅ 2026-04-22 | 27/27 tests PASS
   WARM: `.claude/memory/WARM/change-password.mem.md`
   Plan: `docs/change-password/plan/change-password.plan.md`
-  Tasks: `docs/change-password/tasks/S001–S005.tasks.md`
-  Next: /implement S002
+  Tasks: `docs/change-password/tasks/S001.tasks.md … S005.tasks.md`
+  Next: /implement S003
 
 ## Recent Decisions (Session #110)
 - 2026-04-22: D-CP-07 — DB container is `knowledge-hub-postgres`; apply migrations via `docker exec ... psql -c "..."` (not file copy — Windows path issue)

@@ -27,6 +27,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.auth.dependencies import get_db, verify_token
 from backend.auth.types import AuthenticatedUser
+from backend.auth.utils import generate_password
 
 router = APIRouter()
 
@@ -754,12 +755,13 @@ async def admin_list_users(
     """AC10: List all users with group memberships. Single JOIN — no N+1 (P004)."""
     stmt = text(
         "SELECT u.id, u.sub, u.email, u.display_name, u.is_active, "
+        "(u.password_hash IS NOT NULL) AS has_password, "
         "COALESCE(json_agg(json_build_object('id', ug.id, 'name', ug.name, 'is_admin', ug.is_admin)) "
         "FILTER (WHERE ug.id IS NOT NULL), '[]') AS groups "
         "FROM users u "
         "LEFT JOIN user_group_memberships ugm ON ugm.user_id = u.id "
         "LEFT JOIN user_groups ug ON ug.id = ugm.group_id "
-        "GROUP BY u.id, u.sub, u.email, u.display_name, u.is_active "
+        "GROUP BY u.id, u.sub, u.email, u.display_name, u.is_active, u.password_hash "
         "ORDER BY u.sub"
     )
     rows = (await db.execute(stmt)).mappings().all()
@@ -770,6 +772,7 @@ async def admin_list_users(
             "email": r["email"],
             "display_name": r["display_name"],
             "is_active": r["is_active"],
+            "has_password": bool(r["has_password"]),
             "groups": r["groups"],
         }
         for r in rows
@@ -846,6 +849,135 @@ async def admin_remove_user_group(
         )
     await db.commit()
     return JSONResponse(content={"user_id": str(user_id), "removed_group_id": group_id})
+
+
+# ---------------------------------------------------------------------------
+# S002/T001: POST /v1/admin/users/{id}/password-reset (Admin Force-Reset)
+# Spec: docs/change-password/spec/change-password.spec.md#S002
+# Rule: R003 — Depends(require_admin)
+# Rule: R004 — /v1/ prefix
+# Rule: R006 — audit log on admin reset
+# Rule: S001 — parameterized SQL only
+# Decision: D2 — generate=true → 200+{password}; explicit new_password → 204
+# Decision: D3 — OIDC users → 400 ERR_PASSWORD_NOT_APPLICABLE
+# Decision: Q3 — always set must_change_password = True
+# ---------------------------------------------------------------------------
+
+class PasswordResetRequest(BaseModel):
+    generate: bool | None = None
+    new_password: str | None = Field(default=None, min_length=8, max_length=128)
+
+
+@router.post("/v1/admin/users/{user_id}/password-reset", dependencies=[Depends(require_admin)])
+async def admin_password_reset(
+    user_id: uuid.UUID,
+    body: PasswordResetRequest,
+    admin_user: Annotated[AuthenticatedUser, Depends(require_admin)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> JSONResponse:
+    """Admin force-reset for a target user's password.
+
+    generate=true → generates 16-char random password, returns 200 + {"password": "..."}
+    new_password   → validates 8–128 chars, returns 204
+    Always sets must_change_password = True on target user (Q3).
+    OIDC users (no password_hash) → 400 ERR_PASSWORD_NOT_APPLICABLE (D3).
+    Unknown user → 404 ERR_USER_NOT_FOUND.
+    """
+    request_id = str(uuid.uuid4())
+
+    # Fetch target user
+    row = (await db.execute(
+        text("SELECT id, password_hash FROM users WHERE id = :user_id AND is_active = TRUE")
+        .bindparams(user_id=user_id)
+    )).fetchone()
+
+    if row is None:
+        return JSONResponse(
+            status_code=404,
+            content=_error(request_id, "ERR_USER_NOT_FOUND", "User not found"),
+        )
+
+    stored_hash: str | None = row[1]
+
+    # D3: OIDC users have no password_hash — reset not applicable
+    if stored_hash is None:
+        return JSONResponse(
+            status_code=400,
+            content=_error(
+                request_id,
+                "ERR_PASSWORD_NOT_APPLICABLE",
+                "Password reset is not available for SSO accounts",
+            ),
+        )
+
+    if body.generate:
+        # D2: generate random 16-char password, return plaintext to admin
+        plaintext = generate_password(16)
+        new_hash = _bcrypt_lib.hashpw(plaintext.encode(), _bcrypt_lib.gensalt(rounds=12)).decode()
+
+        await db.execute(
+            text(
+                "UPDATE users SET password_hash = :hash, must_change_password = TRUE "
+                "WHERE id = :user_id"
+            ).bindparams(hash=new_hash, user_id=user_id)
+        )
+        await db.commit()
+
+        # R006: audit log — admin reset action
+        await db.execute(
+            text(
+                "INSERT INTO audit_logs (user_id, doc_id, query_hash, accessed_at) "
+                "VALUES (:user_id, NULL, :query_hash, NOW())"
+            ).bindparams(
+                user_id=admin_user.user_id,
+                query_hash=hashlib.sha256(
+                    f"admin_password_reset:{user_id}".encode()
+                ).hexdigest(),
+            )
+        )
+        await db.commit()
+
+        return JSONResponse(status_code=200, content={"password": plaintext})
+
+    elif body.new_password is not None:
+        # D2: explicit new password provided by admin
+        new_hash = _bcrypt_lib.hashpw(
+            body.new_password.encode(), _bcrypt_lib.gensalt(rounds=12)
+        ).decode()
+
+        await db.execute(
+            text(
+                "UPDATE users SET password_hash = :hash, must_change_password = TRUE "
+                "WHERE id = :user_id"
+            ).bindparams(hash=new_hash, user_id=user_id)
+        )
+        await db.commit()
+
+        # R006: audit log — admin reset action
+        await db.execute(
+            text(
+                "INSERT INTO audit_logs (user_id, doc_id, query_hash, accessed_at) "
+                "VALUES (:user_id, NULL, :query_hash, NOW())"
+            ).bindparams(
+                user_id=admin_user.user_id,
+                query_hash=hashlib.sha256(
+                    f"admin_password_reset:{user_id}".encode()
+                ).hexdigest(),
+            )
+        )
+        await db.commit()
+
+        return JSONResponse(status_code=204, content=None)
+
+    else:
+        return JSONResponse(
+            status_code=422,
+            content=_error(
+                request_id,
+                "INVALID_INPUT",
+                "Provide either 'generate': true or 'new_password'",
+            ),
+        )
 
 
 @router.get("/v1/metrics")

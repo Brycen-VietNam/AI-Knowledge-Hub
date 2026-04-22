@@ -487,3 +487,253 @@ class TestDeleteUserDbError:
         assert data["error"]["code"] == "INTERNAL_ERROR"
         db.rollback.assert_called_once()
 
+
+# ---------------------------------------------------------------------------
+# S002/T003: Tests — admin password reset + has_password
+# Spec: docs/change-password/spec/change-password.spec.md#S002
+# Task: S002/T003 — 8 test cases
+# Rule: R003, R006, A005
+# ---------------------------------------------------------------------------
+
+class TestAdminPasswordResetGenerate:
+    """test_admin_reset_generate — POST {"generate": true} → 200 + {"password": ...}"""
+
+    def test_admin_reset_generate(self):
+        """D2: generate=true → 200 with 'password' key containing plaintext."""
+        admin = _admin_user()
+        db = AsyncMock()
+        target_id = uuid.uuid4()
+
+        # execute calls: 1) SELECT user → row with hash, 2) UPDATE, 3) audit log INSERT
+        db.execute = AsyncMock(side_effect=[
+            _fetchone_mock((target_id, "hashed_pw")),  # user fetch
+            MagicMock(),                                # UPDATE password_hash + must_change
+            MagicMock(),                                # audit log INSERT (commit 1)
+            MagicMock(),                                # audit log INSERT (commit 2)
+        ])
+        db.commit = AsyncMock()
+
+        app = _make_app(admin, db)
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.post(f"/v1/admin/users/{target_id}/password-reset", json={"generate": True})
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "password" in data
+        assert isinstance(data["password"], str)
+        assert len(data["password"]) >= 8
+
+
+class TestAdminPasswordResetManual:
+    """test_admin_reset_manual — POST {"new_password": "..."} → 204"""
+
+    def test_admin_reset_manual(self):
+        """D2: explicit new_password → 204, no response body."""
+        admin = _admin_user()
+        db = AsyncMock()
+        target_id = uuid.uuid4()
+
+        db.execute = AsyncMock(side_effect=[
+            _fetchone_mock((target_id, "hashed_pw")),  # user fetch
+            MagicMock(),                                # UPDATE
+            MagicMock(),                                # audit log INSERT
+        ])
+        db.commit = AsyncMock()
+
+        app = _make_app(admin, db)
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.post(
+            f"/v1/admin/users/{target_id}/password-reset",
+            json={"new_password": "NewPass123!"},
+        )
+
+        assert resp.status_code == 204
+
+
+class TestAdminPasswordResetSetsMustChangeFlag:
+    """test_admin_reset_sets_must_change_flag — UPDATE sets must_change_password=TRUE"""
+
+    def test_admin_reset_sets_must_change_flag(self):
+        """Q3: must_change_password = TRUE is always set in the UPDATE statement."""
+        admin = _admin_user()
+        db = AsyncMock()
+        target_id = uuid.uuid4()
+        executed_sqls: list[str] = []
+
+        async def _capture(stmt, *args, **kwargs):
+            executed_sqls.append(str(stmt))
+            m = MagicMock()
+            m.fetchone.return_value = (target_id, "hashed_pw")
+            return m
+
+        db.execute = _capture
+        db.commit = AsyncMock()
+
+        app = _make_app(admin, db)
+        client = TestClient(app, raise_server_exceptions=False)
+        client.post(
+            f"/v1/admin/users/{target_id}/password-reset",
+            json={"new_password": "NewPass123!"},
+        )
+
+        update_stmts = [s for s in executed_sqls if "UPDATE users" in s]
+        assert update_stmts, "No UPDATE users statement found"
+        assert any("must_change_password" in s for s in update_stmts), (
+            "must_change_password flag must be set in UPDATE"
+        )
+
+
+class TestAdminPasswordResetOidcUser:
+    """test_admin_reset_oidc_user_400 — OIDC user → 400 ERR_PASSWORD_NOT_APPLICABLE (D3)"""
+
+    def test_admin_reset_oidc_user_400(self):
+        """D3: target user has password_hash=None (OIDC) → 400."""
+        admin = _admin_user()
+        db = AsyncMock()
+        target_id = uuid.uuid4()
+
+        # password_hash is None (OIDC user)
+        db.execute = AsyncMock(return_value=_fetchone_mock((target_id, None)))
+        db.commit = AsyncMock()
+
+        app = _make_app(admin, db)
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.post(
+            f"/v1/admin/users/{target_id}/password-reset",
+            json={"generate": True},
+        )
+
+        assert resp.status_code == 400
+        data = resp.json()
+        assert data["error"]["code"] == "ERR_PASSWORD_NOT_APPLICABLE"
+
+
+class TestAdminPasswordResetUnknownUser:
+    """test_admin_reset_unknown_user_404 — unknown user_id → 404 ERR_USER_NOT_FOUND"""
+
+    def test_admin_reset_unknown_user_404(self):
+        """404 A005 shape when target user does not exist."""
+        admin = _admin_user()
+        db = AsyncMock()
+
+        db.execute = AsyncMock(return_value=_fetchone_mock(None))
+        db.commit = AsyncMock()
+
+        app = _make_app(admin, db)
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.post(
+            f"/v1/admin/users/{uuid.uuid4()}/password-reset",
+            json={"generate": True},
+        )
+
+        assert resp.status_code == 404
+        data = resp.json()
+        assert data["error"]["code"] == "ERR_USER_NOT_FOUND"
+        assert "request_id" in data["error"]
+
+
+class TestAdminPasswordResetShortPassword:
+    """test_admin_reset_short_password_422 — new_password < 8 chars → 422"""
+
+    def test_admin_reset_short_password_422(self):
+        """422 Unprocessable when new_password violates min_length=8 (Pydantic)."""
+        admin = _admin_user()
+        db = AsyncMock()
+
+        app = _make_app(admin, db)
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.post(
+            f"/v1/admin/users/{uuid.uuid4()}/password-reset",
+            json={"new_password": "short"},
+        )
+
+        assert resp.status_code == 422
+
+
+class TestAdminPasswordResetAuditLog:
+    """test_admin_reset_audit_log_written — audit_logs INSERT is called (R006)"""
+
+    def test_admin_reset_audit_log_written(self):
+        """R006: an INSERT INTO audit_logs statement is executed after reset."""
+        admin = _admin_user()
+        db = AsyncMock()
+        target_id = uuid.uuid4()
+        executed_sqls: list[str] = []
+
+        async def _capture(stmt, *args, **kwargs):
+            executed_sqls.append(str(stmt))
+            m = MagicMock()
+            m.fetchone.return_value = (target_id, "hashed_pw")
+            return m
+
+        db.execute = _capture
+        db.commit = AsyncMock()
+
+        app = _make_app(admin, db)
+        client = TestClient(app, raise_server_exceptions=False)
+        client.post(
+            f"/v1/admin/users/{target_id}/password-reset",
+            json={"new_password": "AuditPass1!"},
+        )
+
+        audit_stmts = [s for s in executed_sqls if "audit_logs" in s.lower()]
+        assert audit_stmts, "No INSERT INTO audit_logs found — R006 violated"
+
+
+class TestUserListHasPasswordField:
+    """test_user_list_has_password_field — GET /v1/admin/users returns has_password per row (T002)"""
+
+    def test_user_list_has_password_field(self):
+        """has_password: true for password user, false for OIDC user."""
+        admin = _admin_user()
+        db = AsyncMock()
+
+        pw_user_id = uuid.uuid4()
+        oidc_user_id = uuid.uuid4()
+
+        rows = [
+            {
+                "id": pw_user_id,
+                "sub": "pw_user",
+                "email": "pw@example.com",
+                "display_name": "PW User",
+                "is_active": True,
+                "has_password": True,
+                "groups": [],
+            },
+            {
+                "id": oidc_user_id,
+                "sub": "oidc_user",
+                "email": "oidc@example.com",
+                "display_name": "OIDC User",
+                "is_active": True,
+                "has_password": False,
+                "groups": [],
+            },
+        ]
+
+        mock_result = MagicMock()
+        mock_rows = []
+        for row in rows:
+            r = MagicMock()
+            r.__getitem__ = lambda self, k, _row=row: _row[k]
+            # Ensure isoformat not needed for non-datetime fields
+            mock_rows.append(r)
+        mock_result.mappings.return_value.all.return_value = mock_rows
+
+        db.execute = AsyncMock(return_value=mock_result)
+
+        app = _make_app(admin, db)
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.get("/v1/admin/users")
+
+        assert resp.status_code == 200
+        items = resp.json()["items"]
+        assert len(items) == 2
+
+        pw_row = next(i for i in items if i["sub"] == "pw_user")
+        oidc_row = next(i for i in items if i["sub"] == "oidc_user")
+
+        assert pw_row["has_password"] is True
+        assert oidc_row["has_password"] is False
+
