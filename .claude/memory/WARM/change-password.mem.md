@@ -129,21 +129,21 @@ Sessions est.: 2 | Token budget: ~14k
 | T002 | Add has_password to GET /v1/admin/users list | TODO |
 | T003 | Tests: admin reset + has_password + audit log | TODO |
 
-### S003 — Frontend ChangePasswordModal
+### S003 — Frontend ChangePasswordModal ✅ DONE
 | Task | Title | Status |
 |------|-------|--------|
-| T001 | Add CSS classes for ChangePasswordModal to index.css | TODO |
-| T002 | Add i18n keys (change-password) to 4 lang files | TODO |
-| T003 | Create ChangePasswordModal.tsx component | TODO |
-| T004 | Wire user-pill dropdown in App.tsx + OIDC hide | TODO |
+| T001 | Add CSS classes for ChangePasswordModal to index.css | DONE |
+| T002 | Add i18n keys (change-password) to 4 lang files | DONE |
+| T003 | Create ChangePasswordModal.tsx component | DONE |
+| T004 | Wire user-pill dropdown in App.tsx + OIDC hide | DONE |
 
-### S004 — Frontend Admin ResetPasswordModal
+### S004 — Frontend Admin ResetPasswordModal ✅ DONE
 | Task | Title | Status |
 |------|-------|--------|
-| T001 | Add CSS classes for ResetPasswordModal to index.css | TODO |
-| T002 | Add i18n keys (reset-password) to 4 lang files | TODO |
-| T003 | Create ResetPasswordModal.tsx component | TODO |
-| T004 | Add Reset Password button to UsersTab.tsx rows | TODO |
+| T001 | Add CSS classes for ResetPasswordModal to index.css | DONE |
+| T002 | Add i18n keys (reset-password) to 4 lang files | DONE |
+| T003 | Create ResetPasswordModal.tsx component | DONE |
+| T004 | Add Reset Password button to UsersTab.tsx rows | DONE |
 
 ### S005 — Frontend Force-Change Gate
 | Task | Title | Status |
@@ -215,3 +215,28 @@ Test results: 11/11 new PASS | 12/12 auth PASS | DB column confirmed live
 Questions resolved: none new
 New blockers: none
 Next: /implement S002
+
+## Sync: 2026-04-22 (S003 + S004 DONE — /implement complete)
+Decisions added: none new
+Tasks changed: S003 T001→DONE, T002→DONE, T003→DONE, T004→DONE | S004 T001→DONE, T002→DONE, T003→DONE, T004→DONE
+Files created:
+  - frontend/src/components/auth/ChangePasswordModal.tsx (S003)
+  - frontend/src/components/admin/ResetPasswordModal.tsx (S004)
+  - frontend/src/components/admin/UsersTab.tsx (S004 — new; admin-spa UsersTab is separate)
+  - frontend/tests/components/auth/ChangePasswordModal.test.tsx (S003 — 4 tests)
+  - frontend/tests/components/admin/ResetPasswordModal.test.tsx (S004 — 7 tests)
+  - frontend/tests/components/admin/UsersTab.test.tsx (S004 — 5 tests)
+Files modified:
+  - frontend/src/index.css (appended .change-password-* + .reset-password-* + .user-pill-dropdown classes)
+  - frontend/src/i18n/locales/en.json (auth.change_password.* + auth.reset_password.* keys)
+  - frontend/src/i18n/locales/ja.json (same)
+  - frontend/src/i18n/locales/vi.json (same)
+  - frontend/src/i18n/locales/ko.json (same)
+  - frontend/src/App.tsx (user-pill → dropdown; ChangePasswordModal wired; OIDC hide via password===null)
+  - docs/change-password/tasks/S003.tasks.md (all tasks → DONE)
+  - docs/change-password/tasks/S004.tasks.md (all tasks → DONE)
+Test results: 229/229 main SPA PASS (+12 new S004 tests) | admin-spa failures pre-existing (React version mismatch — unrelated)
+Key note: frontend/src/components/admin/UsersTab.tsx is a new minimal component; admin-spa/src/components/UsersTab.tsx is the full feature-complete admin SPA component (separate codebase)
+Questions resolved: none new
+New blockers: none
+Next: /implement S005

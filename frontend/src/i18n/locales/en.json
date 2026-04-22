@@ -32,6 +32,22 @@
     "clear": "Clear History"
   },
   "auth": {
+    "reset_password": {
+      "title": "Reset User Password",
+      "option_manual": "Set password manually",
+      "option_generate": "Auto-generate password",
+      "new_password": "New Password",
+      "generated_label": "Generated Password",
+      "copy": "Copy",
+      "warning": "This password will only be shown once. Copy it now and share it securely.",
+      "submit": "Reset Password",
+      "cancel": "Cancel",
+      "success": "Password has been reset successfully.",
+      "error": {
+        "too_short": "Password must be at least 8 characters.",
+        "oidc_not_applicable": "This user authenticates via SSO and does not have a password."
+      }
+    },
     "change_password": {
       "title": "Change Password",
       "current_password": "Current Password",

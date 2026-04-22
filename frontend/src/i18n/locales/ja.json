@@ -32,6 +32,22 @@
     "clear": "履歴をクリア"
   },
   "auth": {
+    "reset_password": {
+      "title": "ユーザーパスワードのリセット",
+      "option_manual": "手動でパスワードを設定",
+      "option_generate": "自動生成",
+      "new_password": "新しいパスワード",
+      "generated_label": "生成されたパスワード",
+      "copy": "コピー",
+      "warning": "このパスワードは一度しか表示されません。今すぐコピーして安全に共有してください。",
+      "submit": "パスワードをリセット",
+      "cancel": "キャンセル",
+      "success": "パスワードが正常にリセットされました。",
+      "error": {
+        "too_short": "パスワードは8文字以上である必要があります。",
+        "oidc_not_applicable": "このユーザーはSSOで認証しており、パスワードがありません。"
+      }
+    },
     "change_password": {
       "title": "パスワードを変更",
       "current_password": "現在のパスワード",

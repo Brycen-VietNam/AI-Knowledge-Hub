@@ -1,12 +1,12 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-22 | Session: #110 (change-password — S001 DONE, migration applied) | /sync
+Updated: 2026-04-22 | Session: #111 (change-password — S004 DONE, 229 tests) | /sync
 
 ---
 
 ## Current Sprint (Session #110)
-Status: **IN PROGRESS** | change-password — S001 ✅ S002 ✅, next: /implement S003
+Status: **IN PROGRESS** | change-password — S001 ✅ S002 ✅ S003 ✅ S004 ✅, next: /implement S005
 Branch: `develop` (change-password not yet branched)
 
 ## Completed Features (All, Archived)
@@ -18,11 +18,11 @@ Branch: `develop` (change-password not yet branched)
 → All archived in `.claude/memory/COLD/`
 
 ## In Progress (max 3)
-- change-password — S001 ✅ S002 ✅ 2026-04-22 | 27/27 tests PASS
+- change-password — S001 ✅ S002 ✅ S003 ✅ S004 ✅ 2026-04-22 | 229/229 main SPA tests PASS (+12 new)
   WARM: `.claude/memory/WARM/change-password.mem.md`
   Plan: `docs/change-password/plan/change-password.plan.md`
   Tasks: `docs/change-password/tasks/S001.tasks.md … S005.tasks.md`
-  Next: /implement S003
+  Next: /implement S005
 
 ## Recent Decisions (Session #110)
 - 2026-04-22: D-CP-07 — DB container is `knowledge-hub-postgres`; apply migrations via `docker exec ... psql -c "..."` (not file copy — Windows path issue)
