@@ -30,5 +30,49 @@
   "history": {
     "title": "Search History",
     "clear": "Clear History"
+  },
+  "auth": {
+    "reset_password": {
+      "title": "Reset User Password",
+      "option_manual": "Set password manually",
+      "option_generate": "Auto-generate password",
+      "new_password": "New Password",
+      "generated_label": "Generated Password",
+      "copy": "Copy",
+      "warning": "This password will only be shown once. Copy it now and share it securely.",
+      "submit": "Reset Password",
+      "cancel": "Cancel",
+      "success": "Password has been reset successfully.",
+      "error": {
+        "too_short": "Password must be at least 8 characters.",
+        "oidc_not_applicable": "This user authenticates via SSO and does not have a password."
+      }
+    },
+    "force_change": {
+      "title": "You Must Change Your Password",
+      "notice": "An administrator set your initial password. For your security, you must create a new password before continuing.",
+      "new_password": "New Password",
+      "confirm_password": "Confirm New Password",
+      "submit": "Set New Password",
+      "success": "Password updated. Welcome!",
+      "error": {
+        "mismatch": "Passwords do not match.",
+        "too_short": "Password must be at least 8 characters."
+      }
+    },
+    "change_password": {
+      "title": "Change Password",
+      "current_password": "Current Password",
+      "new_password": "New Password",
+      "confirm_password": "Confirm Password",
+      "submit": "Update Password",
+      "cancel": "Cancel",
+      "success": "Password updated successfully.",
+      "error": {
+        "wrong_password": "Current password is incorrect.",
+        "mismatch": "New passwords do not match.",
+        "too_short": "Password must be at least 8 characters."
+      }
+    }
   }
 }

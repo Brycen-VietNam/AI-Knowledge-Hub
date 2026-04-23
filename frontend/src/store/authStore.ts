@@ -9,9 +9,11 @@ interface AuthState {
   token: string | null
   username: string | null
   password: string | null
+  mustChangePassword: boolean
   _refreshTimer: ReturnType<typeof setTimeout> | null
-  login: (token: string, username: string, password: string) => void
+  login: (token: string, username: string, password: string, mustChangePassword?: boolean) => void
   logout: () => void
+  clearMustChangePassword: () => void
   scheduleRefresh: (expSeconds: number, refreshFn: () => void) => void
 }
 
@@ -19,10 +21,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   token: null,
   username: null,
   password: null,
+  mustChangePassword: false,
   _refreshTimer: null,
 
-  login: (token, username, password) => {
-    set({ token, username, password })
+  login: (token, username, password, mustChangePassword = false) => {
+    set({ token, username, password, mustChangePassword })
   },
 
   logout: () => {
@@ -31,7 +34,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (_refreshTimer !== null) {
       clearTimeout(_refreshTimer)
     }
-    set({ token: null, username: null, password: null, _refreshTimer: null })
+    set({ token: null, username: null, password: null, mustChangePassword: false, _refreshTimer: null })
+  },
+
+  clearMustChangePassword: () => {
+    set({ mustChangePassword: false })
   },
 
   scheduleRefresh: (expSeconds, refreshFn) => {

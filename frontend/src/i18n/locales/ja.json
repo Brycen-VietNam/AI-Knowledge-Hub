@@ -30,5 +30,49 @@
   "history": {
     "title": "検索履歴",
     "clear": "履歴をクリア"
+  },
+  "auth": {
+    "reset_password": {
+      "title": "ユーザーパスワードのリセット",
+      "option_manual": "手動でパスワードを設定",
+      "option_generate": "自動生成",
+      "new_password": "新しいパスワード",
+      "generated_label": "生成されたパスワード",
+      "copy": "コピー",
+      "warning": "このパスワードは一度しか表示されません。今すぐコピーして安全に共有してください。",
+      "submit": "パスワードをリセット",
+      "cancel": "キャンセル",
+      "success": "パスワードが正常にリセットされました。",
+      "error": {
+        "too_short": "パスワードは8文字以上である必要があります。",
+        "oidc_not_applicable": "このユーザーはSSOで認証しており、パスワードがありません。"
+      }
+    },
+    "force_change": {
+      "title": "パスワードを変更する必要があります",
+      "notice": "管理者が初期パスワードを設定しました。セキュリティのため、続行する前に新しいパスワードを設定してください。",
+      "new_password": "新しいパスワード",
+      "confirm_password": "新しいパスワード（確認）",
+      "submit": "新しいパスワードを設定",
+      "success": "パスワードが更新されました。ようこそ！",
+      "error": {
+        "mismatch": "パスワードが一致しません。",
+        "too_short": "パスワードは8文字以上である必要があります。"
+      }
+    },
+    "change_password": {
+      "title": "パスワードを変更",
+      "current_password": "現在のパスワード",
+      "new_password": "新しいパスワード",
+      "confirm_password": "新しいパスワード（確認）",
+      "submit": "パスワードを更新",
+      "cancel": "キャンセル",
+      "success": "パスワードが正常に更新されました。",
+      "error": {
+        "wrong_password": "現在のパスワードが正しくありません。",
+        "mismatch": "新しいパスワードが一致しません。",
+        "too_short": "パスワードは8文字以上である必要があります。"
+      }
+    }
   }
 }

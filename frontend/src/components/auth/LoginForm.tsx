@@ -11,6 +11,7 @@ interface TokenResponse {
   access_token: string
   token_type: string
   expires_in: number
+  must_change_password?: boolean
 }
 
 export function LoginForm() {
@@ -33,7 +34,7 @@ export function LoginForm() {
       const { data } = await apiClient.post<TokenResponse>('/v1/auth/token', body, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       })
-      login(data.access_token, username, password)
+      login(data.access_token, username, password, data.must_change_password ?? false)
       const expSeconds = Date.now() / 1000 + data.expires_in
       scheduleRefresh(expSeconds, async () => {
         try {
@@ -43,7 +44,7 @@ export function LoginForm() {
             refreshBody,
             { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
           )
-          login(refreshData.access_token, username, password)
+          login(refreshData.access_token, username, password, refreshData.must_change_password ?? false)
           const nextExp = Date.now() / 1000 + refreshData.expires_in
           scheduleRefresh(nextExp, () => {})
         } catch {

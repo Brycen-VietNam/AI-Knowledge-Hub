@@ -30,5 +30,49 @@
   "history": {
     "title": "검색 기록",
     "clear": "기록 지우기"
+  },
+  "auth": {
+    "reset_password": {
+      "title": "사용자 비밀번호 재설정",
+      "option_manual": "수동으로 비밀번호 설정",
+      "option_generate": "자동 생성",
+      "new_password": "새 비밀번호",
+      "generated_label": "생성된 비밀번호",
+      "copy": "복사",
+      "warning": "이 비밀번호는 한 번만 표시됩니다. 지금 복사하여 안전하게 공유하세요.",
+      "submit": "비밀번호 재설정",
+      "cancel": "취소",
+      "success": "비밀번호가 성공적으로 재설정되었습니다.",
+      "error": {
+        "too_short": "비밀번호는 8자 이상이어야 합니다.",
+        "oidc_not_applicable": "이 사용자는 SSO로 인증하며 비밀번호가 없습니다."
+      }
+    },
+    "force_change": {
+      "title": "비밀번호를 변경해야 합니다",
+      "notice": "관리자가 초기 비밀번호를 설정했습니다. 보안을 위해 계속 진행하기 전에 새 비밀번호를 설정해야 합니다.",
+      "new_password": "새 비밀번호",
+      "confirm_password": "새 비밀번호 확인",
+      "submit": "새 비밀번호 설정",
+      "success": "비밀번호가 업데이트되었습니다. 환영합니다!",
+      "error": {
+        "mismatch": "비밀번호가 일치하지 않습니다.",
+        "too_short": "비밀번호는 8자 이상이어야 합니다."
+      }
+    },
+    "change_password": {
+      "title": "비밀번호 변경",
+      "current_password": "현재 비밀번호",
+      "new_password": "새 비밀번호",
+      "confirm_password": "새 비밀번호 확인",
+      "submit": "비밀번호 업데이트",
+      "cancel": "취소",
+      "success": "비밀번호가 성공적으로 업데이트되었습니다.",
+      "error": {
+        "wrong_password": "현재 비밀번호가 올바르지 않습니다.",
+        "mismatch": "새 비밀번호가 일치하지 않습니다.",
+        "too_short": "비밀번호는 8자 이상이어야 합니다."
+      }
+    }
   }
 }

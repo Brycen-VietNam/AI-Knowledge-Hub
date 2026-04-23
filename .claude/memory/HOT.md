@@ -1,29 +1,29 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-21 | Session: #105 (user-management — /implement S005–S008 DONE) | /sync
+Updated: 2026-04-22 | Session: #115 (change-password — FINALIZED, archived) | /report --finalize
 
 ---
 
-## Current Sprint (Session #105)
-Status: **COMPLETE** | user-management — all 8 stories DONE ✅, 80 tests pass
-Branch: `feature/user-management` (cut from `feature/admin-spa`)
+## Current Sprint
+Status: **NO ACTIVE FEATURE** — ready for next sprint
 
 ## Completed Features (All, Archived)
 - auth-api-key-oidc, rbac-document-filter, cjk-tokenizer, llm-provider, document-ingestion
 - multilingual-rag-pipeline, query-endpoint, document-parser, answer-citation
 - confidence-scoring, citation-quality
-- **admin-spa** — DONE ✅ 2026-04-20 | 50/50 ACs | 151 frontend + 27 backend tests | Archive: `.claude/memory/COLD/admin-spa.archive.md`
+- **admin-spa** — DONE ✅ 2026-04-20 | Archive: `.claude/memory/COLD/admin-spa.archive.md`
 - **user-management** — DONE ✅ 2026-04-21 | 80/80 ACs | 91/91 tests PASS | Archive: `.claude/memory/COLD/user-management.archive.md`
+- **change-password** — DONE ✅ 2026-04-22 | 43/43 ACs | 340/340 tests PASS | Archive: `.claude/memory/COLD/change-password.archive.md`
 → All archived in `.claude/memory/COLD/`
 
 ## In Progress (max 3)
-(none — user-management archived 2026-04-21)
+(none)
 
-## Recent Decisions (Session #106)
-- 2026-04-21: D-UM-15 — /reviewcode S005–S008 warnings all fixed; review upgraded to APPROVED ✅
-- 2026-04-21: D-UM-14 — /reviewcode S005–S008: 0 blockers, 3 warnings (W1 try/except, W3 i18n, CSS 9 missing classes)
-- 2026-04-21: D-UM-13 — S008 DONE: UsersTab wired with create/delete/expand-ApiKeyPanel; 15 tests pass
+## Recent Decisions (Session #110)
+- 2026-04-22: D-CP-07 — DB container is `knowledge-hub-postgres`; apply migrations via `docker exec ... psql -c "..."` (not file copy — Windows path issue)
+- 2026-04-22: D-CP-06 — S001/T001 migration must be applied to DB immediately after file is written; agent must ask user for DB connection info if DATABASE_URL not set
+- 2026-04-22: D-CP-05 — Checklist PASS 29/29; AGENTS.md + CONSTITUTION.md confirmed at .claude/ (not root)
 
 ## Session #080 Summary ✅ COMPLETE
 **Task:** Finalize frontend-theme + frontend-spa reports; ghi nhận backend language preference issue

@@ -69,9 +69,10 @@ async def login(
             raise auth_error(request, "RATE_LIMIT_EXCEEDED", "Too many login attempts", 429)
 
     # S001: parameterized SQL — no f-string interpolation
+    # Task: S001/T005 — include must_change_password in SELECT (P004: no second query)
     result = await db.execute(
         text(
-            "SELECT id, password_hash FROM users "
+            "SELECT id, password_hash, must_change_password FROM users "
             "WHERE sub = :username AND is_active = TRUE"
         ).bindparams(username=form.username)
     )
@@ -82,6 +83,7 @@ async def login(
     # Dummy is a valid bcrypt hash of "dummy" — required so checkpw() doesn't raise.
     _DUMMY_HASH = b"$2b$12$0GjHRQf39w/lWgQsF0zpv.nhMr0.DFIJNeOvbXcEfdKa4tm/2A4gy"
     stored_hash: str | None = row[1] if row is not None else None
+    must_change_password: bool = bool(row[2]) if row is not None and row[2] is not None else False
     hash_bytes = stored_hash.encode() if stored_hash is not None else _DUMMY_HASH
     password_ok = _bcrypt_lib.checkpw(form.password.encode(), hash_bytes)
 
@@ -118,4 +120,5 @@ async def login(
         "token_type": "bearer",
         "expires_in": _AUTH_TOKEN_EXPIRE_MINUTES * 60,
         "is_admin": is_admin,
+        "must_change_password": must_change_password,
     }

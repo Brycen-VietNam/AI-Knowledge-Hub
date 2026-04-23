@@ -88,7 +88,7 @@ export function UserFormModal({ onSave, onClose, groups }: Props) {
               type="text"
               value={sub}
               required
-              pattern="^[a-zA-Z0-9_.@-]+$"
+              pattern="[a-zA-Z0-9_.@\-]+"
               onChange={(e) => setSub(e.target.value)}
               disabled={isSubmitting}
               autoComplete="off"

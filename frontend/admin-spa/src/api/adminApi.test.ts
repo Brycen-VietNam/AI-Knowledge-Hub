@@ -36,6 +36,7 @@ describe('createUser', () => {
       id: 'u1',
       email: 'alice@example.com',
       is_active: true,
+      has_password: false,
       groups: [{ id: 1, name: 'editors' }],
     }
     mockPost.mockResolvedValueOnce({ data: userItem })
