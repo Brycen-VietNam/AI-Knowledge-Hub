@@ -1,40 +1,56 @@
+// Spec: docs/security-audit/spec/security-audit.spec.md#S001
+// Task: S001/T005 — authStore tests: no password field, refreshToken in memory, refreshAccessToken
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useAuthStore } from '../../src/store/authStore'
 import { useQueryStore } from '../../src/store/queryStore'
 
+const mockPost = vi.fn()
+
+vi.mock('../../src/api/client', () => ({
+  apiClient: {
+    post: (...args: unknown[]) => mockPost(...args),
+  },
+}))
+
 beforeEach(() => {
+  mockPost.mockReset()
   useAuthStore.setState({
     token: null,
+    refreshToken: null,
     username: null,
-    password: null,
     _refreshTimer: null,
   })
   useQueryStore.setState({ history: [] })
 })
 
 describe('authStore — login', () => {
-  it('sets token, username, password', () => {
-    useAuthStore.getState().login('tok123', 'alice', 'pw')
-    const { token, username, password } = useAuthStore.getState()
+  it('sets token, refreshToken, username', () => {
+    useAuthStore.getState().login('tok123', 'rtok456', 'alice')
+    const { token, refreshToken, username } = useAuthStore.getState()
     expect(token).toBe('tok123')
+    expect(refreshToken).toBe('rtok456')
     expect(username).toBe('alice')
-    expect(password).toBe('pw')
+  })
+
+  it('does NOT have a password field', () => {
+    useAuthStore.getState().login('tok123', 'rtok456', 'alice')
+    const state = useAuthStore.getState() as Record<string, unknown>
+    expect('password' in state).toBe(false)
   })
 })
 
 describe('authStore — logout', () => {
-  it('clears token, username, password', () => {
-    useAuthStore.getState().login('tok123', 'alice', 'pw')
+  it('clears token, refreshToken, username', () => {
+    useAuthStore.getState().login('tok123', 'rtok456', 'alice')
     useAuthStore.getState().logout()
-    const { token, username, password } = useAuthStore.getState()
+    const { token, refreshToken, username } = useAuthStore.getState()
     expect(token).toBeNull()
+    expect(refreshToken).toBeNull()
     expect(username).toBeNull()
-    expect(password).toBeNull()
   })
 
   it('cancels pending refresh timer', () => {
     const clearSpy = vi.spyOn(globalThis, 'clearTimeout')
-    // Set a fake timer id
     useAuthStore.setState({ _refreshTimer: 999 as unknown as ReturnType<typeof setTimeout> })
     useAuthStore.getState().logout()
     expect(clearSpy).toHaveBeenCalledWith(999)
@@ -42,8 +58,14 @@ describe('authStore — logout', () => {
   })
 
   it('token is never in localStorage', () => {
-    useAuthStore.getState().login('tok123', 'alice', 'pw')
+    useAuthStore.getState().login('tok123', 'rtok456', 'alice')
     expect(localStorage.getItem('token')).toBeNull()
+  })
+
+  it('refreshToken is never in localStorage (D-SA-02 XSS boundary)', () => {
+    useAuthStore.getState().login('tok123', 'rtok456', 'alice')
+    expect(localStorage.getItem('refreshToken')).toBeNull()
+    expect(localStorage.getItem('refresh_token')).toBeNull()
   })
 
   it('clears queryStore history on logout', () => {
@@ -58,7 +80,6 @@ describe('authStore — scheduleRefresh', () => {
   it('fires callback before exp', () => {
     vi.useFakeTimers()
     const refreshFn = vi.fn()
-    // exp = 10 minutes from now → fires in 5 minutes (300s before)
     const expSeconds = Date.now() / 1000 + 600
     useAuthStore.getState().scheduleRefresh(expSeconds, refreshFn)
     vi.advanceTimersByTime(300_001)
@@ -80,8 +101,44 @@ describe('authStore — scheduleRefresh', () => {
 
   it('fires immediately if exp is already past refresh window', () => {
     const refreshFn = vi.fn()
-    const expSeconds = Date.now() / 1000 + 100 // only 100s left, < 300s buffer
+    const expSeconds = Date.now() / 1000 + 100
     useAuthStore.getState().scheduleRefresh(expSeconds, refreshFn)
     expect(refreshFn).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('authStore — refreshAccessToken', () => {
+  it('on success: updates tokens and reschedules refresh', async () => {
+    mockPost.mockResolvedValueOnce({
+      data: {
+        access_token: 'new-access',
+        refresh_token: 'new-refresh',
+        expires_in: 3600,
+      },
+    })
+
+    useAuthStore.setState({ token: 'old-tok', refreshToken: 'old-rtok', username: 'alice' })
+    await useAuthStore.getState().refreshAccessToken()
+
+    const { token, refreshToken } = useAuthStore.getState()
+    expect(token).toBe('new-access')
+    expect(refreshToken).toBe('new-refresh')
+  })
+
+  it('on 401 response: calls logout', async () => {
+    mockPost.mockRejectedValueOnce({ response: { status: 401 } })
+
+    useAuthStore.setState({ token: 'tok', refreshToken: 'rtok', username: 'alice' })
+    await useAuthStore.getState().refreshAccessToken()
+
+    expect(useAuthStore.getState().token).toBeNull()
+  })
+
+  it('when refreshToken is null: calls logout without API call', async () => {
+    useAuthStore.setState({ token: null, refreshToken: null, username: null })
+    await useAuthStore.getState().refreshAccessToken()
+
+    expect(useAuthStore.getState().token).toBeNull()
+    expect(mockPost).not.toHaveBeenCalled()
   })
 })

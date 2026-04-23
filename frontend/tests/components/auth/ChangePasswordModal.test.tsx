@@ -1,9 +1,12 @@
 // Spec: docs/change-password/spec/change-password.spec.md#S003
+// Spec: docs/security-audit/spec/security-audit.spec.md#S001
 // Task: S003/T003 — ChangePasswordModal tests
+// Task: S001/T006 — assert authStore tokens updated on 200 response (D-SA-08)
 // Rule: D6 — no inline styles; all CSS in index.css
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { ChangePasswordModal } from '../../../src/components/auth/ChangePasswordModal'
+import { useAuthStore } from '../../../src/store/authStore'
 
 // Mock apiClient
 const mockPatch = vi.fn()
@@ -83,10 +86,15 @@ describe('ChangePasswordModal — client validation', () => {
 })
 
 describe('ChangePasswordModal — submit success', () => {
-  beforeEach(() => { mockPatch.mockReset() })
+  beforeEach(() => {
+    mockPatch.mockReset()
+    useAuthStore.setState({ token: 'old-tok', refreshToken: 'old-rtok', username: 'alice', _refreshTimer: null })
+  })
 
-  it('calls PATCH /v1/users/me/password and shows success message', async () => {
-    mockPatch.mockResolvedValueOnce({ status: 204 })
+  it('calls PATCH /v1/users/me/password, updates authStore tokens, shows success message', async () => {
+    mockPatch.mockResolvedValueOnce({
+      data: { access_token: 'new-tok', refresh_token: 'new-rtok', expires_in: 3600 },
+    })
     renderModal()
 
     fireEvent.change(screen.getByLabelText(/current password/i), { target: { value: 'OldPass1!' } })
@@ -99,6 +107,9 @@ describe('ChangePasswordModal — submit success', () => {
         current_password: 'OldPass1!',
         new_password: 'NewPass123!',
       })
+      // D-SA-08: authStore updated with new tokens after password change
+      expect(useAuthStore.getState().token).toBe('new-tok')
+      expect(useAuthStore.getState().refreshToken).toBe('new-rtok')
     })
     expect(await screen.findByText(/password updated successfully/i)).toBeInTheDocument()
   })

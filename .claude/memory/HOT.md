@@ -1,12 +1,12 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-22 | Session: #115 (change-password — FINALIZED, archived) | /report --finalize
+Updated: 2026-04-23 | Session: #119 (security-audit — /implement S001 DONE, 7/7 tasks, all tests pass) | /sync
 
 ---
 
 ## Current Sprint
-Status: **NO ACTIVE FEATURE** — ready for next sprint
+Status: **security-audit** — IN_PROGRESS | S001 tasks defined + analyzed | 0 blockers
 
 ## Completed Features (All, Archived)
 - auth-api-key-oidc, rbac-document-filter, cjk-tokenizer, llm-provider, document-ingestion
@@ -18,12 +18,21 @@ Status: **NO ACTIVE FEATURE** — ready for next sprint
 → All archived in `.claude/memory/COLD/`
 
 ## In Progress (max 3)
-(none)
+- **security-audit** — P1 | IN_PROGRESS 2026-04-23 | 0 blockers | Resolves DEFERRED-SEC-001 + DEFERRED-SEC-002
+  WARM: `.claude/memory/WARM/security-audit.mem.md`
+  Plan: `docs/security-audit/plan/security-audit.plan.md` — critical path S001 → S002 (sequential)
+  Stories: S001 ✅ DONE (7/7 tasks, all tests pass), S002 (token_version JWT invalidation — next)
+  **S001 DONE** — backend/auth/jwt.py created, /v1/auth/refresh added, authStore.password removed, token_version wired, users.py returns 200+tokens
+  Tests: backend 29/29 PASS (new) | frontend 313/426 PASS (113 pre-existing failures, 0 regression)
+  Next: /implement security-audit --story S002
 
-## Recent Decisions (Session #110)
-- 2026-04-22: D-CP-07 — DB container is `knowledge-hub-postgres`; apply migrations via `docker exec ... psql -c "..."` (not file copy — Windows path issue)
-- 2026-04-22: D-CP-06 — S001/T001 migration must be applied to DB immediately after file is written; agent must ask user for DB connection info if DATABASE_URL not set
-- 2026-04-22: D-CP-05 — Checklist PASS 29/29; AGENTS.md + CONSTITUTION.md confirmed at .claude/ (not root)
+## Recent Decisions (Session #119)
+- 2026-04-23: D-SA-07 — `/v1/auth/refresh` local HS256 only; OIDC tokens → AUTH_TOKEN_INVALID (via verify_refresh_token failure)
+- 2026-04-23: D-SA-08 — Self-serve change-password bumps `token_version`; PATCH now returns 200+tokens (was 204)
+- 2026-04-23: S001 IMPL — App.tsx `hasPassword` logic changed from `password !== null` → `refreshToken !== null` (D-SA-02 — OIDC users never get refresh token)
+- 2026-04-23: D-SA-01 — `JWT_REFRESH_SECRET` separate env var (not shared with `AUTH_SECRET_KEY`) — confirmed lb_mui; independent rotation policy
+- 2026-04-23: D-SA-02 — Refresh token stored in `authStore` memory only (not localStorage) — XSS boundary
+- 2026-04-23: D-SA-03 — `token_version` JWT claim shortened to `tv` — avoids collision with standard claims
 
 ## Session #080 Summary ✅ COMPLETE
 **Task:** Finalize frontend-theme + frontend-spa reports; ghi nhận backend language preference issue

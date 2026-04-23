@@ -19,13 +19,13 @@ import { LanguageSelector } from './components/query/LanguageSelector'
 
 function App() {
   const navigate = useNavigate()
-  const { token, username, password, logout } = useAuthStore()
+  const { token, username, refreshToken, logout } = useAuthStore()
 
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [changePasswordOpen, setChangePasswordOpen] = useState(false)
 
-  // Derived: password-based users have password stored; OIDC users have null (D3)
-  const hasPassword = password !== null
+  // Derived: local users have a refresh token; OIDC users do not (D3, D-SA-02)
+  const hasPassword = refreshToken !== null
 
   useEffect(() => {
     setNavigate(navigate)

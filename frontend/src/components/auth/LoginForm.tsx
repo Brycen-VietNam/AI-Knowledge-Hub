@@ -1,6 +1,9 @@
 // Spec: docs/frontend-spa/spec/frontend-spa.spec.md
+// Spec: docs/security-audit/spec/security-audit.spec.md#S001
 // Task: T004 — LoginForm — OAuth2 form POST + authStore login + proactive refresh
+// Task: S001/T006 — remove password arg from login(); replace inline re-login with refreshAccessToken
 // Decision: T004 analysis — URLSearchParams (not JSON); backend: OAuth2PasswordRequestForm
+// Decision: D-SA-02 — password never stored; refresh via token only (DEFERRED-SEC-001 fix)
 import { useState, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -9,6 +12,7 @@ import { useAuthStore } from '../../store/authStore'
 
 interface TokenResponse {
   access_token: string
+  refresh_token: string
   token_type: string
   expires_in: number
   must_change_password?: boolean
@@ -17,7 +21,7 @@ interface TokenResponse {
 export function LoginForm() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { login, scheduleRefresh } = useAuthStore()
+  const { login, scheduleRefresh, refreshAccessToken } = useAuthStore()
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -34,23 +38,9 @@ export function LoginForm() {
       const { data } = await apiClient.post<TokenResponse>('/v1/auth/token', body, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       })
-      login(data.access_token, username, password, data.must_change_password ?? false)
+      login(data.access_token, data.refresh_token, username, data.must_change_password ?? false)
       const expSeconds = Date.now() / 1000 + data.expires_in
-      scheduleRefresh(expSeconds, async () => {
-        try {
-          const refreshBody = new URLSearchParams({ username, password })
-          const { data: refreshData } = await apiClient.post<TokenResponse>(
-            '/v1/auth/token',
-            refreshBody,
-            { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
-          )
-          login(refreshData.access_token, username, password, refreshData.must_change_password ?? false)
-          const nextExp = Date.now() / 1000 + refreshData.expires_in
-          scheduleRefresh(nextExp, () => {})
-        } catch {
-          // refresh failed → 401 interceptor handles logout
-        }
-      })
+      scheduleRefresh(expSeconds, () => refreshAccessToken())
       navigate('/query')
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status

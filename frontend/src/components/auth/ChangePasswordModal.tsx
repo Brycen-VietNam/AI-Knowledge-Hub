@@ -1,11 +1,20 @@
 // Spec: docs/change-password/spec/change-password.spec.md#S003
+// Spec: docs/security-audit/spec/security-audit.spec.md#S001
 // Task: S003/T003 — ChangePasswordModal (self-service change, profile menu)
+// Task: S001/T006 — handle 200+tokens response from PATCH; update authStore (D-SA-08)
 // Rule: D6 — all CSS in index.css; no inline styles, no CSS modules, no Tailwind
 // Decision: D1 — API-key callers excluded server-side; modal only for OIDC/password users
 // Decision: D3 — OIDC users hidden from dropdown (App.tsx); modal never shown to them
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { apiClient } from '../../api/client'
+import { useAuthStore } from '../../store/authStore'
+
+interface ChangePasswordResponse {
+  access_token: string
+  refresh_token: string
+  expires_in: number
+}
 
 interface Props {
   onClose: () => void
@@ -13,6 +22,7 @@ interface Props {
 
 export function ChangePasswordModal({ onClose }: Props) {
   const { t } = useTranslation()
+  const { login, username } = useAuthStore()
 
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -43,10 +53,11 @@ export function ChangePasswordModal({ onClose }: Props) {
 
     setIsLoading(true)
     try {
-      await apiClient.patch('/v1/users/me/password', {
+      const { data } = await apiClient.patch<ChangePasswordResponse>('/v1/users/me/password', {
         current_password: currentPassword,
         new_password: newPassword,
       })
+      login(data.access_token, data.refresh_token, username ?? '')
       setSuccessMsg(t('auth.change_password.success'))
       setTimeout(onClose, 1500)
     } catch (err: unknown) {
