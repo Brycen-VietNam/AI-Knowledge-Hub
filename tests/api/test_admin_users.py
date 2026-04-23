@@ -680,6 +680,90 @@ class TestAdminPasswordResetAuditLog:
         assert audit_stmts, "No INSERT INTO audit_logs found — R006 violated"
 
 
+# ---------------------------------------------------------------------------
+# S002/T004: token_version bump on admin password reset
+# Spec: docs/security-audit/spec/security-audit.spec.md#S002
+# Task: S002/T004
+# ---------------------------------------------------------------------------
+
+class TestPasswordResetTokenVersionBump:
+    """S002/T004: Both UPDATE paths include token_version = token_version + 1."""
+
+    def test_generate_path_bumps_token_version(self):
+        """generate=true UPDATE includes token_version increment."""
+        admin = _admin_user()
+        db = AsyncMock()
+        target_id = uuid.uuid4()
+        executed_sqls: list[str] = []
+
+        async def _capture(stmt, *args, **kwargs):
+            executed_sqls.append(str(stmt))
+            m = MagicMock()
+            m.fetchone.return_value = (target_id, "hashed_pw")
+            return m
+
+        db.execute = _capture
+        db.commit = AsyncMock()
+
+        app = _make_app(admin, db)
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.post(
+            f"/v1/admin/users/{target_id}/password-reset",
+            json={"generate": True},
+        )
+
+        assert resp.status_code == 200
+        update_stmts = [s for s in executed_sqls if "UPDATE users" in s]
+        assert update_stmts, "No UPDATE users statement found"
+        assert any("token_version" in s for s in update_stmts), (
+            "token_version bump missing from generate path UPDATE"
+        )
+
+    def test_new_password_path_bumps_token_version(self):
+        """new_password UPDATE includes token_version increment."""
+        admin = _admin_user()
+        db = AsyncMock()
+        target_id = uuid.uuid4()
+        executed_sqls: list[str] = []
+
+        async def _capture(stmt, *args, **kwargs):
+            executed_sqls.append(str(stmt))
+            m = MagicMock()
+            m.fetchone.return_value = (target_id, "hashed_pw")
+            return m
+
+        db.execute = _capture
+        db.commit = AsyncMock()
+
+        app = _make_app(admin, db)
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.post(
+            f"/v1/admin/users/{target_id}/password-reset",
+            json={"new_password": "NewSecure1!"},
+        )
+
+        assert resp.status_code == 204
+        update_stmts = [s for s in executed_sqls if "UPDATE users" in s]
+        assert update_stmts, "No UPDATE users statement found"
+        assert any("token_version" in s for s in update_stmts), (
+            "token_version bump missing from new_password path UPDATE"
+        )
+
+    def test_non_admin_cannot_reset(self):
+        """403 when caller is not an admin (R003)."""
+        user = _non_admin_user()
+        db = AsyncMock()
+
+        app = _make_app(user, db)
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.post(
+            f"/v1/admin/users/{uuid.uuid4()}/password-reset",
+            json={"generate": True},
+        )
+
+        assert resp.status_code == 403
+
+
 class TestUserListHasPasswordField:
     """test_user_list_has_password_field — GET /v1/admin/users returns has_password per row (T002)"""
 

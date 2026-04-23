@@ -110,6 +110,22 @@ def test_audit_log_user_id_is_uuid(session):
 
 # --- __init__ export check ---
 
+def test_user_token_version_defaults_to_1(session):
+    """S002/T002: token_version defaults to 1 when not provided."""
+    u = User(sub=f"test|{uuid.uuid4()}", email=None)
+    session.add(u)
+    session.flush()
+    assert u.token_version == 1
+
+
+def test_user_token_version_custom_value(session):
+    """S002/T002: token_version stores custom integer value."""
+    u = User(sub=f"test|{uuid.uuid4()}", email=None, token_version=5)
+    session.add(u)
+    session.flush()
+    assert u.token_version == 5
+
+
 def test_models_init_exports_auth():
     """User and ApiKey must be importable from backend.db.models package."""
     from backend.db.models import User as U

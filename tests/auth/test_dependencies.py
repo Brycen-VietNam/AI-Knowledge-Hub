@@ -15,6 +15,7 @@ from fastapi.testclient import TestClient
 
 # OIDC env vars set by tests/auth/conftest.py before collection.
 from backend.auth.dependencies import _compute_is_admin, get_db, verify_token
+from backend.auth.jwt import create_access_token
 from backend.auth.types import AuthenticatedUser
 
 # ---------------------------------------------------------------------------
@@ -253,3 +254,116 @@ class TestVerifyTokenIsAdmin:
 
         assert resp.status_code == 200
         assert resp.json()["is_admin"] is False
+
+
+# ---------------------------------------------------------------------------
+# S002/T003: _verify_local_jwt tv claim validation
+# Spec: docs/security-audit/spec/security-audit.spec.md#S002
+# Task: S002/T003
+# ---------------------------------------------------------------------------
+
+def _mock_db_with_tv(user_id: uuid.UUID, db_tv: int) -> AsyncMock:
+    """Mock DB: first execute → (id, token_version) row; second execute → is_admin scalar."""
+    select_row = MagicMock()
+    select_row.__getitem__ = lambda self, i: [user_id, db_tv][i]
+    select_result = MagicMock()
+    select_result.fetchone = MagicMock(return_value=select_row)
+
+    admin_result = MagicMock()
+    admin_result.scalar = MagicMock(return_value=False)
+
+    db = AsyncMock()
+    db.execute = AsyncMock(side_effect=[select_result, admin_result])
+    return db
+
+
+def _mock_db_inactive_user() -> AsyncMock:
+    """Mock DB: first execute → None (inactive user)."""
+    select_result = MagicMock()
+    select_result.fetchone = MagicMock(return_value=None)
+    db = AsyncMock()
+    db.execute = AsyncMock(return_value=select_result)
+    return db
+
+
+def _make_app_local_jwt(db) -> FastAPI:
+    """FastAPI app that overrides get_db with provided mock (no API-key mock)."""
+    app = FastAPI()
+
+    @app.get("/protected")
+    async def protected(user: AuthenticatedUser = Depends(verify_token)):
+        return {"user_id": str(user.user_id), "auth_type": user.auth_type}
+
+    app.dependency_overrides[get_db] = lambda: db
+    return app
+
+
+class TestVerifyTokenTvClaim:
+    """S002/T003: token_version (tv) claim validation in _verify_local_jwt."""
+
+    def test_tv_match_passes(self):
+        """jwt_tv=1, db_tv=1 → 200 (matching tv)."""
+        user_id = uuid.uuid4()
+        token = create_access_token(sub="user|1", user_id=str(user_id), token_version=1)
+        db = _mock_db_with_tv(user_id, db_tv=1)
+
+        app = _make_app_local_jwt(db)
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.get("/protected", headers={"Authorization": f"Bearer {token}"})
+
+        assert resp.status_code == 200
+        assert resp.json()["user_id"] == str(user_id)
+
+    def test_tv_stale_returns_401(self):
+        """jwt_tv=1, db_tv=2 → 401 ERR_TOKEN_INVALIDATED (token invalidated after admin reset)."""
+        user_id = uuid.uuid4()
+        token = create_access_token(sub="user|1", user_id=str(user_id), token_version=1)
+        db = _mock_db_with_tv(user_id, db_tv=2)
+
+        app = _make_app_local_jwt(db)
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.get("/protected", headers={"Authorization": f"Bearer {token}"})
+
+        assert resp.status_code == 401
+        error = resp.json()["detail"]["error"]
+        assert error["code"] == "ERR_TOKEN_INVALIDATED"
+        assert "request_id" in error
+
+    def test_tv_missing_claim_defaults_to_1(self):
+        """No 'tv' in token payload → defaults to tv=1 → passes if db_tv=1 (pre-S001 tokens safe)."""
+        user_id = uuid.uuid4()
+        # create_access_token always embeds 'tv'; patch to simulate pre-S001 token without 'tv'
+        import jwt as _pyjwt
+        import datetime
+        import os
+        secret = os.getenv("AUTH_SECRET_KEY", "test-secret")
+        now = datetime.datetime.now(datetime.timezone.utc)
+        token = _pyjwt.encode(
+            {"sub": "user|1", "user_id": str(user_id), "exp": now + datetime.timedelta(hours=1), "iat": now},
+            secret,
+            algorithm="HS256",
+        )
+        db = _mock_db_with_tv(user_id, db_tv=1)
+
+        app = _make_app_local_jwt(db)
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.get("/protected", headers={"Authorization": f"Bearer {token}"})
+
+        assert resp.status_code == 200
+
+    def test_inactive_user_returns_oidc_fallthrough(self):
+        """inactive user → row=None → _verify_local_jwt returns None → OIDC fallthrough → 401."""
+        from fastapi import HTTPException as _HTTPException
+        user_id = uuid.uuid4()
+        token = create_access_token(sub="user|1", user_id=str(user_id), token_version=1)
+        db = _mock_db_inactive_user()
+
+        # OIDC path also rejects (not a valid OIDC token) → 401
+        app = _make_app_local_jwt(db)
+        client = TestClient(app, raise_server_exceptions=False)
+
+        oidc_401 = _HTTPException(status_code=401, detail={"error": {"code": "AUTH_FAILED", "message": "x", "request_id": ""}})
+        with patch("backend.auth.dependencies.verify_oidc_token", new=AsyncMock(side_effect=oidc_401)):
+            resp = client.get("/protected", headers={"Authorization": f"Bearer {token}"})
+
+        assert resp.status_code == 401

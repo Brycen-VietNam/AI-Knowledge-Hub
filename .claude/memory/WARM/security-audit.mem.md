@@ -1,5 +1,5 @@
 # WARM Memory: security-audit
-Created: 2026-04-23 | Status: IN_PROGRESS | Phase: /tasks S001 DONE → next: /analyze S001
+Created: 2026-04-23 | Status: IN_PROGRESS | Phase: /reviewcode S002 APPROVED → next: /report
 
 ## Plan
 - Path: `docs/security-audit/plan/security-audit.plan.md` (2026-04-23)
@@ -42,21 +42,34 @@ Resolves 2 formally deferred security items from the change-password sprint.
 - D-SA-04 (2026-04-23): `token_version` check reuses existing user row fetch in `verify_token` (RBAC path) — no extra DB query (PERF P004)
 - D-SA-07 (2026-04-23): `/v1/auth/refresh` is **local HS256 only** — OIDC users renew via IdP; `verify_refresh_token()` uses `JWT_REFRESH_SECRET` only; OIDC-format tokens rejected with AUTH_UNSUPPORTED (not AUTH_FAILED)
 - D-SA-08 (2026-04-23): Self-serve `/v1/auth/change-password` **does bump `token_version`** — same atomic `token_version=token_version+1` UPDATE as admin path; user receives fresh access_token in response (no UX disruption; invalidates stolen tokens)
+- D-SA-09 (2026-04-23, /reviewcode): `/v1/auth/refresh` returns **`AUTH_TOKEN_INVALID`** for OIDC tokens (not `AUTH_UNSUPPORTED`) — reconciles W1; both paths fail at `verify_refresh_token` decode, no fragile pre-decode format heuristic. Matches HOT.md.
 
 ---
 
-## S001 Tasks (7 tasks — /tasks DONE 2026-04-23)
-File: `docs/security-audit/tasks/S001.tasks.md`
+## S002 Tasks (4 tasks — /tasks DONE 2026-04-23)
+File: `docs/security-audit/tasks/S002.tasks.md`
 | Task | Title | Status |
 |------|-------|--------|
-| T001 | `jwt.py` — `create_refresh_token()` + `verify_refresh_token()` | TODO |
-| T002 | `auth.py` — login response adds `refresh_token` | TODO |
-| T003 | `auth.py` — `POST /v1/auth/refresh` route | TODO |
-| T004 | `auth.py` login SELECT extends to `token_version` | TODO |
-| T005 | `authStore.ts` — remove `password`, add `refreshToken` + refresh timer | TODO |
-| T006 | Frontend callsites — `LoginForm`, `ChangePasswordPage`, `ChangePasswordModal` | TODO |
-| T007 | `users.py` — self-serve bump `token_version` + 200 with new tokens | TODO |
+| T001 | Migration `013_add_token_version.sql` — ADD COLUMN token_version | DONE |
+| T002 | ORM `User` model — add `token_version` mapped column | DONE |
+| T003 | `_verify_local_jwt` — extend SELECT + tv mismatch → 401 | DONE |
+| T004 | `admin_password_reset` — atomic token_version+1 in both UPDATE paths | DONE |
+Critical path: T001 → T002 → T003 | Parallel: T003 ‖ T004 (both after T002)
+
+## S001 Tasks (7 tasks — REVIEWED ✅ 2026-04-23)
+File: `docs/security-audit/tasks/S001.tasks.md` | Review: `docs/security-audit/reviews/S001.review.md`
+| Task | Title | Status |
+|------|-------|--------|
+| T001 | `jwt.py` — `create_refresh_token()` + `verify_refresh_token()` | REVIEWED |
+| T002 | `auth.py` — login response adds `refresh_token` | REVIEWED |
+| T003 | `auth.py` — `POST /v1/auth/refresh` route | REVIEWED |
+| T004 | `auth.py` login SELECT extends to `token_version` | REVIEWED |
+| T005 | `authStore.ts` — remove `password`, add `refreshToken` + refresh timer | REVIEWED |
+| T006 | Frontend callsites — `LoginForm`, `ChangePasswordPage`, `ChangePasswordModal` | REVIEWED |
+| T007 | `users.py` — self-serve bump `token_version` + 200 with new tokens | REVIEWED |
 Critical path: T001 → T002 → T004 → T005 → T007
+
+**Review verdict (2026-04-23):** APPROVED — 0 blockers, 4 minor warnings (W1 doc drift, W2 stale timer, W3 token length, W4 audit log) — safe to address post-merge.
 
 ## Files to Touch (by story)
 
@@ -147,6 +160,24 @@ Scope-impact catalog (10 items, full detail in plan):
 Status: PLANNED — ready for /tasks after SI-06 + SI-08 resolved
 
 ---
+
+## Sync: 2026-04-23 (Session #120)
+Decisions added: none (all D-SA-xx from prior sessions)
+Tasks changed: S002/T001→DONE, S002/T002→DONE, S002/T003→DONE, S002/T004→DONE
+Files touched:
+  - backend/db/migrations/013_add_token_version.sql (created)
+  - backend/db/models/user.py (Integer import + token_version field)
+  - backend/auth/dependencies.py (HTTPException import + SELECT extended + tv mismatch 401)
+  - backend/api/routes/admin.py (both UPDATE paths + token_version+1)
+  - tests/db/test_auth_models.py (2 new: token_version default + custom value)
+  - tests/auth/test_dependencies.py (4 new: tv match, tv stale 401, tv missing default, inactive user)
+  - tests/auth/conftest.py (added AUTH_SECRET_KEY + JWT_REFRESH_SECRET stubs)
+  - tests/api/test_admin_users.py (3 new: generate bump, new_password bump, non-admin 403)
+  - tests/api/conftest.py (added JWT_REFRESH_SECRET stub)
+  - docs/security-audit/tasks/S002.tasks.md (all 4 tasks → DONE)
+Questions resolved: none new
+New blockers: none
+Status: /implement S002 DONE — 56/56 PASS → next: /reviewcode S002
 
 ## Sync: 2026-04-23 (Session #118)
 Decisions added: D-SA-07 (OIDC local HS256 only → AUTH_UNSUPPORTED), D-SA-08 (self-serve change-password bumps token_version → 200+tokens)

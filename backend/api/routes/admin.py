@@ -917,7 +917,8 @@ async def admin_password_reset(
 
         await db.execute(
             text(
-                "UPDATE users SET password_hash = :hash, must_change_password = TRUE "
+                "UPDATE users SET password_hash = :hash, must_change_password = TRUE, "
+                "token_version = token_version + 1 "
                 "WHERE id = :user_id"
             ).bindparams(hash=new_hash, user_id=user_id)
         )
@@ -947,7 +948,8 @@ async def admin_password_reset(
 
         await db.execute(
             text(
-                "UPDATE users SET password_hash = :hash, must_change_password = TRUE "
+                "UPDATE users SET password_hash = :hash, must_change_password = TRUE, "
+                "token_version = token_version + 1 "
                 "WHERE id = :user_id"
             ).bindparams(hash=new_hash, user_id=user_id)
         )

@@ -1,7 +1,7 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-23 | Session: #119 (security-audit — /implement S001 DONE, 7/7 tasks, all tests pass) | /sync
+Updated: 2026-04-23 | Session: #120 (security-audit — /implement S002 DONE, 4/4 tasks, 56/56 tests pass) | /sync
 
 ---
 
@@ -21,10 +21,11 @@ Status: **security-audit** — IN_PROGRESS | S001 tasks defined + analyzed | 0 b
 - **security-audit** — P1 | IN_PROGRESS 2026-04-23 | 0 blockers | Resolves DEFERRED-SEC-001 + DEFERRED-SEC-002
   WARM: `.claude/memory/WARM/security-audit.mem.md`
   Plan: `docs/security-audit/plan/security-audit.plan.md` — critical path S001 → S002 (sequential)
-  Stories: S001 ✅ DONE (7/7 tasks, all tests pass), S002 (token_version JWT invalidation — next)
-  **S001 DONE** — backend/auth/jwt.py created, /v1/auth/refresh added, authStore.password removed, token_version wired, users.py returns 200+tokens
-  Tests: backend 29/29 PASS (new) | frontend 313/426 PASS (113 pre-existing failures, 0 regression)
-  Next: /implement security-audit --story S002
+  Stories: S001 ✅ REVIEWED (APPROVED, 0 blockers, 4 minor warnings), S002 ✅ IMPLEMENTED (56/56 tests pass)
+  S001 review: `docs/security-audit/reviews/S001.review.md`
+  S002 impl: T001 migration 013 ✅ | T002 ORM User ✅ | T003 _verify_local_jwt tv check ✅ | T004 admin_password_reset bump ✅
+  Tests: backend 56/56 PASS (S002-scoped: db×2, auth×4, api×3 new tests)
+  Next: /reviewcode security-audit --story S002
 
 ## Recent Decisions (Session #119)
 - 2026-04-23: D-SA-07 — `/v1/auth/refresh` local HS256 only; OIDC tokens → AUTH_TOKEN_INVALID (via verify_refresh_token failure)

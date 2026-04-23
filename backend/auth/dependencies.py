@@ -13,7 +13,7 @@ import uuid
 from typing import AsyncGenerator
 
 import jwt
-from fastapi import Depends, Header, Request
+from fastapi import Depends, Header, HTTPException, Request
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -79,14 +79,29 @@ async def _verify_local_jwt(token: str, db: AsyncSession) -> AuthenticatedUser |
     except ValueError:
         return None
 
-    # S001: parameterized SQL — verify user still exists and is active
+    # S001: parameterized SQL — verify user still exists and is active; fetch token_version (S002/SI-02)
     result = await db.execute(
-        text("SELECT id FROM users WHERE id = :user_id AND is_active = TRUE")
+        text("SELECT id, token_version FROM users WHERE id = :user_id AND is_active = TRUE")
         .bindparams(user_id=user_id)
     )
     row = result.fetchone()
     if row is None:
         return None
+
+    db_tv: int = int(row[1]) if row[1] is not None else 1
+    jwt_tv: int = int(payload.get("tv", 1))
+
+    if jwt_tv != db_tv:
+        # Token invalidated (admin reset bumped token_version). Raise directly — do NOT
+        # return None, which would cause verify_token to try OIDC path on a known local token.
+        raise HTTPException(
+            status_code=401,
+            detail={"error": {
+                "code": "ERR_TOKEN_INVALIDATED",
+                "message": "Session invalidated — please log in again",
+                "request_id": str(uuid.uuid4()),
+            }},
+        )
 
     return AuthenticatedUser(
         user_id=user_id,
