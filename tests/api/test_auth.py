@@ -233,16 +233,24 @@ def _make_local_token(user_id: uuid.UUID, username: str, expired: bool = False) 
     )
 
 
-def _mock_db_user_by_id(user_id: uuid.UUID):
-    """Mock DB that returns a user row when looked up by id."""
+def _mock_db_user_by_id(user_id: uuid.UUID, token_version: int = 1):
+    """Mock DB that returns a user row when looked up by id.
+
+    S002/T003: _verify_local_jwt SELECT now returns (id, token_version) — mock must
+    support row[0]=user_id and row[1]=token_version.
+    Second execute call is _compute_is_admin (scalar).
+    """
     row = MagicMock()
-    row.__getitem__ = lambda self, i: [user_id][i]
+    row.__getitem__ = lambda self, i: [user_id, token_version][i]
 
     result = MagicMock()
     result.fetchone = MagicMock(return_value=row)
 
+    admin_result = MagicMock()
+    admin_result.scalar = MagicMock(return_value=False)
+
     session = AsyncMock()
-    session.execute = AsyncMock(return_value=result)
+    session.execute = AsyncMock(side_effect=[result, admin_result])
     return session
 
 

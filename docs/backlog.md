@@ -1,5 +1,5 @@
 # Feature Backlog — Knowledge-Hub
-> Generated: 2026-03-17 | Updated: 2026-04-08
+> Generated: 2026-03-17 | Updated: 2026-04-23
 > Source: /specify session + CONSTITUTION.md v1.2 + license review
 
 ---
@@ -43,6 +43,7 @@
 | 15 | `rate-limiting` | api | Valkey sliding window — 60/min query, 20/min docs (C013) |
 | 16 | `metrics-endpoint` | api | GET /v1/metrics — latency, throughput, error rates |
 | 12 | `change-password` | frontend | React/Vite SPA — Change password, require on first login |
+| 17 | `file-storage` | api | Lưu file gốc sau khi ingest — pluggable backend: local disk hoặc S3-compatible (MinIO/AWS S3) qua env `FILE_STORAGE_BACKEND=local\|s3`. GET /v1/documents/{id}/download trả presigned URL (S3) hoặc stream (local). Embedding là one-way — không thể recover file từ vector. |
 
 ---
 

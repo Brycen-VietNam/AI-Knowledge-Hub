@@ -38,20 +38,44 @@ docker compose up -d --build
 
 ---
 
-## 3. Pull Embedding Model (1 lần duy nhất, ~500MB)
+## 3. Pull Ollama Models (1 lần duy nhất)
+
+Hai model bắt buộc:
 
 ```bash
+# Embedding model (~670MB) — bắt buộc cho mọi query và ingestion
 docker exec knowledge-hub-ollama ollama pull mxbai-embed-large
+
+# LLM generation model (~400MB) — cần thiết để có answer tổng hợp
+docker exec knowledge-hub-ollama ollama pull qwen2.5:0.5b
 ```
 
 > Model được lưu trong Docker volume `ollama_data` — không cần pull lại sau khi đã có.
 
+**Verify đã pull xong:**
+```bash
+docker exec knowledge-hub-ollama ollama list
+# Expected:
+# mxbai-embed-large:latest   ...   669 MB
+# qwen2.5:0.5b               ...   397 MB
+```
+
+**Warm up sau khi pull** (tránh cold-start timeout lần đầu chạy):
+```bash
+curl -s -X POST http://localhost:11434/api/embeddings \
+  -d '{"model":"mxbai-embed-large","prompt":"warmup"}' > /dev/null
+```
+
 ---
 
-## 4. Restart app sau khi model sẵn sàng
+## 4. Set `LLM_MODEL` trong `.env`, sau đó restart app
+
+```env
+LLM_MODEL=qwen2.5:0.5b
+```
 
 ```bash
-docker compose restart app
+docker compose up -d app
 ```
 
 ---
@@ -98,6 +122,7 @@ curl -X POST http://localhost:8000/v1/query \
 ## Notes
 
 - **Migrations:** Chạy tự động khi volume postgres chưa tồn tại. Nếu volume cũ, chạy thủ công: `docker exec -i knowledge-hub-postgres psql -U kh_user -d knowledge_hub < backend/db/migrations/<file>.sql`
-- **LLM model:** Chưa setup — query trả `sources` trực tiếp, `answer: null`. Để enable: pull model + set `LLM_MODEL` trong `.env`.
+- **LLM model:** Default là `qwen2.5:0.5b` (set `LLM_MODEL` trong `.env`). Nếu chưa pull, query trả `sources` trực tiếp với `answer: null`.
+- **Ollama models hiện tại:** `mxbai-embed-large` (embedding, 1024-dim) + `qwen2.5:0.5b` (LLM generation). Thay thế bằng model khác qua env vars `EMBEDDING_MODEL` và `LLM_MODEL`.
 - **Volume wipe:** Nếu cần reset DB sạch: `docker compose down -v && docker compose up -d --build` (mất toàn bộ data)
 - **Ollama CPU-only:** Máy không có discrete GPU — embedding/inference chạy trên CPU, hơi chậm nhưng hoạt động bình thường.
