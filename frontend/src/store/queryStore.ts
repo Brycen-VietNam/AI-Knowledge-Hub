@@ -16,6 +16,7 @@ export interface QueryResult {
   answer: string
   citations: Citation[]
   confidence: number
+  low_confidence: boolean
 }
 
 export interface QueryHistoryItem {
@@ -23,6 +24,7 @@ export interface QueryHistoryItem {
   query: string
   answer: string
   citations: Citation[]
+  confidence: number
   timestamp: Date
 }
 
@@ -37,7 +39,7 @@ interface QueryState {
   setError: (e: string | null) => void
   reset: () => void
   submitQuery: (query: string, lang: string) => Promise<void>
-  addHistory: (query: string, answer: string, citations: Citation[]) => void
+  addHistory: (query: string, answer: string, citations: Citation[], confidence: number) => void
   clearHistory: () => void
   selectHistory: (item: QueryHistoryItem) => void
 }
@@ -55,10 +57,10 @@ export const useQueryStore = create<QueryState>((set, get) => ({
 
   reset: () => set({ query: '', isLoading: false, error: null, result: null }),
 
-  addHistory: (query, answer, citations) =>
+  addHistory: (query, answer, citations, confidence) =>
     set((s) => ({
       history: [
-        { id: crypto.randomUUID(), query, answer, citations, timestamp: new Date() },
+        { id: crypto.randomUUID(), query, answer, citations, confidence, timestamp: new Date() },
         ...s.history,
       ].slice(0, 20),
     })),
@@ -68,7 +70,7 @@ export const useQueryStore = create<QueryState>((set, get) => ({
   selectHistory: (item) =>
     set({
       query: item.query,
-      result: { answer: item.answer, citations: item.citations, confidence: 0 },
+      result: { answer: item.answer, citations: item.citations, confidence: item.confidence, low_confidence: item.confidence < 0.4 },
       error: null,
     }),
 
@@ -77,8 +79,8 @@ export const useQueryStore = create<QueryState>((set, get) => ({
     try {
       const response = await apiClient.post<QueryResult>('/v1/query', { query, lang })
       set({ result: response.data })
-      const { answer, citations } = response.data
-      get().addHistory(query, answer, citations)
+      const { answer, citations, confidence } = response.data
+      get().addHistory(query, answer, citations, confidence)
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status
       if (status === 429) {

@@ -44,6 +44,43 @@
 | 16 | `metrics-endpoint` | api | GET /v1/metrics — latency, throughput, error rates |
 | 12 | `change-password` | frontend | React/Vite SPA — Change password, require on first login |
 | 17 | `file-storage` | api | Lưu file gốc sau khi ingest — pluggable backend: local disk hoặc S3-compatible (MinIO/AWS S3) qua env `FILE_STORAGE_BACKEND=local\|s3`. GET /v1/documents/{id}/download trả presigned URL (S3) hoặc stream (local). Embedding là one-way — không thể recover file từ vector. |
+| 18 | `confidence-retrieval-score` | rag | Thay cited_ratio bằng retrieval-score-based confidence: dùng score của top docs từ pgvector thay vì đếm [N] trong LLM answer. Lý do: model free (gpt-oss-120b, qwen) không follow citation instruction đủ tốt → cited_ratio thường = 1/9 → LOW dù retrieval tốt. Approach: `confidence = weighted_avg(top_k_scores)` hoặc `score[0] * 0.6 + mean(scores) * 0.4`. Giữ top_k không đổi, chỉ thay nguồn tính confidence trong `query.py`. |
+| 19 | `multi-chunk-per-doc` | rag | Retriever hiện dedup theo doc_id → nhiều chunks khớp từ cùng 1 doc bị collapse thành 1 chunk (mất context). Fix: dedup theo `(doc_id, chunk_index)`, giới hạn max 2 chunks/doc. Score vẫn cộng dồn (boost doc có nhiều chunks khớp). Config qua env `RAG_MAX_CHUNKS_PER_DOC=2`. Với top_k=10: worst case 5 docs × 2 chunks — đủ đa dạng nguồn cho LLM. |
+
+---
+
+## P3 — SDD-AI Platform (Vision)
+
+> Mở rộng Knowledge Hub thành nền tảng hỗ trợ phát triển phần mềm theo SDD spec-first với AI.
+> Ba vai trò đồng thời: documentation hub + AI agent backend + AI pair programmer.
+
+### Concept
+
+```
+Team upload spec/ADR/decisions
+        ↓
+  Knowledge Hub (RAG + RBAC)
+        ↓
+  AI agent query context       ←→   Dev viết spec tự nhiên
+  thay vì đọc file local             AI suggest implementation
+  (CLAUDE.md/WARM)                   grounded vào internal docs
+```
+
+Mỗi project có RBAC group riêng → AI agent của project chỉ thấy docs của mình. Nhiều project dùng chung 1 KH instance.
+
+### Features cần thêm
+
+| # | Feature | Mô tả |
+|---|---------|-------|
+| 20 | `project-namespace` | Thêm `project_id` vào RBAC model — mỗi project là 1 namespace độc lập. AI agent nhận `project_id` khi query → chỉ retrieve docs thuộc project đó. |
+| 21 | `sdd-doc-types` | Metadata `doc_type` cho documents: `spec`, `adr`, `decision`, `rule`, `task`, `meeting-note`. Cho phép filter theo type khi query (vd: agent chỉ query `rules` khi /reviewcode). |
+| 22 | `agent-api-endpoint` | `POST /v1/agent/context` — endpoint tối ưu cho AI agent: nhận `task_type` + `query` → trả chunks có rank theo relevance cho task đó. Khác `/v1/query` (dùng cho end-user). |
+| 23 | `spec-ingestion-pipeline` | Auto-parse và ingest SDD artifacts: spec.md, tasks.md, plan.md → tự động detect `doc_type`, extract metadata (story ID, AC list, decisions). |
+| 24 | `decision-search` | Query tìm kiếm decisions/ADR: "tại sao chọn X?" → retrieve các decision records liên quan. Hỗ trợ workflow /clarify và /plan của AI agent. |
+| 25 | `pattern-suggestion` | AI pair programmer mode: dev commit code → KH index patterns → agent suggest implementation dựa trên patterns cũ của cùng project. |
+| 26 | `sdd-phase-memory` | Auto-ingest SDD artifacts sau mỗi phase hoàn thành (/report trigger ingest). Tag theo `phase` + `project_id` + `doc_type`. Orchestrator agent query KH trước khi bắt đầu phase mới để load institutional memory thay vì WARM files — mỗi phase sau thông minh hơn phase trước nhờ accumulated context. |
+| 27 | `visibility-flag` | Thêm `visibility=private\|shared\|public` vào documents table. `private` = chỉ project đó thấy (business logic, internal data). `shared` = tất cả projects trong org (security patterns, architecture decisions, lessons learned). `public` = không giới hạn. RBAC hiện tại chỉ control `user_group_id` — cần layer visibility on top. |
+| 28 | `cross-project-search` | `POST /v1/agent/context` query đồng thời: `private` docs của project hiện tại + `shared` docs của toàn org trong 1 request. Cho phép cross-project learning — Project B tự động nhận patterns/decisions từ Project A mà không cần copy manual. Depends on #27 visibility-flag. |
 
 ---
 
