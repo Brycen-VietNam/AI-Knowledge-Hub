@@ -25,6 +25,7 @@ export function LoginForm() {
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -70,15 +71,25 @@ export function LoginForm() {
       </div>
       <div className="form-group">
         <label htmlFor="password" className="form-label">{t('login.password')}</label>
-        <input
-          id="password"
-          type="password"
-          className="form-input"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          autoComplete="current-password"
-        />
+        <div className="password-field-row">
+          <input
+            id="password"
+            type={showPassword ? 'text' : 'password'}
+            className="form-input"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+          />
+          <button
+            type="button"
+            className="btn-eye"
+            onClick={() => setShowPassword((p) => !p)}
+            aria-label={showPassword ? t('login.hide_password') : t('login.show_password')}
+          >
+            {showPassword ? '🙈' : '👁'}
+          </button>
+        </div>
       </div>
       {error && <p role="alert" className="login-error">{error}</p>}
       <button type="submit" className="btn-primary" disabled={isLoading}>

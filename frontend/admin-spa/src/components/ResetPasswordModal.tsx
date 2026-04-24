@@ -107,11 +107,14 @@ export function ResetPasswordModal({ userId, onClose }: Props) {
             <input
               id="rp-new"
               type="password"
+              minLength={8}
+              maxLength={128}
               value={newPassword}
               onChange={(e) => { clearErrors(); setNewPassword(e.target.value) }}
               required
               autoComplete="new-password"
             />
+            <p className="field-hint">{t('auth.reset_password.hint_password')}</p>
           </div>
         )}
 

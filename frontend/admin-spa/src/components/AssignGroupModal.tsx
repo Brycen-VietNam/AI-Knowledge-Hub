@@ -63,11 +63,12 @@ export function AssignGroupModal({ user, allGroups, onSave, onClose }: Props) {
             ))}
           </div>
           {error && <div className="upload-error">{error}</div>}
+          {selected.size === 0 && <p className="field-error">{t('assign_groups_hint_min')}</p>}
           <div className="upload-actions">
             <button type="button" className="btn-secondary" onClick={onClose} disabled={loading}>
               {t('btn_cancel')}
             </button>
-            <button type="submit" className="btn-primary" disabled={loading}>
+            <button type="submit" className="btn-primary" disabled={loading || selected.size === 0}>
               {t('btn_save')}
             </button>
           </div>

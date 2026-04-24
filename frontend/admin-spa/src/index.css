@@ -1165,4 +1165,6 @@ header.app-header {
 }
 
 .health-badge--ok .health-dot { background: var(--success); }
+
+.btn-eye { background: none; border: none; cursor: pointer; color: var(--text-3); padding: 4px; }
 .health-badge--error .health-dot { background: var(--danger); }

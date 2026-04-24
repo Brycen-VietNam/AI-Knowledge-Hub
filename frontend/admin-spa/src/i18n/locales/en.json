@@ -71,7 +71,10 @@
       "groups_label": "Groups",
       "generate_password": "Generate",
       "show_password": "Show",
-      "hide_password": "Hide"
+      "hide_password": "Hide",
+      "hint_sub": "3–200 chars: a-z A-Z 0-9 _ . @ -",
+      "hint_email": "Must be a valid domain (e.g. user@company.com)",
+      "hint_password": "Minimum 12 characters"
     }
   },
   "common": {
@@ -158,5 +161,11 @@
     "metrics_unavailable": "Metrics unavailable",
     "auto_refresh_note": "Auto-refreshes every 60s",
     "loading": "Loading..."
+  },
+  "assign_groups_hint_min": "Select at least 1 group",
+  "auth": {
+    "reset_password": {
+      "hint_password": "Minimum 8 characters"
+    }
   }
 }

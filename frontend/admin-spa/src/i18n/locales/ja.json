@@ -71,7 +71,10 @@
       "groups_label": "グループ",
       "generate_password": "生成",
       "show_password": "表示",
-      "hide_password": "非表示"
+      "hide_password": "非表示",
+      "hint_sub": "3〜200文字: a-z A-Z 0-9 _ . @ -",
+      "hint_email": "有効なメールアドレスを入力してください（例: user@company.com）",
+      "hint_password": "12文字以上"
     }
   },
   "common": {
@@ -158,5 +161,11 @@
     "metrics_unavailable": "メトリクスを取得できません",
     "auto_refresh_note": "60秒ごとに自動更新",
     "loading": "読み込み中..."
+  },
+  "assign_groups_hint_min": "グループを1つ以上選択してください",
+  "auth": {
+    "reset_password": {
+      "hint_password": "8文字以上"
+    }
   }
 }

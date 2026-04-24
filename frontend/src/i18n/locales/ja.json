@@ -8,7 +8,9 @@
     "submit": "サインイン",
     "error_invalid": "ユーザー名またはパスワードが無効です",
     "error_unavailable": "サービスが利用できません。後でもう一度お試しください。",
-    "session_expired": "セッションの有効期限が切れました。再度サインインしてください。"
+    "session_expired": "セッションの有効期限が切れました。再度サインインしてください。",
+    "show_password": "パスワードを表示",
+    "hide_password": "パスワードを非表示"
   },
   "search": {
     "placeholder": "ナレッジベースを検索...",
@@ -68,6 +70,7 @@
       "submit": "パスワードを更新",
       "cancel": "キャンセル",
       "success": "パスワードが正常に更新されました。",
+      "hint_password": "8〜128文字",
       "error": {
         "wrong_password": "現在のパスワードが正しくありません。",
         "mismatch": "新しいパスワードが一致しません。",

@@ -71,7 +71,10 @@
       "groups_label": "Nhóm",
       "generate_password": "Tạo ngẫu nhiên",
       "show_password": "Hiển thị",
-      "hide_password": "Ẩn"
+      "hide_password": "Ẩn",
+      "hint_sub": "3–200 ký tự: a-z A-Z 0-9 _ . @ -",
+      "hint_email": "Phải là email hợp lệ (vd: user@company.com)",
+      "hint_password": "Tối thiểu 12 ký tự"
     }
   },
   "common": {
@@ -158,5 +161,11 @@
     "metrics_unavailable": "Không thể tải metrics",
     "auto_refresh_note": "Tự động cập nhật mỗi 60 giây",
     "loading": "Đang tải..."
+  },
+  "assign_groups_hint_min": "Chọn ít nhất 1 nhóm",
+  "auth": {
+    "reset_password": {
+      "hint_password": "Tối thiểu 8 ký tự"
+    }
   }
 }

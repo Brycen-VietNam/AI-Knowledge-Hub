@@ -8,7 +8,9 @@
     "submit": "Sign In",
     "error_invalid": "Invalid username or password",
     "error_unavailable": "Service unavailable. Please try again later.",
-    "session_expired": "Your session has expired. Please sign in again."
+    "session_expired": "Your session has expired. Please sign in again.",
+    "show_password": "Show password",
+    "hide_password": "Hide password"
   },
   "search": {
     "placeholder": "Search knowledge base...",
@@ -68,6 +70,7 @@
       "submit": "Update Password",
       "cancel": "Cancel",
       "success": "Password updated successfully.",
+      "hint_password": "8–128 characters",
       "error": {
         "wrong_password": "Current password is incorrect.",
         "mismatch": "New passwords do not match.",
