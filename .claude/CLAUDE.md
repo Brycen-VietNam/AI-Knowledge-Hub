@@ -15,7 +15,9 @@ Consumers: Web SPA, Teams bot, Slack bot (all via API).
 - RAG: Hybrid search (multilingual dense embeddings + BM25) + RBAC hard-filter + conflict detection
 - Storage: PostgreSQL + pgvector (embeddings) + CJK-aware full-text search
 - Auth: API-key (bots/service accounts) + OIDC/SSO Bearer (human users)
-- Frontend: React/Vite SPA (thin client)
+- Frontend: **2 React/Vite SPAs** (thin clients)
+  - `frontend/` → User SPA (`:8080`) — query interface cho end-users
+  - `frontend/admin-spa/` → Admin SPA (`:8081`) — quản lý users, groups, API keys, documents
 
 ---
 
@@ -90,7 +92,8 @@ backend/
   auth/       — OIDC, API-key, RBAC middleware (auth-agent scope)
   db/         — Models, migrations (db-agent scope)
   bots/       — Teams/Slack adapters (bot-agent scope)
-frontend/     — React/Vite SPA (frontend-agent scope)
+frontend/           — User SPA React/Vite (frontend-agent scope) — :8080
+  admin-spa/        — Admin SPA React/Vite (frontend-agent scope) — :8081
 docs/
   <feature>/
     spec/           — <feature>.spec.md (Layers 1–3, output of /specify)

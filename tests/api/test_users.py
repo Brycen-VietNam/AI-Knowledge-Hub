@@ -1,11 +1,14 @@
 # Spec: docs/change-password/spec/change-password.spec.md#S001
+# Spec: docs/security-audit/spec/security-audit.spec.md#S001
 # Task: S001/T004 — PATCH /v1/users/me/password tests
 # Task: S001/T006 — route registration smoke test
+# Task: S001/T007 — 204→200, token_version bump, new tokens in response (D-SA-08)
 import os
 import uuid
 from unittest.mock import AsyncMock, MagicMock
 
 import bcrypt
+import jwt
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -14,12 +17,14 @@ os.environ.setdefault("OIDC_ISSUER", "https://test.example.com")
 os.environ.setdefault("OIDC_AUDIENCE", "test-audience")
 os.environ.setdefault("OIDC_JWKS_URI", "https://test.example.com/.well-known/jwks.json")
 os.environ.setdefault("AUTH_SECRET_KEY", "test-secret-key-for-unit-tests-only-32bytes!!")
+os.environ.setdefault("JWT_REFRESH_SECRET", "test-refresh-secret-for-unit-tests-32bytes!")
 
 from backend.api.routes.users import router
 from backend.auth.dependencies import get_db, verify_token
 from backend.auth.types import AuthenticatedUser
 
 _TEST_USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
+_TEST_SUB = "testuser"
 _CURRENT_PW = "correct-pw"  # test fixture
 _CURRENT_HASH = bcrypt.hashpw(_CURRENT_PW.encode(), bcrypt.gensalt(rounds=4)).decode()
 
@@ -32,14 +37,20 @@ def _api_key_user() -> AuthenticatedUser:
     return AuthenticatedUser(user_id=_TEST_USER_ID, user_group_ids=[], auth_type="api_key")
 
 
-def _mock_db_with_hash(password_hash: str | None):
-    """Return a mock db session that yields one row with the given password_hash."""
-    row = MagicMock()
-    row.__getitem__ = lambda self, i: [password_hash][i]
-    result = MagicMock()
-    result.fetchone = MagicMock(return_value=row)
+def _mock_db_with_hash(password_hash: str | None, sub: str = _TEST_SUB, new_tv: int = 2):
+    """Mock db session: SELECT returns (password_hash, sub); UPDATE RETURNING returns (new_tv,)."""
+    select_row = MagicMock()
+    select_row.__getitem__ = lambda self, i: [password_hash, sub][i]
+    select_result = MagicMock()
+    select_result.fetchone = MagicMock(return_value=select_row)
+
+    update_row = MagicMock()
+    update_row.__getitem__ = lambda self, i: [new_tv][i]
+    update_result = MagicMock()
+    update_result.fetchone = MagicMock(return_value=update_row)
+
     session = AsyncMock()
-    session.execute = AsyncMock(return_value=result)
+    session.execute = AsyncMock(side_effect=[select_result, update_result])
     session.commit = AsyncMock()
     return session
 
@@ -61,9 +72,9 @@ def _make_app(user: AuthenticatedUser, db=None) -> FastAPI:
 
 
 class TestChangePasswordEndpoint:
-    def test_success_returns_204(self):
-        """Valid current_password + strong new_password → 204 No Content."""
-        db = _mock_db_with_hash(_CURRENT_HASH)
+    def test_success_returns_200_with_tokens(self):
+        """Valid current_password + strong new_password → 200 with access_token + refresh_token."""
+        db = _mock_db_with_hash(_CURRENT_HASH, sub=_TEST_SUB, new_tv=2)
         app = _make_app(_oidc_user(), db=db)
 
         with TestClient(app, raise_server_exceptions=False) as client:
@@ -72,7 +83,18 @@ class TestChangePasswordEndpoint:
                 json={"current_password": _CURRENT_PW, "new_password": "NewStr0ng!"},
             )
 
-        assert resp.status_code == 204
+        assert resp.status_code == 200
+        body = resp.json()
+        assert "access_token" in body
+        assert "refresh_token" in body
+        assert body["token_type"] == "bearer"
+        assert isinstance(body["expires_in"], int)
+
+        # D-SA-08: access token carries incremented token_version (tv=2)
+        secret = os.environ["AUTH_SECRET_KEY"]
+        payload = jwt.decode(body["access_token"], secret, algorithms=["HS256"])
+        assert payload["tv"] == 2
+        assert payload["sub"] == _TEST_SUB
 
     def test_wrong_password_returns_401(self):
         """Incorrect current_password → 401 ERR_WRONG_PASSWORD."""

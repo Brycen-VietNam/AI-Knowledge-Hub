@@ -76,6 +76,7 @@ class QueryResponse(BaseModel):
     request_id: str          # retained — R005 traceability (D12)
     answer: str | None
     sources: list[str]
+    confidence: float        # unified cited_ratio formula — adapter-independent
     low_confidence: bool
     reason: str | None = None  # populated only when answer is None (D09)
     citations: list[CitationObject] = Field(default_factory=list)  # AC10: never null
@@ -247,11 +248,17 @@ async def query_documents(
         )
         for d in docs
     ]
+    # Unified confidence — adapter-independent, single source of truth
+    # cited_ratio × 0.8 + 0.2 → range [0.2, 1.0]; LOW when cited_ratio < 0.25
+    cited_count = sum(1 for c in citations if c.cited)
+    cited_ratio = cited_count / len(content_docs) if content_docs else 0.0
+    confidence = round(cited_ratio * 0.8 + 0.2, 4)
     return QueryResponse(
         request_id=request_id,
         answer=llm_response.answer,
         sources=[str(d.doc_id) for d in docs],
-        low_confidence=llm_response.confidence < _LOW_CONFIDENCE_THRESHOLD,
+        confidence=confidence,
+        low_confidence=confidence < _LOW_CONFIDENCE_THRESHOLD,
         reason=None,
         citations=citations,
     )

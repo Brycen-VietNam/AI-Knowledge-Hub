@@ -48,7 +48,7 @@ function renderApp(initialPath = '/') {
 
 describe('App — /query route (unauthenticated)', () => {
   it('redirects to /login when not authenticated', () => {
-    useAuthStore.setState({ token: null, username: null, password: null, _refreshTimer: null })
+    useAuthStore.setState({ token: null, refreshToken: null, username: null, _refreshTimer: null })
     renderApp('/query')
     expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
   })
@@ -56,7 +56,7 @@ describe('App — /query route (unauthenticated)', () => {
 
 describe('App — /query route (authenticated)', () => {
   it('renders QueryPage when authenticated', () => {
-    useAuthStore.setState({ token: 'valid-token', username: 'alice', password: 'pw', _refreshTimer: null })
+    useAuthStore.setState({ token: 'valid-token', refreshToken: 'rtok', username: 'alice', _refreshTimer: null })
     useQueryStore.setState({ query: '', isLoading: false, error: null, result: null })
     renderApp('/query')
     expect(screen.getByRole('textbox')).toBeInTheDocument()
@@ -66,7 +66,7 @@ describe('App — /query route (authenticated)', () => {
 
 describe('App — / redirects to /query', () => {
   it('unauthenticated: / → /login (via /query ProtectedRoute redirect)', () => {
-    useAuthStore.setState({ token: null, username: null, password: null, _refreshTimer: null })
+    useAuthStore.setState({ token: null, refreshToken: null, username: null, _refreshTimer: null })
     renderApp('/')
     expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
   })
@@ -74,7 +74,7 @@ describe('App — / redirects to /query', () => {
 
 describe('App — /login route', () => {
   it('renders login form at /login', () => {
-    useAuthStore.setState({ token: null, username: null, password: null, _refreshTimer: null })
+    useAuthStore.setState({ token: null, refreshToken: null, username: null, _refreshTimer: null })
     renderApp('/login')
     expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
   })
@@ -82,7 +82,7 @@ describe('App — /login route', () => {
 
 describe('App — user-pill dropdown (S003/T004)', () => {
   it('shows dropdown menu when user pill is clicked', () => {
-    useAuthStore.setState({ token: 'tok', username: 'alice', password: 'pw', _refreshTimer: null })
+    useAuthStore.setState({ token: 'tok', refreshToken: 'rtok', username: 'alice', _refreshTimer: null })
     useQueryStore.setState({ query: '', isLoading: false, error: null, result: null })
     renderApp('/query')
     const pill = screen.getByRole('button', { name: /alice/i })
@@ -90,16 +90,16 @@ describe('App — user-pill dropdown (S003/T004)', () => {
     expect(screen.getByRole('menu')).toBeInTheDocument()
   })
 
-  it('shows "Change Password" menu item for password user (has_password=true)', () => {
-    useAuthStore.setState({ token: 'tok', username: 'alice', password: 'pw', _refreshTimer: null })
+  it('shows "Change Password" menu item for local user (has refreshToken)', () => {
+    useAuthStore.setState({ token: 'tok', refreshToken: 'rtok', username: 'alice', _refreshTimer: null })
     useQueryStore.setState({ query: '', isLoading: false, error: null, result: null })
     renderApp('/query')
     fireEvent.click(screen.getByRole('button', { name: /alice/i }))
     expect(screen.getByRole('menuitem', { name: /change password/i })).toBeInTheDocument()
   })
 
-  it('hides "Change Password" menu item for OIDC user (password=null)', () => {
-    useAuthStore.setState({ token: 'tok', username: 'oidc_user', password: null, _refreshTimer: null })
+  it('hides "Change Password" menu item for OIDC user (no refreshToken)', () => {
+    useAuthStore.setState({ token: 'tok', refreshToken: null, username: 'oidc_user', _refreshTimer: null })
     useQueryStore.setState({ query: '', isLoading: false, error: null, result: null })
     renderApp('/query')
     fireEvent.click(screen.getByRole('button', { name: /oidc_user/i }))

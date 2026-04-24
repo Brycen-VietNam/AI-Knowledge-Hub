@@ -5,7 +5,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import func, text as sa_text
+from sqlalchemy import Integer, func, text as sa_text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
@@ -22,4 +22,7 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(nullable=False, server_default=func.now())
     must_change_password: Mapped[bool] = mapped_column(
         nullable=False, server_default=sa_text("TRUE"), default=True
+    )
+    token_version: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=1
     )

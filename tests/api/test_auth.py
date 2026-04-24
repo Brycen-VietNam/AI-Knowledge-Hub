@@ -21,6 +21,7 @@ os.environ.setdefault("OIDC_ISSUER", "https://test.example.com")
 os.environ.setdefault("OIDC_AUDIENCE", "test-audience")
 os.environ.setdefault("OIDC_JWKS_URI", "https://test.example.com/.well-known/jwks.json")
 os.environ.setdefault("AUTH_SECRET_KEY", "test-secret-key-for-unit-tests-only-32bytes!!")
+os.environ.setdefault("JWT_REFRESH_SECRET", "test-refresh-secret-for-unit-tests-32bytes!")
 os.environ.setdefault("AUTH_TOKEN_EXPIRE_MINUTES", "60")
 
 from backend.api.routes.auth import router
@@ -52,16 +53,16 @@ def _make_app(db=None) -> FastAPI:
     return app
 
 
-def _mock_db_row(username: str, password_hash: str | None, user_id: uuid.UUID):
+def _mock_db_row(username: str, password_hash: str | None, user_id: uuid.UUID, token_version: int = 1):
     """Return a mock AsyncSession yielding one user row, then is_admin=False.
 
     auth.py now calls db.execute twice:
-      1. User lookup (fetchone)
+      1. User lookup (fetchone) — returns (id, password_hash, must_change_password, token_version)
       2. _compute_is_admin (scalar) — S000/T009
     """
     row = MagicMock()
-    # T005: login SELECT now returns (id, password_hash, must_change_password)
-    row.__getitem__ = lambda self, i: [user_id, password_hash, False][i]
+    # T004: login SELECT now returns (id, password_hash, must_change_password, token_version)
+    row.__getitem__ = lambda self, i: [user_id, password_hash, False, token_version][i]
 
     user_result = MagicMock()
     user_result.fetchone = MagicMock(return_value=row)
@@ -91,7 +92,7 @@ class TestLoginEndpoint:
     """Tests for POST /v1/auth/token."""
 
     def test_login_success_returns_token(self):
-        """Valid credentials → 200 with access_token, token_type, expires_in."""
+        """Valid credentials → 200 with access_token, refresh_token, token_type, expires_in."""
         db = _mock_db_row(_TEST_USERNAME, _TEST_HASH, _TEST_USER_ID)
         app = _make_app(db=db)
 
@@ -104,6 +105,9 @@ class TestLoginEndpoint:
         assert resp.status_code == 200
         body = resp.json()
         assert "access_token" in body
+        # T002: refresh_token present and non-empty
+        assert "refresh_token" in body
+        assert isinstance(body["refresh_token"], str) and len(body["refresh_token"]) > 0
         assert body["token_type"] == "bearer"
         assert isinstance(body["expires_in"], int)
         assert body["expires_in"] > 0
@@ -111,12 +115,14 @@ class TestLoginEndpoint:
         assert "is_admin" in body
         assert isinstance(body["is_admin"], bool)
 
-        # Token must be a valid HS256 JWT with correct claims
+        # Access token must be a valid HS256 JWT with correct claims
         secret = os.environ["AUTH_SECRET_KEY"]
         payload = jwt.decode(body["access_token"], secret, algorithms=["HS256"])
         assert payload["sub"] == _TEST_USERNAME
         assert payload["user_id"] == str(_TEST_USER_ID)
         assert "exp" in payload
+        # T004: tv claim present (token_version=1 default)
+        assert payload.get("tv") == 1
 
     def test_login_wrong_password_returns_401(self):
         """Wrong password → 401 AUTH_FAILED (no enumeration)."""
@@ -227,16 +233,24 @@ def _make_local_token(user_id: uuid.UUID, username: str, expired: bool = False) 
     )
 
 
-def _mock_db_user_by_id(user_id: uuid.UUID):
-    """Mock DB that returns a user row when looked up by id."""
+def _mock_db_user_by_id(user_id: uuid.UUID, token_version: int = 1):
+    """Mock DB that returns a user row when looked up by id.
+
+    S002/T003: _verify_local_jwt SELECT now returns (id, token_version) — mock must
+    support row[0]=user_id and row[1]=token_version.
+    Second execute call is _compute_is_admin (scalar).
+    """
     row = MagicMock()
-    row.__getitem__ = lambda self, i: [user_id][i]
+    row.__getitem__ = lambda self, i: [user_id, token_version][i]
 
     result = MagicMock()
     result.fetchone = MagicMock(return_value=row)
 
+    admin_result = MagicMock()
+    admin_result.scalar = MagicMock(return_value=False)
+
     session = AsyncMock()
-    session.execute = AsyncMock(return_value=result)
+    session.execute = AsyncMock(side_effect=[result, admin_result])
     return session
 
 
@@ -357,3 +371,103 @@ def test_smoke_bad_credentials():
     assert "exception" not in str(body).lower()
     # Route must be registered — verify via OpenAPI schema
     assert "/v1/auth/token" in app.openapi()["paths"]
+
+
+# ---------------------------------------------------------------------------
+# T003 Tests — POST /v1/auth/refresh
+# ---------------------------------------------------------------------------
+
+def _mock_db_refresh_user(user_id: uuid.UUID, sub: str, token_version: int = 1):
+    """Mock DB that returns a user row for refresh route: (id, sub, token_version)."""
+    row = MagicMock()
+    row.__getitem__ = lambda self, i: [user_id, sub, token_version][i]
+    result = MagicMock()
+    result.fetchone = MagicMock(return_value=row)
+    session = AsyncMock()
+    session.execute = AsyncMock(return_value=result)
+    return session
+
+
+def _make_valid_refresh_token(user_id: uuid.UUID, sub: str) -> str:
+    from backend.auth.jwt import create_refresh_token
+    return create_refresh_token(sub=sub, user_id=str(user_id))
+
+
+class TestRefreshEndpoint:
+    """Tests for POST /v1/auth/refresh (T003)."""
+
+    def test_refresh_success_returns_new_tokens(self):
+        """Valid refresh token → 200 with new access_token + refresh_token."""
+        refresh_tok = _make_valid_refresh_token(_TEST_USER_ID, _TEST_USERNAME)
+        db = _mock_db_refresh_user(_TEST_USER_ID, _TEST_USERNAME)
+        app = _make_app(db=db)
+
+        with TestClient(app, raise_server_exceptions=False) as client:
+            resp = client.post("/v1/auth/refresh", json={"refresh_token": refresh_tok})
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert "access_token" in body
+        assert "refresh_token" in body
+        assert body["token_type"] == "bearer"
+        assert isinstance(body["expires_in"], int)
+        # New access token must be decodable and carry tv claim
+        secret = os.environ["AUTH_SECRET_KEY"]
+        payload = jwt.decode(body["access_token"], secret, algorithms=["HS256"])
+        assert payload["sub"] == _TEST_USERNAME
+        assert "tv" in payload
+
+    def test_refresh_expired_token_returns_401(self):
+        """Expired refresh token → 401 AUTH_TOKEN_INVALID."""
+        import datetime as _dt
+        _REFRESH_SECRET = os.environ["JWT_REFRESH_SECRET"]
+        now = _dt.datetime.now(_dt.timezone.utc)
+        expired = jwt.encode(
+            {"sub": _TEST_USERNAME, "user_id": str(_TEST_USER_ID),
+             "exp": now - _dt.timedelta(hours=1), "iat": now - _dt.timedelta(hours=2)},
+            _REFRESH_SECRET,
+            algorithm="HS256",
+        )
+        app = _make_app()
+        with TestClient(app, raise_server_exceptions=False) as client:
+            resp = client.post("/v1/auth/refresh", json={"refresh_token": expired})
+
+        assert resp.status_code == 401
+        assert resp.json()["detail"]["error"]["code"] == "AUTH_TOKEN_INVALID"
+
+    def test_refresh_tampered_token_returns_401(self):
+        """Tampered refresh token → 401 AUTH_TOKEN_INVALID."""
+        refresh_tok = _make_valid_refresh_token(_TEST_USER_ID, _TEST_USERNAME)
+        tampered = refresh_tok[:-4] + "XXXX"
+        app = _make_app()
+        with TestClient(app, raise_server_exceptions=False) as client:
+            resp = client.post("/v1/auth/refresh", json={"refresh_token": tampered})
+
+        assert resp.status_code == 401
+        assert resp.json()["detail"]["error"]["code"] == "AUTH_TOKEN_INVALID"
+
+    def test_refresh_oidc_access_token_rejected(self):
+        """OIDC / access token used as refresh token → 401 (D-SA-07)."""
+        _ACCESS_SECRET = os.environ["AUTH_SECRET_KEY"]
+        access_tok = jwt.encode(
+            {"sub": _TEST_USERNAME, "user_id": str(_TEST_USER_ID),
+             "exp": int(time.time()) + 3600},
+            _ACCESS_SECRET,
+            algorithm="HS256",
+        )
+        app = _make_app()
+        with TestClient(app, raise_server_exceptions=False) as client:
+            resp = client.post("/v1/auth/refresh", json={"refresh_token": access_tok})
+
+        assert resp.status_code == 401
+        assert resp.json()["detail"]["error"]["code"] == "AUTH_TOKEN_INVALID"
+
+    def test_refresh_inactive_user_returns_401(self):
+        """Valid token but user not found/inactive → 401 AUTH_TOKEN_INVALID."""
+        refresh_tok = _make_valid_refresh_token(_TEST_USER_ID, _TEST_USERNAME)
+        app = _make_app(db=_mock_db_no_user())
+        with TestClient(app, raise_server_exceptions=False) as client:
+            resp = client.post("/v1/auth/refresh", json={"refresh_token": refresh_tok})
+
+        assert resp.status_code == 401
+        assert resp.json()["detail"]["error"]["code"] == "AUTH_TOKEN_INVALID"

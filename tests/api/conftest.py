@@ -12,6 +12,7 @@ os.environ.setdefault("OIDC_ISSUER", "https://test.example.com")
 os.environ.setdefault("OIDC_AUDIENCE", "test-audience")
 os.environ.setdefault("OIDC_JWKS_URI", "https://test.example.com/.well-known/jwks.json")
 os.environ.setdefault("AUTH_SECRET_KEY", "test-secret-key-for-unit-tests-only-32bytes!!")
+os.environ.setdefault("JWT_REFRESH_SECRET", "test-refresh-secret-key-for-unit-tests-32b!")
 
 _TEST_DB_URL = os.getenv("TEST_DATABASE_URL", "")
 _integration_available = bool(_TEST_DB_URL)

@@ -1,31 +1,42 @@
 // Spec: docs/frontend-spa/spec/frontend-spa.spec.md
+// Spec: docs/security-audit/spec/security-audit.spec.md#S001
 // Task: T002 — authStore (Zustand) — token + login/logout + proactive refresh
 // Task: T005 (S004) — clearHistory on logout (D004)
+// Task: S001/T005 — remove password, add refreshToken, add refreshAccessToken (D-SA-02)
 // Decision: D002 — token in memory ONLY (no localStorage); D011 — refresh 5min before exp
+// Decision: D-SA-02 — refreshToken in memory only (not localStorage — XSS boundary)
 import { create } from 'zustand'
+import { apiClient } from '../api/client'
 import { useQueryStore } from './queryStore'
+
+interface TokenRefreshResponse {
+  access_token: string
+  refresh_token: string
+  expires_in: number
+}
 
 interface AuthState {
   token: string | null
+  refreshToken: string | null
   username: string | null
-  password: string | null
   mustChangePassword: boolean
   _refreshTimer: ReturnType<typeof setTimeout> | null
-  login: (token: string, username: string, password: string, mustChangePassword?: boolean) => void
+  login: (accessToken: string, refreshToken: string, username: string, mustChangePassword?: boolean) => void
   logout: () => void
   clearMustChangePassword: () => void
   scheduleRefresh: (expSeconds: number, refreshFn: () => void) => void
+  refreshAccessToken: () => Promise<void>
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   token: null,
+  refreshToken: null,
   username: null,
-  password: null,
   mustChangePassword: false,
   _refreshTimer: null,
 
-  login: (token, username, password, mustChangePassword = false) => {
-    set({ token, username, password, mustChangePassword })
+  login: (accessToken, refreshToken, username, mustChangePassword = false) => {
+    set({ token: accessToken, refreshToken, username, mustChangePassword })
   },
 
   logout: () => {
@@ -34,7 +45,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (_refreshTimer !== null) {
       clearTimeout(_refreshTimer)
     }
-    set({ token: null, username: null, password: null, mustChangePassword: false, _refreshTimer: null })
+    set({ token: null, refreshToken: null, username: null, mustChangePassword: false, _refreshTimer: null })
   },
 
   clearMustChangePassword: () => {
@@ -53,5 +64,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
     const timer = setTimeout(refreshFn, msUntilRefresh)
     set({ _refreshTimer: timer })
+  },
+
+  refreshAccessToken: async () => {
+    const { refreshToken, username, mustChangePassword } = get()
+    if (!refreshToken) {
+      get().logout()
+      return
+    }
+    try {
+      const { data } = await apiClient.post<TokenRefreshResponse>('/v1/auth/refresh', {
+        refresh_token: refreshToken,
+      })
+      get().login(data.access_token, data.refresh_token, username ?? '', mustChangePassword)
+      const nextExp = Date.now() / 1000 + data.expires_in
+      get().scheduleRefresh(nextExp, () => get().refreshAccessToken())
+    } catch {
+      get().logout()
+    }
   },
 }))
