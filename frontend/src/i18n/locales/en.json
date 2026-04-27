@@ -8,7 +8,9 @@
     "submit": "Sign In",
     "error_invalid": "Invalid username or password",
     "error_unavailable": "Service unavailable. Please try again later.",
-    "session_expired": "Your session has expired. Please sign in again."
+    "session_expired": "Your session has expired. Please sign in again.",
+    "show_password": "Show password",
+    "hide_password": "Hide password"
   },
   "search": {
     "placeholder": "Search knowledge base...",
@@ -51,6 +53,7 @@
     "force_change": {
       "title": "You Must Change Your Password",
       "notice": "An administrator set your initial password. For your security, you must create a new password before continuing.",
+      "current_password": "Current Password",
       "new_password": "New Password",
       "confirm_password": "Confirm New Password",
       "submit": "Set New Password",
@@ -68,6 +71,7 @@
       "submit": "Update Password",
       "cancel": "Cancel",
       "success": "Password updated successfully.",
+      "hint_password": "8–128 characters",
       "error": {
         "wrong_password": "Current password is incorrect.",
         "mismatch": "New passwords do not match.",

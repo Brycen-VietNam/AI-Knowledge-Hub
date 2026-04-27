@@ -29,3 +29,4 @@ Triggered automatically by `/report` when feature is APPROVED. Manual steps:
 | admin-spa | 2026-04-20 | S000–S005 | 151/151 frontend + 27/27 backend / 50 AC PASS / 8 QA bugs fixed | — | docs/admin-spa/reports/admin-spa.report.md |
 | user-management | 2026-04-21 | S001–S008 | 41 backend + 50 frontend / 91/91 PASS / 80 AC PASS | — | docs/user-management/reports/user-management.report.md |
 | change-password | 2026-04-22 | S001–S005 | 318 frontend + 22 backend / 340/340 PASS / 43 AC PASS | — | docs/change-password/reports/change-password.report.md |
+| ux-form-validation | 2026-04-24 | S001–S005 | Build PASS / 28/30 AC PASS (2 PARTIAL deferred) | — | docs/ux-form-validation/reports/ux-form-validation.report.md |

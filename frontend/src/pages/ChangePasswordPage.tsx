@@ -26,6 +26,7 @@ export function ChangePasswordPage() {
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [confirmError, setConfirmError] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -53,8 +54,15 @@ export function ChangePasswordPage() {
       scheduleRefresh(nextExp, () => refreshAccessToken())
       clearMustChangePassword()
       navigate('/')
-    } catch {
-      setError(t('results.error_service'))
+    } catch (err: unknown) {
+      const code =
+        (err as { response?: { data?: { error?: { code?: string } } } })
+          ?.response?.data?.error?.code
+      if (code === 'ERR_WRONG_PASSWORD') {
+        setError(t('auth.change_password.error.wrong_password'))
+      } else {
+        setError(t('results.error_service'))
+      }
     } finally {
       setIsLoading(false)
     }
@@ -83,10 +91,12 @@ export function ChangePasswordPage() {
               id="fc-new"
               type="password"
               value={newPassword}
+              maxLength={128}
               onChange={(e) => { setError(null); setNewPassword(e.target.value) }}
               required
               autoComplete="new-password"
             />
+            <p className="field-hint">{t('auth.change_password.hint_password')}</p>
           </div>
           <div>
             <label htmlFor="fc-confirm">{t('auth.force_change.confirm_password')}</label>
@@ -94,10 +104,20 @@ export function ChangePasswordPage() {
               id="fc-confirm"
               type="password"
               value={confirmPassword}
-              onChange={(e) => { setError(null); setConfirmPassword(e.target.value) }}
+              maxLength={128}
+              onChange={(e) => {
+                const v = e.target.value
+                setConfirmPassword(v)
+                if (v && v !== newPassword) {
+                  setConfirmError(t('auth.change_password.error.mismatch'))
+                } else {
+                  setConfirmError('')
+                }
+              }}
               required
               autoComplete="new-password"
             />
+            {confirmError && <p className="field-error">{confirmError}</p>}
           </div>
           {error && <p role="alert">{error}</p>}
           <button

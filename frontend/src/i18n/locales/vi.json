@@ -8,7 +8,9 @@
     "submit": "Đăng nhập",
     "error_invalid": "Tên đăng nhập hoặc mật khẩu không hợp lệ",
     "error_unavailable": "Dịch vụ không khả dụng. Vui lòng thử lại sau.",
-    "session_expired": "Phiên của bạn đã hết hạn. Vui lòng đăng nhập lại."
+    "session_expired": "Phiên của bạn đã hết hạn. Vui lòng đăng nhập lại.",
+    "show_password": "Hiện mật khẩu",
+    "hide_password": "Ẩn mật khẩu"
   },
   "search": {
     "placeholder": "Tìm kiếm trong kho kiến thức...",
@@ -51,6 +53,7 @@
     "force_change": {
       "title": "Bạn phải thay đổi mật khẩu",
       "notice": "Quản trị viên đã đặt mật khẩu ban đầu cho bạn. Vì lý do bảo mật, bạn phải tạo mật khẩu mới trước khi tiếp tục.",
+      "current_password": "Mật khẩu hiện tại",
       "new_password": "Mật khẩu mới",
       "confirm_password": "Xác nhận mật khẩu mới",
       "submit": "Đặt mật khẩu mới",
@@ -68,6 +71,7 @@
       "submit": "Cập nhật mật khẩu",
       "cancel": "Hủy",
       "success": "Mật khẩu đã được cập nhật thành công.",
+      "hint_password": "8–128 ký tự",
       "error": {
         "wrong_password": "Mật khẩu hiện tại không đúng.",
         "mismatch": "Mật khẩu mới không khớp.",

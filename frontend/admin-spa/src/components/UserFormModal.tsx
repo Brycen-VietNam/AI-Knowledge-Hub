@@ -29,6 +29,7 @@ export function UserFormModal({ onSave, onClose, groups }: Props) {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [selectedGroupIds, setSelectedGroupIds] = useState<number[]>([])
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -61,13 +62,19 @@ export function UserFormModal({ onSave, onClose, groups }: Props) {
       onClose()
     } catch (err: unknown) {
       const axiosErr = err as {
-        response?: { status?: number; data?: { detail?: string; message?: string } }
+        response?: { status?: number; data?: { detail?: Array<{ loc: string[]; msg: string }> | string; message?: string } }
       }
       if (axiosErr.response?.status === 409) {
         setError(t('user.create.error.duplicate_sub'))
       } else if (axiosErr.response?.status === 422) {
-        const detail = axiosErr.response?.data?.detail ?? axiosErr.response?.data?.message
-        setError(typeof detail === 'string' ? detail : t('common.error.unexpected'))
+        const detail = axiosErr.response?.data?.detail
+        if (Array.isArray(detail)) {
+          const errs: Record<string, string> = {}
+          detail.forEach((d) => { if (d.loc[1]) errs[d.loc[1]] = d.msg })
+          setFieldErrors(errs)
+        } else {
+          setError(typeof detail === 'string' ? detail : t('common.error.unexpected'))
+        }
       } else {
         setError(t('common.error.unexpected'))
       }
@@ -93,6 +100,8 @@ export function UserFormModal({ onSave, onClose, groups }: Props) {
               disabled={isSubmitting}
               autoComplete="off"
             />
+            {fieldErrors.sub && <p className="field-error">{fieldErrors.sub}</p>}
+            <p className="field-hint">{t('user.form.hint_sub')}</p>
           </div>
 
           {/* email */}
@@ -105,6 +114,8 @@ export function UserFormModal({ onSave, onClose, groups }: Props) {
               disabled={isSubmitting}
               autoComplete="off"
             />
+            {fieldErrors.email && <p className="field-error">{fieldErrors.email}</p>}
+            <p className="field-hint">{t('user.form.hint_email')}</p>
           </div>
 
           {/* display_name */}
@@ -148,6 +159,8 @@ export function UserFormModal({ onSave, onClose, groups }: Props) {
                 {t('user.form.generate_password')}
               </button>
             </div>
+            {fieldErrors.password && <p className="field-error">{fieldErrors.password}</p>}
+            <p className="field-hint">{t('user.form.hint_password')}</p>
           </div>
 
           {/* groups */}

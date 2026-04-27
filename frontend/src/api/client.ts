@@ -26,9 +26,12 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      useAuthStore.getState().logout()
-      if (_navigate) {
-        _navigate('/login')
+      const isChangingPassword = window.location.pathname === '/change-password'
+      if (!isChangingPassword) {
+        useAuthStore.getState().logout()
+        if (_navigate) {
+          _navigate('/login')
+        }
       }
     }
     return Promise.reject(error)

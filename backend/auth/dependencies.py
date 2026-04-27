@@ -103,9 +103,16 @@ async def _verify_local_jwt(token: str, db: AsyncSession) -> AuthenticatedUser |
             }},
         )
 
+    # Load group memberships from DB so RBAC filter works for local-auth users
+    groups_result = await db.execute(
+        text("SELECT group_id FROM user_group_memberships WHERE user_id = :user_id")
+        .bindparams(user_id=user_id)
+    )
+    user_group_ids = [r[0] for r in groups_result.fetchall()]
+
     return AuthenticatedUser(
         user_id=user_id,
-        user_group_ids=[],  # local JWT carries no group claims; empty = permissive (D06)
+        user_group_ids=user_group_ids,
         auth_type="oidc",   # Literal["api_key","oidc"] — "local" out of scope (T002 decision)
     )
 

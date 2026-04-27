@@ -27,6 +27,7 @@ export function ChangePasswordModal({ onClose }: Props) {
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [confirmError, setConfirmError] = useState('')
   const [fieldError, setFieldError] = useState<string | null>(null)
   const [generalError, setGeneralError] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
@@ -97,10 +98,12 @@ export function ChangePasswordModal({ onClose }: Props) {
             id="cp-new"
             type="password"
             value={newPassword}
+            maxLength={128}
             onChange={(e) => { clearErrors(); setNewPassword(e.target.value) }}
             required
             autoComplete="new-password"
           />
+          <p className="field-hint">{t('auth.change_password.hint_password')}</p>
         </div>
 
         <div className="change-password-field">
@@ -109,10 +112,20 @@ export function ChangePasswordModal({ onClose }: Props) {
             id="cp-confirm"
             type="password"
             value={confirmPassword}
-            onChange={(e) => { clearErrors(); setConfirmPassword(e.target.value) }}
+            maxLength={128}
+            onChange={(e) => {
+              const v = e.target.value
+              setConfirmPassword(v)
+              if (v && v !== newPassword) {
+                setConfirmError(t('auth.change_password.error.mismatch'))
+              } else {
+                setConfirmError('')
+              }
+            }}
             required
             autoComplete="new-password"
           />
+          {confirmError && <p className="field-error">{confirmError}</p>}
         </div>
 
         {fieldError && <p className="change-password-error">{fieldError}</p>}

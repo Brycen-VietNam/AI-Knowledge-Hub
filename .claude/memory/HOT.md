@@ -1,7 +1,7 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-23 | Session: #121 (security-audit — /report DONE, 20/20 ACs, 118/118 backend+32/32 frontend tests) | /sync
+Updated: 2026-04-24 | Session: #123 (ux-form-validation — DONE + archived) | /report --finalize
 
 ---
 
@@ -15,6 +15,7 @@ Status: **security-audit** — IN_PROGRESS | S001 tasks defined + analyzed | 0 b
 - **admin-spa** — DONE ✅ 2026-04-20 | Archive: `.claude/memory/COLD/admin-spa.archive.md`
 - **user-management** — DONE ✅ 2026-04-21 | 80/80 ACs | 91/91 tests PASS | Archive: `.claude/memory/COLD/user-management.archive.md`
 - **change-password** — DONE ✅ 2026-04-22 | 43/43 ACs | 340/340 tests PASS | Archive: `.claude/memory/COLD/change-password.archive.md`
+- **ux-form-validation** — DONE ✅ 2026-04-24 | 30 ACs | 28 PASS + 2 PARTIAL | Archive: `.claude/memory/COLD/ux-form-validation.archive.md`
 → All archived in `.claude/memory/COLD/`
 
 ## In Progress (max 3)
@@ -24,10 +25,12 @@ Status: **security-audit** — IN_PROGRESS | S001 tasks defined + analyzed | 0 b
   Stories: S001 ✅ REVIEWED + S002 ✅ REVIEWED | ACs: 20/20 | Tests: 118/118 backend + 32/32 frontend
   Fixed: test_local_jwt_resolves_user mock fixture gap (S002 SELECT extension → row[1])
   Next: lb_mui sign-off → /report security-audit --finalize
+- **ux-form-validation** — DONE ✅ 2026-04-24 | 5 stories, 28/30 AC PASS (2 PARTIAL deferred) | Archive: `.claude/memory/COLD/ux-form-validation.archive.md`
 
-## Recent Decisions (Session #119)
-- 2026-04-23: D-SA-07 — `/v1/auth/refresh` local HS256 only; OIDC tokens → AUTH_TOKEN_INVALID (via verify_refresh_token failure)
-- 2026-04-23: D-SA-08 — Self-serve change-password bumps `token_version`; PATCH now returns 200+tokens (was 204)
+## Recent Decisions (Session #122)
+- 2026-04-24: D-UX-04 — admin-spa had no `auth.*` i18n namespace; added `auth.reset_password.hint_password` as new top-level block in all 4 admin-spa locales
+- 2026-04-24: D-UX-03 — ResetPasswordModal copy timeout already implemented (line 71); S005 AC3 verify-only
+- 2026-04-24: D-UX-01/02 — /clarify skipped; `.password-field-row` exists admin-spa:922; all 4 classes needed in frontend-spa
 - 2026-04-23: S001 IMPL — App.tsx `hasPassword` logic changed from `password !== null` → `refreshToken !== null` (D-SA-02 — OIDC users never get refresh token)
 - 2026-04-23: D-SA-01 — `JWT_REFRESH_SECRET` separate env var (not shared with `AUTH_SECRET_KEY`) — confirmed lb_mui; independent rotation policy
 - 2026-04-23: D-SA-02 — Refresh token stored in `authStore` memory only (not localStorage) — XSS boundary
