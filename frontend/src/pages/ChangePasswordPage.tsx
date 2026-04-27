@@ -54,8 +54,15 @@ export function ChangePasswordPage() {
       scheduleRefresh(nextExp, () => refreshAccessToken())
       clearMustChangePassword()
       navigate('/')
-    } catch {
-      setError(t('results.error_service'))
+    } catch (err: unknown) {
+      const code =
+        (err as { response?: { data?: { error?: { code?: string } } } })
+          ?.response?.data?.error?.code
+      if (code === 'ERR_WRONG_PASSWORD') {
+        setError(t('auth.change_password.error.wrong_password'))
+      } else {
+        setError(t('results.error_service'))
+      }
     } finally {
       setIsLoading(false)
     }

@@ -14,3 +14,6 @@ User: `dev@example.com` (sub: `dev-local`), `user_group_ids = [1]`
 
 apikey: kh_4eea3eb9fbd7b5d313a50f3c0d75e2ab
 demo: demo123456
+
+No group: 
+nogroup  demo123456

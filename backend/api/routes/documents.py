@@ -206,9 +206,10 @@ async def list_documents(
 
     # R001: RBAC at WHERE clause — not Python post-filter
     rbac_stmt = text(
-        "SELECT d.id, d.title, d.lang, d.user_group_id, d.status, d.created_at, "
+        "SELECT d.id, d.title, d.lang, d.user_group_id, g.name AS user_group_name, d.status, d.created_at, "
         "(SELECT COUNT(*) FROM embeddings e WHERE e.doc_id = d.id) AS chunk_count "
         "FROM documents d "
+        "LEFT JOIN user_groups g ON d.user_group_id = g.id "
         "WHERE (d.user_group_id = ANY(:group_ids) OR d.user_group_id IS NULL) "
         "ORDER BY d.created_at DESC "
         "LIMIT :limit OFFSET :offset"
@@ -228,6 +229,7 @@ async def list_documents(
             "title": r["title"],
             "lang": r["lang"],
             "user_group_id": r["user_group_id"],
+            "user_group_name": r["user_group_name"],
             "status": r["status"],
             "created_at": r["created_at"].isoformat() if hasattr(r["created_at"], "isoformat") else str(r["created_at"]),
             "chunk_count": r["chunk_count"],

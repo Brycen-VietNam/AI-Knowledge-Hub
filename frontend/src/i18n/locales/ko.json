@@ -53,6 +53,7 @@
     "force_change": {
       "title": "비밀번호를 변경해야 합니다",
       "notice": "관리자가 초기 비밀번호를 설정했습니다. 보안을 위해 계속 진행하기 전에 새 비밀번호를 설정해야 합니다.",
+      "current_password": "현재 비밀번호",
       "new_password": "새 비밀번호",
       "confirm_password": "새 비밀번호 확인",
       "submit": "새 비밀번호 설정",

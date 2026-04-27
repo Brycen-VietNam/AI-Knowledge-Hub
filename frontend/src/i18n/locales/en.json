@@ -53,6 +53,7 @@
     "force_change": {
       "title": "You Must Change Your Password",
       "notice": "An administrator set your initial password. For your security, you must create a new password before continuing.",
+      "current_password": "Current Password",
       "new_password": "New Password",
       "confirm_password": "Confirm New Password",
       "submit": "Set New Password",

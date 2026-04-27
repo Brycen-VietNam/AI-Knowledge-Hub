@@ -119,9 +119,10 @@ async def admin_list_documents(
 
     # Static fragment list — no user input injected into SQL text
     base_select = (
-        "SELECT d.id, d.title, d.lang, d.user_group_id, d.status, d.created_at, "
+        "SELECT d.id, d.title, d.lang, d.user_group_id, g.name AS user_group_name, d.status, d.created_at, "
         "(SELECT COUNT(*) FROM embeddings e WHERE e.doc_id = d.id) AS chunk_count "
-        "FROM documents d"
+        "FROM documents d "
+        "LEFT JOIN user_groups g ON d.user_group_id = g.id"
     )
     base_count = "SELECT COUNT(*) FROM documents d"
     filter_sql = (" WHERE " + " AND ".join(conditions)) if conditions else ""
@@ -142,6 +143,7 @@ async def admin_list_documents(
             "title": r["title"],
             "lang": r["lang"],
             "user_group_id": r["user_group_id"],
+            "user_group_name": r["user_group_name"],
             "status": r["status"],
             "created_at": r["created_at"].isoformat() if hasattr(r["created_at"], "isoformat") else str(r["created_at"]),
             "chunk_count": r["chunk_count"],
