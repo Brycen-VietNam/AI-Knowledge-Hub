@@ -1,5 +1,5 @@
 # Feature Backlog — Knowledge-Hub
-> Generated: 2026-03-17 | Updated: 2026-04-23
+> Generated: 2026-03-17 | Updated: 2026-04-27
 > Source: /specify session + CONSTITUTION.md v1.2 + license review
 
 ---
@@ -24,6 +24,7 @@
 | 6 | `multilingual-rag-pipeline` | rag | Hybrid search: dense embeddings + BM25, auto lang detect |
 | 7 | `llm-provider` | rag | Multi-provider LLM adapter: Ollama/Llama (free) + OpenAI/Claude (paid) |
 | 8 | `query-endpoint` | api | POST /v1/query với audit log, latency SLA <2000ms |
+| 29 | `embed-model-migration` | rag | **IN PROGRESS (SPECCING 2026-04-27)** — Chuyển dense embedder `mxbai-embed-large` (English-centric) → `intfloat/multilingual-e5-large` (MIT, self-build từ HF, q4_k_m quantized). Schema 1024-dim giữ nguyên (HNSW cosine). Truncate test data + re-ingest (Strategy A). Bổ sung E5 prefix `query: ` / `passage: `. Eval set 120 query (30 × JA/EN/VI/KO, ≥25% cross-lingual) đo recall@10 ≥ baseline +15%. Demo AWS `t3.medium` (~$30/tháng). Spec: `docs/embed-model-migration/spec/`. |
 
 ## P1 — Core MVP
 
@@ -46,6 +47,7 @@
 | 17 | `file-storage` | api | Lưu file gốc sau khi ingest — pluggable backend: local disk hoặc S3-compatible (MinIO/AWS S3) qua env `FILE_STORAGE_BACKEND=local\|s3`. GET /v1/documents/{id}/download trả presigned URL (S3) hoặc stream (local). Embedding là one-way — không thể recover file từ vector. |
 | 18 | `confidence-retrieval-score` | rag | Thay cited_ratio bằng retrieval-score-based confidence: dùng score của top docs từ pgvector thay vì đếm [N] trong LLM answer. Lý do: model free (gpt-oss-120b, qwen) không follow citation instruction đủ tốt → cited_ratio thường = 1/9 → LOW dù retrieval tốt. Approach: `confidence = weighted_avg(top_k_scores)` hoặc `score[0] * 0.6 + mean(scores) * 0.4`. Giữ top_k không đổi, chỉ thay nguồn tính confidence trong `query.py`. |
 | 19 | `multi-chunk-per-doc` | rag | Retriever hiện dedup theo doc_id → nhiều chunks khớp từ cùng 1 doc bị collapse thành 1 chunk (mất context). Fix: dedup theo `(doc_id, chunk_index)`, giới hạn max 2 chunks/doc. Score vẫn cộng dồn (boost doc có nhiều chunks khớp). Config qua env `RAG_MAX_CHUNKS_PER_DOC=2`. Với top_k=10: worst case 5 docs × 2 chunks — đủ đa dạng nguồn cho LLM. |
+| 30 | `query-rewriting` | rag | **DEFERRED — giải quyết sau khi #29 ship + đo baseline E5.** Layer trước embedding: gọi LLM (qua `llm-provider` adapter) rewrite/expand query → (a) chuẩn hoá thuật ngữ nội bộ ("KH" → "Knowledge Hub"), (b) sinh synonym, (c) sinh translation 1–2 ngôn ngữ khác (EN ↔ JA/VI/KO). Multi-vector retrieval: embed bản gốc + rewritten + translated → dense_search song song → merge max-score → dedupe. Feature flag `RAG_QUERY_REWRITE_ENABLED=false` mặc định. Cache TTL 1h theo `hash(query)`. Mục tiêu: recall@10 ON ≥ OFF +5% trên top E5 baseline. Lý do defer: (1) cần đo recall E5 trước để biết rewriting có còn cần thiết hay không; (2) thêm 1 LLM call/query — phải đánh giá trade-off latency + chi phí Ollama load sau khi #29 stable; (3) rủi ro LLM hallucinate translation/synonym → false positive, cần guardrails (S003 input sanitization). Estimate: 5 stories, ~3.25 ngày. Plan tham khảo: `.claude/plans/xem-x-t-c-c-feature-streamed-kazoo.md` §4 feature #30. |
 
 ---
 

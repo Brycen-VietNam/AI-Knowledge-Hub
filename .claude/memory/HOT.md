@@ -19,6 +19,11 @@ Status: **security-audit** — IN_PROGRESS | S001 tasks defined + analyzed | 0 b
 → All archived in `.claude/memory/COLD/`
 
 ## In Progress (max 3)
+- **embed-model-migration** — P0 | CLARIFIED 2026-04-27 | 0 blockers, ready for /checklist
+  Spec: `docs/embed-model-migration/spec/embed-model-migration.spec.md` (updated AC4,5 S005 + AC3 S004)
+  Clarify: `docs/embed-model-migration/clarify/embed-model-migration.clarify.md` (all resolved ✅)
+  WARM: `.claude/memory/WARM/embed-model-migration.mem.md`
+  Next: /checklist embed-model-migration → /plan
 - **security-audit** — P1 | REPORT DONE 2026-04-23 | awaiting sign-off (lb_mui) → /report --finalize
   WARM: `.claude/memory/WARM/security-audit.mem.md`
   Report: `docs/security-audit/reports/security-audit.report.md`
@@ -27,10 +32,10 @@ Status: **security-audit** — IN_PROGRESS | S001 tasks defined + analyzed | 0 b
   Next: lb_mui sign-off → /report security-audit --finalize
 - **ux-form-validation** — DONE ✅ 2026-04-24 | 5 stories, 28/30 AC PASS (2 PARTIAL deferred) | Archive: `.claude/memory/COLD/ux-form-validation.archive.md`
 
-## Recent Decisions (Session #122)
-- 2026-04-24: D-UX-04 — admin-spa had no `auth.*` i18n namespace; added `auth.reset_password.hint_password` as new top-level block in all 4 admin-spa locales
-- 2026-04-24: D-UX-03 — ResetPasswordModal copy timeout already implemented (line 71); S005 AC3 verify-only
-- 2026-04-24: D-UX-01/02 — /clarify skipped; `.password-field-row` exists admin-spa:922; all 4 classes needed in frontend-spa
+## Recent Decisions (Session #125 — embed-model-migration /clarify)
+- 2026-04-27: D09 — S005 pass bar = absolute recall@10 ≥ 0.6 (cross-lingual ≥ 0.5); mxbai baseline bỏ qua (fixture mới)
+- 2026-04-27: D08 — GGUF path = llama.cpp convert từ safetensors Q4_K_M; HF GGUF repo không tồn tại (verified)
+- 2026-04-27: D07 — Fixture generation: Claude tự generate synthetic từ test docs; lb_mui review cuối S005
 - 2026-04-23: S001 IMPL — App.tsx `hasPassword` logic changed from `password !== null` → `refreshToken !== null` (D-SA-02 — OIDC users never get refresh token)
 - 2026-04-23: D-SA-01 — `JWT_REFRESH_SECRET` separate env var (not shared with `AUTH_SECRET_KEY`) — confirmed lb_mui; independent rotation policy
 - 2026-04-23: D-SA-02 — Refresh token stored in `authStore` memory only (not localStorage) — XSS boundary
