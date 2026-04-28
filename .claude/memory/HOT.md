@@ -1,7 +1,7 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-24 | Session: #123 (ux-form-validation — DONE + archived) | /report --finalize
+Updated: 2026-04-28 | Session: #127 (embed-model-migration — /tasks S001 + /analyze S001 complete, plan §S003 corrected, ready for /implement T001)
 
 ---
 
@@ -19,11 +19,15 @@ Status: **security-audit** — IN_PROGRESS | S001 tasks defined + analyzed | 0 b
 → All archived in `.claude/memory/COLD/`
 
 ## In Progress (max 3)
-- **embed-model-migration** — P0 | CLARIFIED 2026-04-27 | 0 blockers, ready for /checklist
-  Spec: `docs/embed-model-migration/spec/embed-model-migration.spec.md` (updated AC4,5 S005 + AC3 S004)
-  Clarify: `docs/embed-model-migration/clarify/embed-model-migration.clarify.md` (all resolved ✅)
+- **embed-model-migration** — P0 | TASKS+ANALYZE done for S001 | 0 blockers, ready for /implement T001
+  Spec: `docs/embed-model-migration/spec/embed-model-migration.spec.md`
+  Plan: `docs/embed-model-migration/plan/embed-model-migration.plan.md` (5 stories, ~14.5k tokens — S003 corrected post-analyze)
+  S001 tasks: `docs/embed-model-migration/tasks/S001.tasks.md` (T001–T005, groups G1[T001]→G2[T002,T003]→G3[T004]→G4[T005])
+  S001 analysis: `docs/embed-model-migration/tasks/S001.analysis.md` (5 findings; F1 applied to plan, F3 dismissed)
+  Plan correction §S003: actual call-site = `backend/rag/query_processor.py:49` (NOT `retriever.py`). Two-file scope: query_processor.py (caller swap) + retriever.py (cosine `<->` → `<=>` AC6).
+  Spike A: PASS (dim=1024, latency 230–330ms warm, prefix-sensitive, cross-lingual cos=0.94)
   WARM: `.claude/memory/WARM/embed-model-migration.mem.md`
-  Next: /checklist embed-model-migration → /plan
+  Next: /implement T001 (flip EMBEDDING_MODEL default → multilingual-e5-large)
 - **security-audit** — P1 | REPORT DONE 2026-04-23 | awaiting sign-off (lb_mui) → /report --finalize
   WARM: `.claude/memory/WARM/security-audit.mem.md`
   Report: `docs/security-audit/reports/security-audit.report.md`
@@ -32,9 +36,12 @@ Status: **security-audit** — IN_PROGRESS | S001 tasks defined + analyzed | 0 b
   Next: lb_mui sign-off → /report security-audit --finalize
 - **ux-form-validation** — DONE ✅ 2026-04-24 | 5 stories, 28/30 AC PASS (2 PARTIAL deferred) | Archive: `.claude/memory/COLD/ux-form-validation.archive.md`
 
-## Recent Decisions (Session #125 — embed-model-migration /clarify)
+## Recent Decisions (Session — embed-model-migration /plan + Spike A 2026-04-28)
+- 2026-04-28: **D12** — Quantization = F16 (zylonai tag native), không Q4_K_M. SUPERSEDES D03. RAM ~1.1GB fit `t3.medium`
+- 2026-04-28: **D11** — POC→Product gate: trước khi go-product phải re-evaluate model sourcing (self-convert / cosine-verify zylonai / Brysen approved-vendor process). Carry-over checklist trong WARM
+- 2026-04-28: **D10** — POC dùng `ollama pull zylonai/multilingual-e5-large` (community tag, F16, MIT, digest pinned `c1522b1c...d76b`). SUPERSEDES D08 cho POC. Spike A 2026-04-28 verified dim/latency/prefix/cross-lingual.
 - 2026-04-27: D09 — S005 pass bar = absolute recall@10 ≥ 0.6 (cross-lingual ≥ 0.5); mxbai baseline bỏ qua (fixture mới)
-- 2026-04-27: D08 — GGUF path = llama.cpp convert từ safetensors Q4_K_M; HF GGUF repo không tồn tại (verified)
+- 2026-04-27: D08 — [SUPERSEDED by D10 cho POC; giữ làm fallback path] GGUF path = llama.cpp convert từ safetensors Q4_K_M
 - 2026-04-27: D07 — Fixture generation: Claude tự generate synthetic từ test docs; lb_mui review cuối S005
 - 2026-04-23: S001 IMPL — App.tsx `hasPassword` logic changed from `password !== null` → `refreshToken !== null` (D-SA-02 — OIDC users never get refresh token)
 - 2026-04-23: D-SA-01 — `JWT_REFRESH_SECRET` separate env var (not shared with `AUTH_SECRET_KEY`) — confirmed lb_mui; independent rotation policy

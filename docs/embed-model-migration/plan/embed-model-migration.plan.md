@@ -1,5 +1,9 @@
 # Plan: embed-model-migration
-Created: 2026-04-28 | Based on spec: v1 (DRAFT 2026-04-27) | Checklist: PASS (2026-04-28, 0 blockers / 1 WARN auto-approved)
+Created: 2026-04-28 | Updated: 2026-04-28 (post-Spike A) | Based on spec: v1 (DRAFT 2026-04-27) | Checklist: PASS (2026-04-28, 0 blockers / 1 WARN auto-approved)
+
+## Update Log
+- **2026-04-28 (post-Spike A)**: D10 supersedes D08 for POC — switch from self-convert to `zylonai/multilingual-e5-large` community tag. D12 supersedes D03 — F16 instead of Q4_K_M. D11 adds product-phase migration gate. S004 simplified. S003 gains AC for `<->` → `<=>` retriever bug fix.
+- **2026-04-28 (post-/analyze S001)**: S003 TOUCH list corrected — actual query-time embedder call-site is `backend/rag/query_processor.py:49`, not `retriever.py`. `retriever.py` retained for AC6 cosine fix only. S003 token estimate ~2k → ~2.5k.
 
 ---
 
@@ -61,10 +65,10 @@ G3 (after G2 + S004 complete — needs ingested data + working pipeline):
 |-------|-------------|
 | S001 | ~3k (refactor + 7 ACs of unit tests) |
 | S002 | ~2k (one-line caller swap + integration test) |
-| S003 | ~2k (one-line caller swap + smoke test) |
+| S003 | ~2.5k (caller swap in query_processor.py + cosine fix in retriever.py + smoke test) |
 | S004 | ~3k (script + 2 ops docs + smoke verification) |
 | S005 | ~4k (harness + 120 fixtures + report generation) |
-| **Total** | **~14k** |
+| **Total** | **~14.5k** |
 
 ---
 
@@ -134,24 +138,30 @@ G3 (after G2 + S004 complete — needs ingested data + working pipeline):
 
 ---
 
-### S003: Wire query path to `embed_query`
+### S003: Wire query path to `embed_query` + fix retriever cosine operator
 **Agent**: rag-agent
 **Parallel group**: G2 (after S001)
 **Depends on**: S001
-**Spec reference**: spec.md §S003 (AC1–AC5)
+**Spec reference**: spec.md §S003 (AC1–AC5) + new AC6 (added 2026-04-28 post-Spike A)
 
-**Files**
-| Action | Path |
-|--------|------|
-| MODIFY | [backend/rag/retriever.py](backend/rag/retriever.py) (`_dense_search`) |
-| MODIFY | (retriever test file — confirm path in /tasks /analyze) |
+**New AC6 (out-of-spike-scope bug folded in)**: retriever currently uses `<->` (L2 distance) at [backend/rag/retriever.py:51](backend/rag/retriever.py#L51) but HNSW index is built with `vector_cosine_ops` ([migrations/002:25](backend/db/migrations/002_add_pgvector_hnsw.sql#L25)). Operator/index mismatch causes sequential scan — violates P003. Fix: change `<->` → `<=>` and update score formula `1.0 - distance` to be cosine-correct (cosine distance is bounded [0,2], so `1.0 - dist` may go negative; use `1.0 - (dist / 2.0)` or revisit normalization). Verify HNSW used via `EXPLAIN ANALYZE`.
+
+**Files** (corrected 2026-04-28 post-/analyze S001 — actual query-time call-site is `query_processor.py`, not `retriever.py`)
+| Action | Path | Purpose |
+|--------|------|---------|
+| MODIFY | [backend/rag/query_processor.py](backend/rag/query_processor.py) (`embed_query`, L49) | **Primary caller swap** — replace `_embedder.embed_one(text)` → `_embedder.embed_query(text)` (prefix applied internally) |
+| MODIFY | [backend/rag/retriever.py](backend/rag/retriever.py) (`_dense_search`, L51) | **AC6 only** — cosine operator fix `<->` → `<=>` + score formula update |
+| MODIFY | [tests/rag/test_query_processor.py](tests/rag/test_query_processor.py) | Update mock to `embed_query` + assert prefix-aware call |
+| MODIFY | [tests/rag/test_retriever.py](tests/rag/test_retriever.py) | Cross-lingual smoke + cosine operator regression |
 
 **Subagent dispatch**: YES
-**Est. tokens**: ~2k
-**Test entry**: `pytest backend/rag/tests/test_retriever.py -v`
+**Est. tokens**: ~2.5k (was ~2k — bumped for two-file scope)
+**Test entry**: `pytest tests/rag/test_query_processor.py tests/rag/test_retriever.py -v`
 
 **Story-specific notes**
-- `_dense_search` swaps to `embedder.embed_query(query_text)` — prefix applied internally.
+- **Call-flow** (verified 2026-04-28): `/v1/query` → `search.py` → `query_processor.embed_query(text)` → `_embedder.embed_one(text)`. `retriever.py` consumes the vector but does NOT call the embedder directly. AC1/AC2 swap belongs in `query_processor.py`.
+- **Name collision note**: after this story, `query_processor.embed_query` (façade) calls `OllamaEmbedder.embed_query` (S001). Same name, two layers — keep both, façade is the public API for retrieval pipeline.
+- `_dense_search` cosine fix (AC6) is independent of the caller swap — can be reviewed as separate hunk in same PR.
 - Hybrid weights stay env-driven (`RAG_DENSE_WEIGHT=0.7`, `RAG_BM25_WEIGHT=0.3`) per A004 — do NOT hardcode.
 - HNSW cosine ANN (m=16, ef=64) untouched.
 - Cross-lingual smoke test (AC4): query `"検索する方法"` → expect ≥1 EN doc about "search guide" in top-10.
@@ -159,18 +169,20 @@ G3 (after G2 + S004 complete — needs ingested data + working pipeline):
 - R007 budget: total /v1/query p95 < 2000ms — embedding is one of several stages; respect existing 1800ms hard timeout.
 
 **Outputs expected**
-- [ ] `_dense_search` uses `embed_query`
+- [ ] `query_processor.embed_query` calls `_embedder.embed_query` (not `embed_one`)
+- [ ] `_dense_search` uses `<=>` cosine operator + corrected score formula (AC6)
 - [ ] Cross-lingual smoke test passes
 - [ ] No regression in BM25 path or hybrid scoring tests
 - [ ] Latency assertion or telemetry hook in place
+- [ ] EXPLAIN ANALYZE confirms HNSW index used (AC6 verification)
 
 ---
 
-### S004: Truncate-and-reset script + AWS Ollama Modelfile setup
+### S004: Truncate-and-reset script + AWS Ollama setup (POC — community tag)
 **Agent**: ops
 **Parallel group**: G1 (independent of code)
 **Depends on**: none
-**Spec reference**: spec.md §S004 (AC1–AC6)
+**Spec reference**: spec.md §S004 (AC1–AC6) — **simplified per D10 (2026-04-28)**
 
 **Files**
 | Action | Path |
@@ -178,24 +190,32 @@ G3 (after G2 + S004 complete — needs ingested data + working pipeline):
 | CREATE | [scripts/truncate_and_reset.py](scripts/truncate_and_reset.py) |
 | CREATE | [docs/embed-model-migration/ops/ollama_setup.md](docs/embed-model-migration/ops/ollama_setup.md) |
 | CREATE | [docs/embed-model-migration/ops/license.md](docs/embed-model-migration/ops/license.md) |
+| CREATE | [docs/embed-model-migration/ops/LICENSE.e5](docs/embed-model-migration/ops/LICENSE.e5) (copied from upstream HF) |
 | MODIFY | [.env.example](.env.example) (also touched by S001 — coordinate; S001 sets default, S004 documents) |
 
 **Subagent dispatch**: YES (docs + script, no shared code surface with S001–S003)
-**Est. tokens**: ~3k
+**Est. tokens**: ~2k (reduced from ~3k — no convert step)
 **Test entry**: Manual — `python scripts/truncate_and_reset.py --confirm` on dev DB; `curl POST :11434/api/embeddings` smoke (AC5)
 
-**Story-specific notes**
-- Truncate script uses SQLAlchemy `text()` with named params — **no f-string SQL** (S001 SQL-injection rule + R001-style discipline). `TRUNCATE embeddings, documents CASCADE` + sequence reset.
-- `--confirm` flag mandatory (AC1). Idempotent (AC2). Log row counts before/after.
-- Ollama setup doc covers: AWS `t3.medium` provisioning, Ollama install, **llama.cpp convert** (`python convert-hf-to-gguf.py intfloat/multilingual-e5-large --outtype q4_k_m`), Modelfile, `ollama create`, env vars (D08).
-- License doc records: HF model URL, MIT license text reference, GGUF source = self-converted, distribution policy, GGUF checksum (D04).
-- `.env.example` flip is shared with S001 — ensure single canonical value `EMBEDDING_MODEL=multilingual-e5-large`. If both stories touch `.env.example`, S001 lands first; S004 confirms.
+**Story-specific notes (D10 update)**
+- Model sourcing: `ollama pull zylonai/multilingual-e5-large` — pin digest `sha256:c1522b1cf095b82080a9b804d86b4aa609e71a48bbdbcde7ea7864bb9b0cd76b` in setup doc.
+- **Bỏ section "llama.cpp convert"** — chuyển thành Appendix B "Fallback: self-convert if zylonai unavailable" với đầy đủ steps (preserved from D08) cho rollback case.
+- `EMBEDDING_MODEL` env value: `zylonai/multilingual-e5-large` (full tag, not bare `multilingual-e5-large`).
+- License doc structure (POC version):
+  - Upstream: `intfloat/multilingual-e5-large` MIT (verified via HF API 2026-04-28)
+  - Distribution: zylonai Ollama tag, MIT-declared, digest pinned
+  - Use case: internal-only consumption — MIT redistribute obligations not triggered
+  - **POC → product carry-over**: cite WARM `embed-model-migration.mem.md` "POC → PRODUCT MIGRATION CHECKLIST" section (D11)
+- LICENSE.e5: copy verbatim từ `intfloat/multilingual-e5-large` HF repo for record-keeping.
+- Truncate script unchanged: SQLAlchemy `text()` with named params, `--confirm` flag, idempotent, log row counts.
+- AWS provisioning section: `t3.medium` (4GB RAM, F16 model ~1.1GB fits), Docker run Ollama, pull tag, smoke `curl`.
 
 **Outputs expected**
 - [ ] Idempotent truncate script with `--confirm` gate
-- [ ] Ops setup doc with full provisioning + convert steps
-- [ ] License doc with checksum
-- [ ] Smoke `curl` returns 1024-float array on fresh box
+- [ ] Ops setup doc — POC primary path (zylonai pull) + Appendix B (self-convert fallback)
+- [ ] License doc with digest pin + POC scope statement + product-phase carry-over note
+- [ ] LICENSE.e5 file (upstream MIT copy)
+- [ ] Smoke `curl` returns 1024-float array on fresh box (already verified in Spike A on dev)
 
 ---
 
