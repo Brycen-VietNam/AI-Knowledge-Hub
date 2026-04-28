@@ -64,6 +64,22 @@ Token budget: ~14k total
 ## Plan Corrections (post-/analyze S001 — 2026-04-28)
 - **S003 TOUCH list corrected**: actual query-time call-site is `backend/rag/query_processor.py:49` (`_embedder.embed_one(text)`), NOT `retriever.py` as originally planned. `retriever.py` retained only for AC6 cosine `<->` → `<=>` fix. Plan §S003 + Token Budget table + Update Log all updated. Two-file scope, ~2.5k tokens.
 
+## Query/Passage Hygiene — Deferred (Option A + flag, 2026-04-28)
+Doc: `docs/embed-model-migration/notes/query-passage-hygiene.md` (full catalog + re-open decision tree)
+
+**In #29 (folded into S001 T002/T003 review criteria)**:
+- Q3: double-prefix guard — `embed_query`/`embed_passage` raise `ValueError` if input already prefixed
+- X3: exact byte-level prefix check in tests (`"query: "` 7 chars, `"passage: "` 9 chars)
+
+**Deferred — re-evaluate after S005**:
+- P1 (truncation cuts long EN/VI passage tails) | P2 (CJK token-rejoin may not match raw) | P4 (no title boost) | P5 (parser metadata leak)
+- Q1 (no NFKC + whitespace normalize on query) + X1 (must apply symmetric to passage) | X2 (long-doc tail recall miss)
+
+**Out-of-scope — separate features**:
+- Q2 + Q5 → `query-input-validation` (api-agent) | Q4 → A003 compliance check on `/v1/query` lang auto-detect | Q6 → `query-rewriting` (D06)
+
+**Re-open trigger**: S005 recall@10 < 0.6 overall OR < 0.5 cross-lingual → run decision tree in notes file.
+
 ## Files Touched
 _None yet — populated by /sync after first /implement._
 
