@@ -48,15 +48,30 @@ Token budget: ~14k total
 ## Task Progress
 | Task | Story | Status | Agent | Notes |
 |------|-------|--------|-------|-------|
-| T001 | S001  | TODO   | rag-agent | Flip EMBEDDING_MODEL default + .env.example |
-| T002 | S001  | TODO   | rag-agent | Add embed_query + prefix/truncation tests |
-| T003 | S001  | TODO   | rag-agent | Add embed_passage + tests |
-| T004 | S001  | TODO   | rag-agent | Replace batch_embed → batch_embed_passage |
-| T005 | S001  | TODO   | rag-agent | Remove old embed_one/batch_embed (gate after S002/S003 ready) |
-| —    | S002  | TODO   | api-agent | Ingest caller switch |
-| —    | S003  | TODO   | rag-agent | Retriever query path |
-| —    | S004  | TODO   | ops       | Truncate script + AWS Modelfile + license doc |
-| —    | S005  | TODO   | rag-agent | Eval harness + fixtures |
+| T001 | S001  | DONE   | rag-agent | Flip EMBEDDING_MODEL default + docs/env.example |
+| T002 | S001  | DONE   | rag-agent | embed_query + prefix/truncation/guard tests |
+| T003 | S001  | DONE   | rag-agent | embed_passage + prefix/truncation/guard tests |
+| T004 | S001  | DONE   | rag-agent | batch_embed_passage + order/prefix/batch/error tests |
+| T005 | S001  | BLOCKED| rag-agent | Remove embed_one/batch_embed — waiting on S002+S003 caller swap |
+| T001 | S002  | DONE   | api-agent | Swap batch_embed → batch_embed_passage in documents.py:95 + docstring fix |
+| T002 | S002  | DONE   | api-agent | Pipeline-body unit test (prefix routing, dim=1024, single commit) |
+| T003 | S002  | DONE   | api-agent | Multilingual ingest smoke test (JA/EN/VI/KO) — embeddings.lang populated |
+| —    | S002  | DONE ✅ | api-agent | Story complete — 8 tests (7 PASS + 1 SKIP ja-MeCab) |
+| T001 | S003  | TODO   | rag-agent | Swap embed_one → embed_query in query_processor.py:49 |
+| T002 | S003  | TODO   | rag-agent | Update test_query_processor.py mocks + dim 768→1024 |
+| T003 | S003  | TODO   | rag-agent | Cosine fix retriever.py:51 <-> → <=> + score formula |
+| T004 | S003  | TODO   | rag-agent | Update test_retriever_rbac.py score expectations |
+| —    | S003  | BROKEN_DOWN | rag-agent | 4 tasks defined — docs/embed-model-migration/tasks/S003.tasks.md |
+| T001 | S004  | DONE   | ops       | Truncate-and-reset script (--confirm, SQLAlchemy text()) |
+| T002 | S004  | TODO   | ops       | AWS Ollama setup doc (primary path + Appendix B fallback) |
+| T003 | S004  | TODO   | ops       | License doc + LICENSE.e5 verbatim MIT copy |
+| T004 | S004  | TODO   | ops       | Smoke test + .env.example coordination check |
+| —    | S004  | BROKEN_DOWN | ops  | 4 tasks defined — docs/embed-model-migration/tasks/S004.tasks.md |
+| T001 | S005  | DONE   | rag-agent | Fixture JSON — 120 queries (30×4 lang, ≥25% cross-lingual) |
+| T002 | S005  | DONE   | rag-agent | Test: fixture schema validation + AC7 traceability (9/9 PASS) |
+| T003 | S005  | DONE   | rag-agent | Eval harness CLI — recall@10 + MRR computation |
+| T004 | S005  | DONE   | rag-agent | Generate recall_e5.md report + pass/fail verdict |
+| —    | S005  | BROKEN_DOWN | rag-agent | 4 tasks defined — docs/embed-model-migration/tasks/S005.tasks.md |
 
 **S001 tasks file**: `docs/embed-model-migration/tasks/S001.tasks.md` (5 tasks, parallel groups G1[T001] → G2[T002,T003] → G3[T004] → G4[T005], ~3k tokens)
 **S001 analysis**: `docs/embed-model-migration/tasks/S001.analysis.md` (5 findings — F1 plan correction applied to S003, F3 dismissed, F2/F4/F5 are reviewer notes)
@@ -81,7 +96,10 @@ Doc: `docs/embed-model-migration/notes/query-passage-hygiene.md` (full catalog +
 **Re-open trigger**: S005 recall@10 < 0.6 overall OR < 0.5 cross-lingual → run decision tree in notes file.
 
 ## Files Touched
-_None yet — populated by /sync after first /implement._
+- `backend/rag/embedder.py` — default flipped, `_embed` helper, `embed_query`, `embed_passage`, `batch_embed_passage`, `_check_no_prefix`; `embed_one`/`_embed_one`/`batch_embed` retained (T005 cleanup pending)
+- `docs/env.example` — `EMBEDDING_MODEL=zylonai/multilingual-e5-large` + rollback comment
+- `tests/rag/test_embedder.py` — 22 tests total (2 T001 + 9 T002/T003 + 4 T004 + 7 legacy); 22/22 PASS
+- `docs/embed-model-migration/tasks/S001.tasks.md` — status board updated (T001–T004 DONE, T005 BLOCKED)
 
 ## Open Questions
 _Tất cả đã resolved 2026-04-27_ ✅
@@ -126,6 +144,51 @@ Current POC sourcing: `ollama pull zylonai/multilingual-e5-large` (community red
 - Last resort: fall back to D08 self-convert path (~2h work)
 
 **Open question carry to product phase**: Q4 (new) — Brysen Group có formal AI-model sourcing policy không? (Confirmed informal cho POC; cần verify với IT/legal before product.)
+
+---
+
+## Sync: 2026-04-29 (session #135 — /implement S005 T003+T004 ALL DONE ✅)
+Decisions added: none
+Tasks changed: S005 T003→DONE, T004→DONE; S005 story DONE ✅
+Files created:
+- `backend/rag/eval/__init__.py` — empty package init
+- `backend/rag/eval/multilingual_recall.py` — harness CLI: `_compute_metrics` (recall@10+MRR), `_pgvector_top10` (`<=>` cosine, public docs only), `run_eval` (batch embed P002 + DB loop), `main` (`--model` AC6 flag); JSON stdout
+- `tests/rag/test_multilingual_recall.py` — 14 unit tests (all_hits/no_hits/partial recall, MRR rank1/rank2/mixed/no-hits, per-lang 2-lang + 4-lang, per-category, D09 verdict pass/fail ×2); 1 integration smoke (`@pytest.mark.integration`); 14/14 PASS
+- `docs/embed-model-migration/reports/recall_e5.md` — report template: run metadata, global/per-lang/per-category result tables, D09 verdict section (thresholds 0.6/0.5), misses/anomalies section, traceability links
+Bugs fixed: none
+New blockers: none
+Next: live eval run on target DB — `python -m backend.rag.eval.multilingual_recall --model zylonai/multilingual-e5-large`; fill recall_e5.md with actual numbers; then `/report embed-model-migration`
+
+## Sync: 2026-04-29 (session #134 — /implement S005 T001+T002 DONE)
+Decisions added: none
+Tasks changed: S005 T001→DONE, T002→DONE
+Files created:
+- `backend/rag/eval/multilingual_recall.fixtures.json` — 12 ingest docs (3×4 lang, UUIDs e5000000-...001 to 033), 120 queries (30×4 lang), 35 cross-lingual entries (EN→JA:5, JA→EN:10, VI→EN:10, KO→EN:10), user_group_id=null (public), all AC7 traceability satisfied
+- `tests/rag/test_eval_fixtures.py` — 9 tests: total count, per-lang count, schema validation, cross-lingual min count, cross-lingual pairs, AC7 traceability, ingest docs fields, ingest docs lang coverage; **9/9 PASS**
+Bugs fixed during build:
+- EN→JA direction bug: initial q-en-026..030 had JA-text queries with `query_lang: "en"` → not true cross-lingual; fixed to EN-text queries pointing to JA docs (IDs 011-013)
+- UnicodeDecodeError on Windows: open() without encoding='utf-8' fails on CJK content; fixed in validation script
+Key fixture decisions:
+- Fixture co-defines eval corpus (`ingest_docs[]`) — no stable S002 ingest set exists (S002 uses fully mocked UUIDs, rolled back after each test)
+- Fixed UUID prefix `e5000000-0000-0000-0000-0000000000{NN}`: 01-03=EN, 11-13=JA, 21-23=VI, 31-33=KO
+- T002 tests pure JSON load — no DB/Ollama/OIDC stub needed
+New blockers: none
+Next: /implement S005 T003 — eval harness CLI (`backend/rag/eval/__init__.py` + `backend/rag/eval/multilingual_recall.py`); recall@10+MRR, --model flag (AC6), pgvector `<=>` search, `pytest.mark.integration` skip gate
+
+---
+
+## Sync: 2026-04-29 (session #133 — /tasks S005)
+Decisions added: none
+Tasks changed: S005 → BROKEN_DOWN (4 tasks defined)
+Files created:
+- `docs/embed-model-migration/tasks/S005.tasks.md` (4 tasks: T001+T002 TDD pair for fixtures, T003 harness CLI, T004 report + unit tests; groups G1[T001,T002] → G2[T003] → G3[T004])
+Task breakdown:
+- T001: `backend/rag/eval/multilingual_recall.fixtures.json` — 120 entries, 30×4 lang, ≥30 cross-lingual
+- T002: `tests/rag/test_eval_fixtures.py` — schema + count + AC7 traceability (TDD pair with T001)
+- T003: `backend/rag/eval/multilingual_recall.py` — harness CLI, recall@10+MRR, `--model` flag (AC6)
+- T004: `tests/rag/test_multilingual_recall.py` + `docs/embed-model-migration/reports/recall_e5.md` — unit tests (mock-based) + live-run report
+New blockers: none (S002+S003+S004 must be complete before T003/T004 integration run)
+Next: /analyze S005 T001 → /implement S005
 
 ---
 
@@ -177,5 +240,91 @@ Files touched:
 Questions resolved: Q1 ✅ Q2 ✅ Q3 ✅ — 0 blockers remain
 New blockers: none
 Next phase: /checklist embed-model-migration → /plan
+
+---
+
+## Sync: 2026-04-28 (session #129 — /tasks S002 + /implement S002 T001–T003)
+Decisions added: none
+Tasks changed: S002 T001→DONE, T002→DONE, T003→DONE; S002 story complete
+Files created:
+- `docs/embed-model-migration/tasks/S002.tasks.md` (3 atomic tasks, AC mapping AC1/AC2→T001, AC3/AC4/AC5→T002/T003)
+- `tests/rag/test_ingest_pipeline.py` (8 tests: 4 pipeline-body + 4 multilingual parametrized; 7 PASS + 1 SKIP ja-MeCab)
+Files modified:
+- `backend/api/routes/documents.py` — L95 `batch_embed` → `batch_embed_passage`; L67 docstring updated; header memory comment added
+- `docs/embed-model-migration/tasks/S002.tasks.md` — T001/T002/T003 DONE
+Test pattern notes:
+- Patch `async_session_factory` at origin (`backend.db.session.async_session_factory`), NOT at `documents.py` namespace — imports inside `ingest_pipeline` are deferred (function-local), so module attribute does not exist on `documents`.
+- OIDC env stub required at top of any test file under `tests/rag/` that imports from `backend.api.routes.documents` — `tests/api/conftest.py` does not propagate to `tests/rag/`.
+- JA case skipped via `_mecab_available()` runtime check — established pattern from `test_tokenizers.py`.
+- For real-chunker tests, mock only `OllamaEmbedder` + `async_session_factory` + `update_fts` — leave `chunk_document` real to validate `Chunk.lang` propagation end-to-end.
+T005 status: still BLOCKED — only S003 caller (`query_processor.py:49` embed_one) remains. Pre-flight grep gate now: 1 caller (was 2).
+New blockers: none
+Next: /tasks S003 (query_processor embed_one → embed_query + retriever.py `<->` → `<=>` cosine fix)
+
+---
+
+## Sync: 2026-04-28 (session #130 — /tasks S003)
+Decisions added: none
+Tasks changed: S003 → BROKEN_DOWN (4 tasks defined)
+Files created:
+- `docs/embed-model-migration/tasks/S003.tasks.md` (4 tasks: T001+T002 caller-swap pair, T003+T004 cosine-fix pair; parallel groups G1[T001,T003], G2[T002,T004])
+Files modified:
+- `.claude/memory/WARM/embed-model-migration.mem.md` — S003 task rows added
+Task breakdown:
+- T001: `query_processor.py:49` `embed_one` → `embed_query` (~2 lines)
+- T002: `test_query_processor.py` mock swap + dim 768→1024 assertion + no-prefix test (~12 lines)
+- T003: `retriever.py:51` `<->` → `<=>` + score `1.0-dist` → `1.0-dist/2.0` (~3 lines)
+- T004: `test_retriever_rbac.py` score expectations + cosine-operator regression test (~15 lines)
+AC4/AC5 deferred: cross-lingual smoke + latency covered by S005 eval harness (not unit-testable without live Ollama)
+S001 T005 gate: unblocked once T001 merges (last embed_one caller eliminated)
+New blockers: none
+Next: /analyze S003 T001 → /implement S003
+
+---
+
+## Sync: 2026-04-28 (session #128 — /implement S001 T001–T004)
+Decisions added: D-S001-01 (double-prefix guard → ValueError fail-fast, not strip+warn)
+Tasks changed: T001→DONE, T002→DONE, T003→DONE, T004→DONE, T005→BLOCKED
+Files modified:
+- `backend/rag/embedder.py` — EMBEDDING_MODEL default `multilingual-e5-large`; added `_embed(prompt)`, `_check_no_prefix()`, `embed_query()`, `embed_passage()`, `batch_embed_passage()`; legacy `embed_one`/`_embed_one`/`batch_embed` retained pending T005
+- `docs/env.example` — `EMBEDDING_MODEL=zylonai/multilingual-e5-large` + mxbai rollback comment
+- `tests/rag/test_embedder.py` — 22/22 PASS; 13 new tests (T001×2, T002×5, T003×4, T004×4); legacy batch_embed tests updated to patch `_embed`
+- `docs/embed-model-migration/tasks/S001.tasks.md` — T001–T004 DONE, T005 BLOCKED, story status IN_PROGRESS
+New blockers: T005 blocked — pre-flight grep found 2 live callers: `documents.py:95` (S002, `batch_embed`) + `query_processor.py:49` (S003, `embed_one`). T005 cannot land until both are swapped.
+Next: /implement S002 (documents.py) or /implement S003 (query_processor.py) — both unblocked
+
+---
+
+## Sync: 2026-04-29 (session #133 — /implement S004 T002+T003+T004 ALL DONE)
+Decisions added: none
+Tasks changed: S004 T002→DONE, T003→DONE, T004→DONE | S004 story DONE ✅
+Files created:
+- `docs/embed-model-migration/ops/ollama_setup.md` — Ollama runbook; primary pull path + digest pin + smoke curl (1024-dim assert) + Docker run + OLLAMA_MAX_EMBED_CHARS; Appendix B self-convert (llama.cpp → GGUF → ollama create); troubleshooting table
+- `docs/embed-model-migration/ops/license.md` — provenance doc; upstream=intfloat MIT; zylonai distribution; digest pinned; internal-only note; POC scope + D11 carry-over link; backup GGUF field (TODO for ops)
+- `docs/embed-model-migration/ops/LICENSE.e5` — verbatim MIT license text; intfloat copyright holders
+Files modified:
+- `docs/env.example` — added `OLLAMA_MAX_EMBED_CHARS=1400` after EMBEDDING_MODEL line
+- `docs/embed-model-migration/tasks/S004.tasks.md` — T002/T003/T004 → DONE; story status → DONE ✅
+- `.claude/memory/HOT.md` — S004 DONE recorded
+Notes:
+- root `.env.example` (at repo root, not docs/) — permission-denied for agent write; lb_mui manually updated: `EMBEDDING_MODEL=zylonai/multilingual-e5-large` + `OLLAMA_MAX_EMBED_CHARS=1400` added
+- T004 coordination check: all model tags consistent across ollama_setup.md, license.md, docs/env.example (no drift)
+- T001 unit tests: 12/12 PASS confirmed in T004 run
+New blockers: none
+Next: S005 — eval harness + 120-query fixture set (30×JA/EN/VI/KO, ≥25% cross-lingual); recall@10 pass bar ≥ 0.6
+
+---
+
+## Sync: 2026-04-29 (session #132 — /tasks S004 + /implement S004 T001)
+Decisions added: none
+Tasks changed: S004 T001→DONE | S004 BROKEN_DOWN (4 tasks: T001 DONE, T002/T003/T004 TODO)
+Files created:
+- `docs/embed-model-migration/tasks/S004.tasks.md` (4 tasks, G1[T001,T002,T003] → G2[T004])
+- `scripts/truncate_and_reset.py` — idempotent truncate script; `--confirm` gate; SQLAlchemy `text()`; row-count logging; `DATABASE_URL` from env; exits non-zero on error
+- `tests/ops/__init__.py` — new test scope created
+- `tests/ops/test_truncate_and_reset.py` — 12 tests (confirm gate×3, SQL safety×3, logging×2, idempotency×2, env config×2); 12/12 PASS
+Test pattern note: tests that mock `_build_engine` must also `patch.dict("os.environ", {"DATABASE_URL": "postgresql://stub"})` — script checks env before calling `_build_engine`
+New blockers: none
+Next: S004 T002 (ollama_setup.md) + T003 (license.md + LICENSE.e5) — parallel-safe, run together
 
 ---

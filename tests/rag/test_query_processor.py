@@ -3,6 +3,7 @@
 # Task: S002-T002 — Implement tokenize_query() in query_processor.py
 # Task: S003-T001 — Write test suite for embed_query()
 # Task: S003-T002 — Implement embed_query() in query_processor.py
+# Task: S003-T002 — embed-model-migration: swap embed_one mocks → embed_query (E5 migration)
 
 import pytest
 from unittest.mock import patch, AsyncMock
@@ -102,22 +103,37 @@ def test_tokenize_query_error_propagates():
 @patch('backend.rag.query_processor._embedder')
 async def test_embed_query_returns_vector(mock_embedder):
     """Verify embed_query() returns list[float] of expected shape."""
-    # Setup mock to return a 768-dim vector
-    mock_embedder.embed_one = AsyncMock(return_value=[0.1, 0.2, 0.3] * 256)
+    # Setup mock to return a 1024-dim vector (multilingual-e5-large)
+    mock_embedder.embed_query = AsyncMock(return_value=[0.0] * 1024)
 
     result = await embed_query("hello world")
 
     assert isinstance(result, list), "Result must be list"
-    assert len(result) == 768, f"Expected 768-dim vector, got {len(result)}"
+    assert len(result) == 1024, f"Expected 1024-dim vector, got {len(result)}"
     assert all(isinstance(x, float) for x in result), "All elements must be floats"
-    mock_embedder.embed_one.assert_called_once_with("hello world")
+    mock_embedder.embed_query.assert_called_once_with("hello world")
 
 
 @patch('backend.rag.query_processor._embedder')
 async def test_embed_query_embedder_error_propagates(mock_embedder):
     """Verify EmbedderError from embedder is NOT caught — propagates to caller."""
     # Setup mock to raise error
-    mock_embedder.embed_one = AsyncMock(side_effect=EmbedderError("Ollama API down"))
+    mock_embedder.embed_query = AsyncMock(side_effect=EmbedderError("Ollama API down"))
 
     with pytest.raises(EmbedderError, match="Ollama API down"):
         await embed_query("hello world")
+
+
+@patch('backend.rag.query_processor._embedder')
+async def test_embed_query_passes_raw_text_no_prefix(mock_embedder):
+    """Verify façade passes raw text through — no 'query: ' prefix added at façade layer.
+
+    The 'query: ' prefix is OllamaEmbedder.embed_query's responsibility (S001 AC2).
+    Double-prefixing would trigger ValueError via _check_no_prefix guard (D-S001-01).
+    """
+    mock_embedder.embed_query = AsyncMock(return_value=[0.0] * 1024)
+
+    await embed_query("hello")
+
+    call_arg = mock_embedder.embed_query.call_args[0][0]
+    assert call_arg == "hello", f"Façade must not prepend prefix — got: {call_arg!r}"
