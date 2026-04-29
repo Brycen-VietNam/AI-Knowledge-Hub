@@ -1,7 +1,7 @@
 # HOT Memory
 > Auto-updated by /sync. Loaded every session. Keep under 300 lines.
 
-Updated: 2026-04-29 | Session: #135 (embed-model-migration — S005 ALL DONE ✅ T003+T004, 14/14 PASS) | /sync ✅
+Updated: 2026-04-29 | Session: #136 (embed-model-migration — D13 confidence fix + citation parser + live eval PASS) | /sync ✅
 
 ---
 
@@ -34,9 +34,9 @@ S001 ✅ + S002 ✅ REVIEWED | 20/20 ACs | 118/118 backend + 32/32 frontend test
 ---
 
 ## Recent Decisions (last 3)
+- 2026-04-29: **D13 — Presence-based confidence** — `cited_count > 0 → 0.9`, no cite → `0.5`, no answer → `0.2`. SUPERSEDES `cited_ratio × 0.8 + 0.2`. Rationale: old formula unfairly penalised LLM for not citing all retrieved docs.
+- 2026-04-29: **Live eval PASS** — seeded 12 fixture docs via `scripts/seed_eval_fixtures.py`; recall@10 = 1.0, MRR = 0.964 on synthetic 120-query set; S005 fully verified end-to-end.
 - 2026-04-29: **S005 ALL DONE** — T003 harness CLI (14/14 unit PASS, `--model` AC6, P002 batch embed, `<=>` pgvector) + T004 mock tests + `recall_e5.md` report template; full S005 story complete
-- 2026-04-29: **S004 ALL DONE** — truncate script (12/12 PASS), ollama_setup.md, license.md+LICENSE.e5, coordination check PASS
-- 2026-04-29: **S003 DONE** — embed_one→embed_query swap + cosine <->→<=> fix; 37 PASS + 1 SKIP
 
 ---
 

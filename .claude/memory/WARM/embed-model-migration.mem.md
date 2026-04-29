@@ -28,6 +28,7 @@ Updated: 2026-04-28
 | D10 | **POC scope**: dùng community Ollama tag `zylonai/multilingual-e5-large` (F16, MIT, digest pinned `c1522b1cf095...d76b`) thay vì self-convert. SUPERSEDES D08 cho POC phase. | Spike A 2026-04-28 verified: dim=1024, latency 230–330ms warm, prefix-sensitive, cross-lingual cos=0.94. Self-convert (D08) giữ làm fallback. License MIT clean cho internal-only consumption (không redistribute) | 2026-04-28 |
 | D11 | **PRODUCT-PHASE CARRY-OVER**: Trước khi chuyển từ POC → product, phải re-evaluate model sourcing. Options: (a) self-convert từ intfloat (D08 path) cho audit trail clean, (b) verify zylonai = upstream weights via cosine ≥ 0.99 vs HF reference, (c) request approved-vendor process từ Brysen IT/legal nếu policy formal hóa | Risk transition: POC chấp nhận third-party redistributor để demo nhanh; product cần audit trail + supply-chain verification; SOC2/ISO27001 compliance khả năng yêu cầu first-party source | 2026-04-28 |
 | D12 | Quantization: F16 (zylonai tag) thay vì Q4_K_M. SUPERSEDES D03 cho POC. RAM ~1.1GB vẫn fit `t3.medium` 4GB | Tag có sẵn ở F16, không cần quantize step; chất lượng cao hơn dự kiến; recall@10 không bị quantize hurt | 2026-04-28 |
+| D13 | Confidence: presence-based thay vì cited_ratio. `cited_count > 0 → 0.9 (HIGH)`, no cite → `0.5 (MEDIUM)`, no answer → `0.2 (LOW)`. SUPERSEDES công thức `cited_ratio × 0.8 + 0.2` | Công thức cũ phạt oan LLM vì docs retrieval thừa không được cite — LLM đúng khi chỉ cite docs thực sự relevant cho câu trả lời. Fix kèm: multi-format citation parser hỗ trợ `【N†...】`, `[N†...]`, `(N)` ngoài `[N]` gốc | 2026-04-29 |
 
 ## Spec
 Path: `docs/embed-model-migration/spec/embed-model-migration.spec.md`
@@ -146,6 +147,24 @@ Current POC sourcing: `ollama pull zylonai/multilingual-e5-large` (community red
 **Open question carry to product phase**: Q4 (new) — Brysen Group có formal AI-model sourcing policy không? (Confirmed informal cho POC; cần verify với IT/legal before product.)
 
 ---
+
+## Sync: 2026-04-29 (session #136 — D13 confidence fix + live eval PASS ✅)
+Decisions added: D13 (presence-based confidence — already recorded above)
+Tasks changed: none (all stories DONE); additional post-S005 work:
+  - Live eval seeded + passed: recall@10=1.0, MRR=0.964
+  - Confidence formula fixed + citation parser extended
+Files created:
+  - `scripts/seed_eval_fixtures.py` — seeds 12 docs from multilingual_recall.fixtures.json into documents+embeddings tables; uses OllamaEmbedder.embed_passage, asyncio.gather (P002 batch), DELETE+INSERT pattern (no unique constraint on chunk_index)
+Files modified:
+  - `backend/rag/citation_parser.py` — regex extended to support `【N†...】`, `[N†...]`, `(N)` in addition to `[N]`
+  - `backend/rag/llm/openai.py` — `inline_markers_present` detection updated to match all 3 new marker formats
+  - `backend/api/routes/query.py` — confidence formula replaced: `cited_ratio × 0.8 + 0.2` → D13 presence-based (`cited_count > 0 → 0.9`, else `0.5`, no answer → `0.2`)
+Bugs fixed:
+  - Citation parser missed `【N†L1-L4】` format (OpenRouter LLM output) → LOW confidence despite correct answers
+  - `cited_ratio` formula divided by total retrieved (10 docs) → ratio=0.1 even for 1 correct cite
+  - Docker: `scripts/` dir not in image → required `docker compose build app` + `docker compose up -d app` × multiple iterations
+New blockers: none
+Next: `/report embed-model-migration` to finalize; also security-audit awaiting lb_mui sign-off
 
 ## Sync: 2026-04-29 (session #135 — /implement S005 T003+T004 ALL DONE ✅)
 Decisions added: none
