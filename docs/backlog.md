@@ -1,5 +1,5 @@
 # Feature Backlog — Knowledge-Hub
-> Generated: 2026-03-17 | Updated: 2026-04-27
+> Generated: 2026-03-17 | Updated: 2026-04-29
 > Source: /specify session + CONSTITUTION.md v1.2 + license review
 
 ---
@@ -14,40 +14,40 @@
 
 ## P0 — Nền tảng bắt buộc
 
-| # | Feature | Epic | Mô tả |
-|---|---------|------|-------|
-| 1 | `db-schema-embeddings` | db | PostgreSQL schema + pgvector HNSW index + migrations |
-| 2 | `auth-api-key-oidc` | auth | API-key + OIDC/SSO Bearer authentication middleware |
-| 3 | `rbac-document-filter` | auth | RBAC hard-filter tại pgvector WHERE clause (C001) |
-| 4 | `cjk-tokenizer` | rag | MeCab (ja), kiwipiepy (ko), jieba (zh), underthesea (vi) |
-| 5 | `document-ingestion` | api | POST /v1/documents — upload, batch embed, index |
-| 6 | `multilingual-rag-pipeline` | rag | Hybrid search: dense embeddings + BM25, auto lang detect |
-| 7 | `llm-provider` | rag | Multi-provider LLM adapter: Ollama/Llama (free) + OpenAI/Claude (paid) |
-| 8 | `query-endpoint` | api | POST /v1/query với audit log, latency SLA <2000ms |
-| 29 | `embed-model-migration` | rag | **IN PROGRESS (SPECCING 2026-04-27)** — Chuyển dense embedder `mxbai-embed-large` (English-centric) → `intfloat/multilingual-e5-large` (MIT, self-build từ HF, q4_k_m quantized). Schema 1024-dim giữ nguyên (HNSW cosine). Truncate test data + re-ingest (Strategy A). Bổ sung E5 prefix `query: ` / `passage: `. Eval set 120 query (30 × JA/EN/VI/KO, ≥25% cross-lingual) đo recall@10 ≥ baseline +15%. Demo AWS `t3.medium` (~$30/tháng). Spec: `docs/embed-model-migration/spec/`. |
+| # | Feature | Epic | Status | Mô tả |
+|---|---------|------|--------|-------|
+| 1 | `db-schema-embeddings` | db | ✅ DONE (2026-03-19) | PostgreSQL schema + pgvector HNSW index + migrations |
+| 2 | `auth-api-key-oidc` | auth | ✅ DONE (2026-03-24) | API-key + OIDC/SSO Bearer authentication middleware |
+| 3 | `rbac-document-filter` | auth | ✅ DONE (2026-04-06) | RBAC hard-filter tại pgvector WHERE clause (C001) |
+| 4 | `cjk-tokenizer` | rag | ✅ DONE (2026-04-06) | MeCab (ja), kiwipiepy (ko), jieba (zh), underthesea (vi) |
+| 5 | `document-ingestion` | api | ✅ DONE (2026-04-08) | POST /v1/documents — upload, batch embed, index |
+| 6 | `multilingual-rag-pipeline` | rag | ✅ DONE (2026-04-13) | Hybrid search: dense embeddings + BM25, auto lang detect |
+| 7 | `llm-provider` | rag | ✅ DONE (2026-04-06) | Multi-provider LLM adapter: Ollama/Llama (free) + OpenAI/Claude (paid) |
+| 8 | `query-endpoint` | api | ✅ DONE (2026-04-13) | POST /v1/query với audit log, latency SLA <2000ms |
+| 29 | `embed-model-migration` | rag | ✅ DONE (2026-04-29) | Chuyển dense embedder `mxbai-embed-large` → `zylonai/multilingual-e5-large` (MIT, F16, 1024-dim). E5 prefix contract (`query: ` / `passage: `). Cosine bug fix `<->` → `<=>`. Live eval recall@10=1.000, MRR=0.964. 28/28 AC PASS. D11 carry-over: sourcing review trước production. |
 
 ## P1 — Core MVP
 
-| # | Feature | Epic | Mô tả |
-|---|---------|------|-------|
-| 9 | `document-parser` | api | PDF/DOCX/HTML → text extraction trước khi chunk + embed |
-| 10 | `answer-citation` | rag | AI answer cite ≥1 source; confidence < 0.4 → warning (C014) |
-| 11 | `conflict-detection` | rag | Phát hiện tài liệu mâu thuẫn nhau |
-| 12 | `frontend-spa` | frontend | React/Vite SPA — search UI, multilingual |
+| # | Feature | Epic | Status | Mô tả |
+|---|---------|------|--------|-------|
+| 9 | `document-parser` | api | ✅ DONE (2026-04-13) | PDF/DOCX/HTML → text extraction trước khi chunk + embed |
+| 10 | `answer-citation` | rag | ✅ DONE (2026-04-15) | AI answer cite ≥1 source; confidence < 0.4 → warning (C014) |
+| 11 | `conflict-detection` | rag | ⬜ TODO | Phát hiện tài liệu mâu thuẫn nhau |
+| 12 | `frontend-spa` | frontend | ✅ DONE (2026-04-20) | React/Vite SPA — search UI (User SPA :8080) + Admin SPA (:8081); admin-spa + user-management + change-password + ux-form-validation |
+| 31 | `security-audit` | api+frontend | ✅ DONE (2026-04-29) | OWASP top-10 audit; DEFERRED-SEC-001 (password hygiene) + DEFERRED-SEC-002 (JWT token_version invalidation) trước production. 20/20 AC PASS. |
 
 ## P2 — Mở rộng sau MVP
 
-| # | Feature | Epic | Mô tả |
-|---|---------|------|-------|
-| 13 | `teams-bot-adapter` | bots | Microsoft Teams bot → /v1/query |
-| 14 | `slack-bot-query-handler` | bots | Slack bot → /v1/query |
-| 15 | `rate-limiting` | api | Valkey sliding window — 60/min query, 20/min docs (C013) |
-| 16 | `metrics-endpoint` | api | GET /v1/metrics — latency, throughput, error rates |
-| 12 | `change-password` | frontend | React/Vite SPA — Change password, require on first login |
-| 17 | `file-storage` | api | Lưu file gốc sau khi ingest — pluggable backend: local disk hoặc S3-compatible (MinIO/AWS S3) qua env `FILE_STORAGE_BACKEND=local\|s3`. GET /v1/documents/{id}/download trả presigned URL (S3) hoặc stream (local). Embedding là one-way — không thể recover file từ vector. |
-| 18 | `confidence-retrieval-score` | rag | Thay cited_ratio bằng retrieval-score-based confidence: dùng score của top docs từ pgvector thay vì đếm [N] trong LLM answer. Lý do: model free (gpt-oss-120b, qwen) không follow citation instruction đủ tốt → cited_ratio thường = 1/9 → LOW dù retrieval tốt. Approach: `confidence = weighted_avg(top_k_scores)` hoặc `score[0] * 0.6 + mean(scores) * 0.4`. Giữ top_k không đổi, chỉ thay nguồn tính confidence trong `query.py`. |
-| 19 | `multi-chunk-per-doc` | rag | Retriever hiện dedup theo doc_id → nhiều chunks khớp từ cùng 1 doc bị collapse thành 1 chunk (mất context). Fix: dedup theo `(doc_id, chunk_index)`, giới hạn max 2 chunks/doc. Score vẫn cộng dồn (boost doc có nhiều chunks khớp). Config qua env `RAG_MAX_CHUNKS_PER_DOC=2`. Với top_k=10: worst case 5 docs × 2 chunks — đủ đa dạng nguồn cho LLM. |
-| 30 | `query-rewriting` | rag | **DEFERRED — giải quyết sau khi #29 ship + đo baseline E5.** Layer trước embedding: gọi LLM (qua `llm-provider` adapter) rewrite/expand query → (a) chuẩn hoá thuật ngữ nội bộ ("KH" → "Knowledge Hub"), (b) sinh synonym, (c) sinh translation 1–2 ngôn ngữ khác (EN ↔ JA/VI/KO). Multi-vector retrieval: embed bản gốc + rewritten + translated → dense_search song song → merge max-score → dedupe. Feature flag `RAG_QUERY_REWRITE_ENABLED=false` mặc định. Cache TTL 1h theo `hash(query)`. Mục tiêu: recall@10 ON ≥ OFF +5% trên top E5 baseline. Lý do defer: (1) cần đo recall E5 trước để biết rewriting có còn cần thiết hay không; (2) thêm 1 LLM call/query — phải đánh giá trade-off latency + chi phí Ollama load sau khi #29 stable; (3) rủi ro LLM hallucinate translation/synonym → false positive, cần guardrails (S003 input sanitization). Estimate: 5 stories, ~3.25 ngày. Plan tham khảo: `.claude/plans/xem-x-t-c-c-feature-streamed-kazoo.md` §4 feature #30. |
+| # | Feature | Epic | Status | Mô tả |
+|---|---------|------|--------|-------|
+| 13 | `teams-bot-adapter` | bots | ⬜ TODO | Microsoft Teams bot → /v1/query |
+| 14 | `slack-bot-query-handler` | bots | ⬜ TODO | Slack bot → /v1/query |
+| 15 | `rate-limiting` | api | ✅ DONE (in query-endpoint) | Valkey sliding window — 60/min query, 20/min docs (C013) |
+| 16 | `metrics-endpoint` | api | ⬜ TODO | GET /v1/metrics — latency, throughput, error rates |
+| 17 | `file-storage` | api | ⬜ TODO | Lưu file gốc sau khi ingest — pluggable backend: local disk hoặc S3-compatible (MinIO/AWS S3) qua env `FILE_STORAGE_BACKEND=local\|s3`. GET /v1/documents/{id}/download trả presigned URL (S3) hoặc stream (local). |
+| 18 | `confidence-retrieval-score` | rag | ✅ SUPERSEDED (D13, 2026-04-29) | D13 đã thay bằng presence-based formula (`cited_count > 0 → 0.9`). Approach retrieval-score-based vẫn khả thi nếu E5 recall xuống thấp — để trong backlog như option. |
+| 19 | `multi-chunk-per-doc` | rag | ⬜ TODO | Retriever hiện dedup theo doc_id → nhiều chunks khớp từ cùng 1 doc bị collapse thành 1 chunk (mất context). Fix: dedup theo `(doc_id, chunk_index)`, giới hạn max 2 chunks/doc. Config qua env `RAG_MAX_CHUNKS_PER_DOC=2`. |
+| 30 | `query-rewriting` | rag | ⬜ DEFERRED | **Trigger: E5 recall@10 < 0.6 in production, hoặc user demand.** Layer trước embedding: LLM rewrite/expand query → synonym + cross-lingual translation. Feature flag `RAG_QUERY_REWRITE_ENABLED=false`. Estimate: 5 stories, ~3.25 ngày. E5 baseline đã đo: recall@10=1.000 (fixture set) — không cần triển khai ngay. |
 
 ---
 
