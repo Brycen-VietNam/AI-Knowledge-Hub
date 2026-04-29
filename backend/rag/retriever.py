@@ -3,6 +3,7 @@
 # Task: T002 — _dense_search() pgvector RBAC WHERE clause
 # Task: T003 — _bm25_search() tsvector RBAC WHERE clause
 # Task: T004 — retrieve() hybrid merge + asyncio.wait_for timeout wrapper
+# Task: S003-T003 — embed-model-migration: cosine operator <-> → <=> (HNSW vector_cosine_ops match, P003)
 # Decision: D01 — user_group_id IS NULL = public document
 # Decision: D02 — dense filter on embeddings, BM25 filter on documents
 import asyncio
@@ -48,7 +49,7 @@ async def _dense_search(
     sql = text("""
         SELECT e.doc_id, e.chunk_index, e.user_group_id, e.text,
                d.title, d.lang, d.source_url,
-               e.embedding <-> cast(:query_vec AS vector) AS distance
+               e.embedding <=> cast(:query_vec AS vector) AS distance
         FROM embeddings e
         INNER JOIN documents d ON d.id = e.doc_id
         WHERE (e.user_group_id = ANY(:group_ids) OR e.user_group_id IS NULL)
@@ -64,7 +65,7 @@ async def _dense_search(
         RetrievedDocument(
             doc_id=r.doc_id,
             chunk_index=r.chunk_index,
-            score=1.0 - r.distance,
+            score=1.0 - (r.distance / 2.0),  # cosine distance ∈ [0,2] → similarity ∈ [0,1]
             user_group_id=r.user_group_id,
             content=r.text,
             title=r.title,

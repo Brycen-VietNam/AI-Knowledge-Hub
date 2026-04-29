@@ -7,6 +7,7 @@
 # Task: S005-api-T001 — GET /v1/documents (paginated, RBAC-filtered)
 # Task: S005-api-T002 — GET /v1/documents/{id} (metadata + 404)
 # Task: S005-api-T003 — DELETE /v1/documents/{id} (204 + 404)
+# Task: T001 — embed-model-migration S002 (batch_embed → batch_embed_passage)
 # Decision: D09 — api_key=write, OIDC=read-only
 # Decision: D11 — content NOT stored in documents; passed to ingest_pipeline as arg
 # Rule: R001 — RBAC at WHERE clause (read paths)
@@ -64,7 +65,7 @@ async def ingest_pipeline(doc_id: uuid.UUID, content: str) -> None:
     """Ingestion pipeline: chunk → embed → BM25 index. (S002–S004)
 
     S002: chunk_document splits content into overlapping Chunks.
-    S003: OllamaEmbedder.batch_embed generates vectors; insert_embeddings persists them.
+    S003: OllamaEmbedder.batch_embed_passage generates passage-prefixed vectors; insert_embeddings persists them.
     S004: update_fts updates content_fts + sets status='ready'.
     On EmbedderError: doc.status='failed', no partial insert.
     """
@@ -92,7 +93,7 @@ async def ingest_pipeline(doc_id: uuid.UUID, content: str) -> None:
 
         embedder = OllamaEmbedder()
         try:
-            vectors = await embedder.batch_embed(chunks)
+            vectors = await embedder.batch_embed_passage(chunks)
             await insert_embeddings(chunks, vectors, doc, db)
         except EmbedderError as exc:
             _logger.error("ingest_pipeline: embedding failed for doc %s: %s", doc_id, exc)

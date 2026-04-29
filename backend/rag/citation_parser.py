@@ -29,11 +29,18 @@ def _parse_citations(answer: str, num_docs: int) -> set[int]:
     if not answer or num_docs <= 0:
         return set()
 
-    raw: list[str] = re.findall(r"\[\s*(\d+)\s*\]", answer)
+    # Support multiple marker formats that LLMs emit in practice:
+    #   [N]  [N†...]  【N†...】  (N)
+    raw: list[str] = re.findall(
+        r"\[\s*(\d+)[^\]]*\]"   # [N] or [N†L1-L4]
+        r"|【\s*(\d+)[^】]*】"   # 【N†...】
+        r"|\(\s*(\d+)\s*\)",    # (N)
+        answer,
+    )
     cited: set[int] = set()
-    for token in raw:
-        one_based = int(token)
-        zero_based = one_based - 1
+    for groups in raw:
+        token = next(g for g in groups if g)
+        zero_based = int(token) - 1
         if 0 <= zero_based < num_docs:
             cited.add(zero_based)
     return cited

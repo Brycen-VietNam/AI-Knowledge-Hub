@@ -3,6 +3,7 @@
 # Task: T002 — dense RBAC WHERE clause tests (TestDenseRBAC)
 # Task: T003 — BM25 RBAC WHERE clause tests (TestBM25RBAC)
 # Task: T004 — hybrid merge + timeout tests (TestHybridMerge, TestTimeout)
+# Task: S003-T004 — embed-model-migration: cosine score formula update
 import asyncio
 import uuid
 
@@ -62,7 +63,7 @@ from backend.rag.retriever import _dense_search
 
 
 def _make_row(doc_id, chunk_index, user_group_id, distance):
-    """Helper — create a mock CursorResult row."""
+    """Helper — create a mock CursorResult row. distance = cosine distance ∈ [0, 2]."""
     row = MagicMock()
     row.doc_id = doc_id
     row.chunk_index = chunk_index
@@ -95,7 +96,7 @@ class TestDenseRBAC:
         assert len(results) == 1
         assert results[0].doc_id == self.GROUP1_ID
         assert results[0].user_group_id == 1
-        assert results[0].score == pytest.approx(0.9)   # 1.0 - 0.1
+        assert results[0].score == pytest.approx(0.95)  # 1.0 - 0.1/2.0 (cosine distance ∈ [0,2])
 
     @pytest.mark.asyncio
     async def test_empty_group_ids_returns_only_public(self):
@@ -120,12 +121,22 @@ class TestDenseRBAC:
         assert "user_group_id IS NULL" in sql_text
 
     @pytest.mark.asyncio
-    async def test_result_score_is_one_minus_distance(self):
-        """score = 1.0 - cosine_distance."""
+    async def test_result_score_is_cosine_similarity_from_distance(self):
+        """score = 1.0 - distance/2.0 (cosine distance ∈ [0,2] → similarity ∈ [0,1])."""
         rows = [_make_row(self.GROUP1_ID, 0, 1, 0.3)]
         session = _mock_session(rows)
         results = await _dense_search(session, [0.1] * 1024, [1], 10)
-        assert results[0].score == pytest.approx(0.7)
+        assert results[0].score == pytest.approx(0.85)  # 1.0 - 0.3/2.0
+
+    @pytest.mark.asyncio
+    async def test_dense_search_uses_cosine_operator(self):
+        """SQL must use <=> cosine operator — matches HNSW vector_cosine_ops index (AC3/AC6)."""
+        session = _mock_session([])
+        await _dense_search(session, [0.1] * 1024, [1], 5)
+        call_args = session.execute.call_args[0][0]
+        sql_text = str(call_args)
+        assert "<=>" in sql_text, "Dense SQL must use <=> cosine operator"
+        assert "<->" not in sql_text, "Dense SQL must NOT use <-> L2 operator"
 
 
 # ---------------------------------------------------------------------------

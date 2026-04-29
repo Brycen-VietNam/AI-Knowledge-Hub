@@ -64,5 +64,5 @@ class OpenAIAdapter(LLMProvider):
             provider="openai",
             model=self._model,
             low_confidence=confidence < 0.4,
-            inline_markers_present=bool(re.search(r"\[\d+\]", content)),
+            inline_markers_present=bool(re.search(r"\[\d+[^\]]*\]|【\d+[^】]*】|\(\d+\)", content)),
         )

@@ -30,3 +30,5 @@ Triggered automatically by `/report` when feature is APPROVED. Manual steps:
 | user-management | 2026-04-21 | S001–S008 | 41 backend + 50 frontend / 91/91 PASS / 80 AC PASS | — | docs/user-management/reports/user-management.report.md |
 | change-password | 2026-04-22 | S001–S005 | 318 frontend + 22 backend / 340/340 PASS / 43 AC PASS | — | docs/change-password/reports/change-password.report.md |
 | ux-form-validation | 2026-04-24 | S001–S005 | Build PASS / 28/30 AC PASS (2 PARTIAL deferred) | — | docs/ux-form-validation/reports/ux-form-validation.report.md |
+| embed-model-migration | 2026-04-29 | S001–S005 | ~89/90 PASS (1 SKIP MeCab) / 28 AC PASS / live eval recall@10=1.000 MRR=0.964 | — | docs/embed-model-migration/reports/embed-model-migration.report.md |
+| security-audit | 2026-04-29 | S001–S002 | 118/118 backend + 32/32 frontend / 20 AC PASS / 0 blockers | — | docs/security-audit/reports/security-audit.report.md |

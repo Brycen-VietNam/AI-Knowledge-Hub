@@ -248,11 +248,17 @@ async def query_documents(
         )
         for d in docs
     ]
-    # Unified confidence — adapter-independent, single source of truth
-    # cited_ratio × 0.8 + 0.2 → range [0.2, 1.0]; LOW when cited_ratio < 0.25
+    # Unified confidence — D11: presence-based, not ratio-based.
+    # Any valid cite → HIGH (0.9); no cite but answer exists → MEDIUM (0.5); no answer → LOW (0.2).
+    # Rationale: penalising by total docs retrieved is unfair — LLM correctly cites only
+    # the docs relevant to the answer; unused retrieval candidates should not lower confidence.
     cited_count = sum(1 for c in citations if c.cited)
-    cited_ratio = cited_count / len(content_docs) if content_docs else 0.0
-    confidence = round(cited_ratio * 0.8 + 0.2, 4)
+    if cited_count > 0:
+        confidence = 0.9
+    elif llm_response.answer:
+        confidence = 0.5
+    else:
+        confidence = 0.2
     return QueryResponse(
         request_id=request_id,
         answer=llm_response.answer,
